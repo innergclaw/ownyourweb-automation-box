@@ -86,6 +86,7 @@ button:disabled {
 
 .landing {
   display: grid;
+  align-content: start;
   min-height: 100vh;
   gap: 24px;
   padding: 24px;
@@ -724,6 +725,7 @@ pre {
   .landing-grid {
     grid-template-columns: 1fr;
     gap: 8px;
+    align-items: start;
   }
 
   .landing-copy,
@@ -784,13 +786,16 @@ pre {
   }
 
   .landing-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
+    align-items: start;
   }
 
   .landing-copy,
   .landing-preview {
-    gap: 20px;
-    padding: 24px 20px;
+    gap: 14px;
+    padding: 20px 16px;
   }
 
   .landing-copy {
@@ -846,9 +851,12 @@ pre {
 
   .tabs,
   .field-grid,
-  .preview-stack,
   .offer-row {
     grid-template-columns: 1fr;
+  }
+
+  .preview-stack {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .tabs,
@@ -856,10 +864,11 @@ pre {
   .result-toolbar,
   .output-panel,
   .offer-builder {
-    padding: 16px;
+    padding: 12px;
   }
 
   .tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
 
@@ -872,9 +881,14 @@ pre {
   .output-actions,
   .action-row {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
     width: 100%;
+  }
+
+  .output-actions,
+  .action-row {
+    grid-template-columns: 1fr;
   }
 
   .offer-builder-head,
@@ -914,21 +928,45 @@ pre {
   .footer-link,
   .creator-link {
     justify-content: center;
+    min-height: 40px;
+    width: auto;
+    padding: 0 10px;
+    font-size: 10px;
   }
 
   .brand-block {
+    gap: 12px;
     text-align: center;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+  }
+
+  .intro-panel {
+    gap: 14px;
+  }
+
+  .intro-panel .system-preview {
+    display: none;
   }
 
   h1 {
     max-width: 100%;
-    font-size: 42px;
-    line-height: 0.94;
+    font-size: 36px;
+    line-height: 0.96;
   }
 
   h2 {
-    font-size: 30px;
+    font-size: 26px;
     line-height: 1;
+  }
+
+  .lead,
+  .landing-lead {
+    font-size: 12px;
+    line-height: 17px;
   }
 
   pre {
@@ -946,7 +984,7 @@ pre {
   .output-panel,
   .offer-builder,
   .site-footer {
-    padding: 14px;
+    padding: 12px;
   }
 
   .landing-preview {
@@ -960,10 +998,10 @@ pre {
   }
 
   h1 {
-    font-size: 38px;
+    font-size: 34px;
   }
 
   h2 {
-    font-size: 28px;
+    font-size: 24px;
   }
 }

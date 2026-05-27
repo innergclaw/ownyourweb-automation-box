@@ -77,11 +77,11 @@ button:disabled {
 .app-shell {
   display: grid;
   grid-template-columns: minmax(360px, 0.82fr) minmax(0, 1.18fr);
+  align-items: start;
   width: 100%;
   max-width: 100%;
-  min-height: 100vh;
-  gap: 4px;
-  padding: 24px;
+  gap: 8px;
+  padding: 16px;
 }
 
 .landing {
@@ -160,8 +160,8 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 0 24px 24px;
-  padding: 24px;
+  margin: 0 16px 16px;
+  padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -247,14 +247,14 @@ button:disabled {
 
 .intro-panel {
   position: sticky;
-  top: 0;
+  top: 16px;
   min-width: 0;
   display: flex;
-  min-height: 100vh;
+  min-height: auto;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 24px;
+  justify-content: start;
+  gap: 16px;
+  padding: 16px;
   background: linear-gradient(180deg, #f6f8fa 0%, #e4e7ec 100%);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -265,7 +265,7 @@ button:disabled {
 
 .brand-block {
   display: grid;
-  gap: 22px;
+  gap: 14px;
 }
 
 .brand-row {
@@ -338,6 +338,7 @@ h3 {
 
 .lead {
   max-width: 58ch;
+  margin-bottom: 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 16px;
@@ -345,7 +346,7 @@ h3 {
 
 .system-preview {
   display: grid;
-  gap: 16px;
+  gap: 8px;
 }
 
 .preview-window {
@@ -360,7 +361,7 @@ h3 {
 .window-bar {
   display: flex;
   gap: 4px;
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 }
 
@@ -382,12 +383,12 @@ h3 {
 .preview-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 24px;
+  gap: 6px;
+  padding: 14px;
 }
 
 .preview-card {
-  min-height: 76px;
+  min-height: 52px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, #ffffff, #d1d5db);
@@ -395,7 +396,7 @@ h3 {
 
 .preview-card.tall {
   grid-row: span 2;
-  min-height: 164px;
+  min-height: 110px;
   background: linear-gradient(180deg, #ffffff, #9ca3af);
 }
 
@@ -405,7 +406,7 @@ h3 {
 
 .preview-card.wide {
   grid-column: span 2;
-  min-height: 54px;
+  min-height: 40px;
   background: #ffffff;
 }
 
@@ -417,7 +418,7 @@ h3 {
 
 .preview-stack span {
   min-width: 0;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid var(--line);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.74);
@@ -441,7 +442,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  padding: 24px;
+  padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, #f6f8fa 0%, #e4e7ec 100%);
@@ -486,7 +487,7 @@ h3 {
 }
 
 .generator-form {
-  padding: 24px;
+  padding: 16px;
 }
 
 .tab-panel {
@@ -495,7 +496,7 @@ h3 {
 
 .tab-panel.is-active {
   display: grid;
-  gap: 24px;
+  gap: 14px;
 }
 
 .section-heading {

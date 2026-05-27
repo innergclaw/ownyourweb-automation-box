@@ -39,6 +39,11 @@ body {
   overflow-x: hidden;
 }
 
+img,
+svg {
+  max-width: 100%;
+}
+
 body::after {
   content: "";
   display: block;
@@ -102,6 +107,7 @@ button:disabled {
 
 .landing-copy,
 .landing-preview {
+  min-width: 0;
   display: flex;
   min-height: calc(100vh - 120px);
   flex-direction: column;
@@ -188,6 +194,7 @@ button:disabled {
 .footer-link,
 .creator-link {
   display: inline-flex;
+  justify-content: center;
   min-height: 48px;
   align-items: center;
   gap: 8px;
@@ -240,6 +247,7 @@ button:disabled {
 .intro-panel {
   position: sticky;
   top: 0;
+  min-width: 0;
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -263,6 +271,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -288,6 +297,7 @@ button:disabled {
   font-weight: 400;
   letter-spacing: 0;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 h1,
@@ -338,6 +348,7 @@ h3 {
 }
 
 .preview-window {
+  width: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -413,9 +424,11 @@ h3 {
   font-size: 12px;
   font-weight: 400;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .workspace {
+  min-width: 0;
   display: grid;
   align-content: start;
   gap: 8px;
@@ -423,6 +436,7 @@ h3 {
 }
 
 .tabs {
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
@@ -461,6 +475,7 @@ h3 {
 
 .generator-form,
 .results {
+  min-width: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   background:
@@ -571,6 +586,9 @@ select:focus {
 .primary-action,
 .secondary-action,
 .output-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   border-radius: var(--radius-sm);
   font-size: 12px;
@@ -601,11 +619,13 @@ select:focus {
 }
 
 .output-grid {
+  min-width: 0;
   display: grid;
   gap: 0;
 }
 
 .output-panel {
+  min-width: 0;
   padding: 24px;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -698,24 +718,29 @@ pre {
 @media (max-width: 980px) {
   .landing {
     padding: 8px;
+    gap: 8px;
   }
 
   .landing-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .landing-copy,
   .landing-preview {
     min-height: auto;
+    padding: 24px;
   }
 
   .app-shell {
     grid-template-columns: 1fr;
     padding: 8px;
+    gap: 8px;
   }
 
   .site-footer {
     margin: 0 8px 8px;
+    padding: 20px;
   }
 
   .top-links {
@@ -725,6 +750,7 @@ pre {
   .intro-panel {
     position: relative;
     min-height: auto;
+    padding: 20px;
   }
 
   h1 {
@@ -742,13 +768,76 @@ pre {
 }
 
 @media (max-width: 680px) {
+  :root {
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --radius-sm: 10px;
+  }
+
+  .landing {
+    padding: 8px;
+  }
+
   .landing-links,
   .landing-links .creator-link {
     width: 100%;
   }
 
+  .landing-links {
+    gap: 6px;
+  }
+
+  .landing-copy,
+  .landing-preview {
+    gap: 20px;
+    padding: 24px 20px;
+  }
+
+  .landing-copy {
+    text-align: center;
+  }
+
+  .landing-copy .brand-row,
+  .brand-block .brand-row {
+    justify-content: center;
+  }
+
+  .landing-lead,
+  .lead {
+    max-width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
   .access-row {
     grid-template-columns: 1fr;
+  }
+
+  .access-row .primary-action,
+  .action-row .primary-action,
+  .action-row .secondary-action,
+  .output-actions button {
+    width: 100%;
+  }
+
+  .landing-preview {
+    padding: 20px;
+  }
+
+  .landing-preview .preview-grid {
+    padding: 16px;
+  }
+
+  .landing-preview .preview-card {
+    min-height: 48px;
+  }
+
+  .landing-preview .preview-card.tall {
+    min-height: 104px;
+  }
+
+  .landing-preview .preview-card.wide {
+    min-height: 42px;
   }
 
   .workspace {
@@ -762,17 +851,52 @@ pre {
     grid-template-columns: 1fr;
   }
 
+  .tabs,
+  .generator-form,
+  .result-toolbar,
+  .output-panel,
+  .offer-builder {
+    padding: 16px;
+  }
+
+  .tabs {
+    gap: 6px;
+  }
+
+  .tab-button {
+    min-height: 44px;
+  }
+
+  .top-links,
+  .footer-links,
+  .output-actions,
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .offer-builder-head,
+  .result-toolbar,
+  .section-heading,
+  .site-footer {
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .offer-builder-head {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .add-offer-button,
   .remove-offer-button {
     width: 100%;
   }
 
-  .section-heading {
-    align-items: start;
-    flex-direction: column;
-  }
-
-  .result-toolbar {
-    align-items: start;
+  .remove-offer-button {
+    width: 100%;
   }
 
   .site-footer,
@@ -783,8 +907,63 @@ pre {
     width: 100%;
   }
 
+  .site-footer {
+    width: auto;
+  }
+
   .footer-link,
   .creator-link {
     justify-content: center;
+  }
+
+  .brand-block {
+    text-align: center;
+  }
+
+  h1 {
+    max-width: 100%;
+    font-size: 42px;
+    line-height: 0.94;
+  }
+
+  h2 {
+    font-size: 30px;
+    line-height: 1;
+  }
+
+  pre {
+    min-height: 160px;
+    max-height: 340px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-copy,
+  .intro-panel,
+  .generator-form,
+  .result-toolbar,
+  .output-panel,
+  .offer-builder,
+  .site-footer {
+    padding: 14px;
+  }
+
+  .landing-preview {
+    display: none;
+  }
+
+  .brand-row {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 38px;
+  }
+
+  h2 {
+    font-size: 28px;
   }
 }

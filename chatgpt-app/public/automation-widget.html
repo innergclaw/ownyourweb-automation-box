@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OWNYOURWEB Automation Box</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #111827;
+        --muted: #6b7280;
+        --soft: #9ca3af;
+        --line: #9ca3af;
+        --line-soft: #e5e7eb;
+        --surface: #111827;
+        --surface-text: #ffffff;
+        --panel: #ffffff;
+        --radius-lg: 30px;
+        --radius-md: 20px;
+        --radius-sm: 12px;
+        font-family:
+          "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #ffffff 0%, #d1d5db 100%);
+        color: var(--ink);
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .app {
+        max-width: 460px;
+        margin: 0 auto;
+        padding: 12px;
+      }
+
+      .phone {
+        overflow: hidden;
+        border: 1px solid #020617;
+        border-radius: 42px;
+        background: linear-gradient(180deg, #ffffff 0%, #d1d5db 100%);
+        box-shadow: rgba(0, 0, 0, 0.22) 0 24px 60px;
+      }
+
+      .status {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 26px 4px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .island {
+        width: 108px;
+        height: 30px;
+        margin: -18px auto 8px;
+        border-radius: 999px;
+        background: #020617;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px 12px;
+      }
+
+      .mark {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        place-items: center;
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--surface-text);
+        font-weight: 900;
+      }
+
+      .header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .header h1 {
+        margin: 2px 0 0;
+        font-size: 24px;
+        font-weight: 100;
+        line-height: 1;
+      }
+
+      .links {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        padding: 0 18px 12px;
+      }
+
+      .links button {
+        min-height: 36px;
+        border: 1px solid var(--surface);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--surface-text);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .content {
+        max-height: min(700px, 78vh);
+        overflow: auto;
+        padding: 0 18px 14px;
+      }
+
+      .panel {
+        display: none;
+        gap: 12px;
+      }
+
+      .panel.is-active {
+        display: grid;
+      }
+
+      .card {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: #ffffff;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 16px 34px;
+      }
+
+      .heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .heading p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .heading h2 {
+        margin: 8px 0 0;
+        font-size: 24px;
+        font-weight: 100;
+        line-height: 0.98;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: linear-gradient(180deg, #ffffff, #f6f8fa);
+        color: var(--ink);
+        font-size: 12px;
+        line-height: 16px;
+        outline: none;
+      }
+
+      input,
+      select {
+        min-height: 42px;
+        padding: 0 12px;
+      }
+
+      textarea {
+        min-height: 74px;
+        resize: vertical;
+        padding: 12px;
+      }
+
+      .primary,
+      .secondary,
+      .copy-output,
+      .remove-offer {
+        min-height: 40px;
+        border: 1px solid var(--surface);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--surface-text);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .secondary,
+      .copy-output,
+      .remove-offer {
+        background: #ffffff;
+        color: var(--surface);
+      }
+
+      .add-offer {
+        width: 44px;
+        height: 44px;
+        font-size: 22px;
+      }
+
+      .offers {
+        display: grid;
+        gap: 10px;
+      }
+
+      .offer {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid var(--line-soft);
+        border-radius: var(--radius-md);
+        background: #ffffff;
+      }
+
+      .offer-inline {
+        display: grid;
+        grid-template-columns: 1fr 0.8fr;
+        gap: 8px;
+      }
+
+      .output {
+        display: grid;
+        gap: 8px;
+      }
+
+      .output-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .output h3 {
+        margin: 0;
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      pre {
+        overflow: auto;
+        max-height: 240px;
+        margin: 0;
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        color: var(--surface-text);
+        font-size: 11px;
+        line-height: 15px;
+        white-space: pre-wrap;
+      }
+
+      .tabbar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 8px 12px 16px;
+        border-top: 1px solid rgba(17, 24, 39, 0.1);
+        background: rgba(246, 248, 250, 0.9);
+      }
+
+      .tabbar button {
+        display: grid;
+        gap: 2px;
+        min-height: 52px;
+        place-items: center;
+        border: 0;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .tabbar button.is-active {
+        background: var(--surface);
+        color: var(--surface-text);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="phone" aria-label="OWNYOURWEB Automation Box">
+        <div class="status">
+          <span id="time">9:41</span>
+          <span>5G</span>
+        </div>
+        <div class="island" aria-hidden="true"></div>
+
+        <header class="header">
+          <div class="mark">OY</div>
+          <div>
+            <p>SHOPNASGFX</p>
+            <h1>Automation Box</h1>
+          </div>
+        </header>
+
+        <nav class="links" aria-label="Creator links">
+          <button type="button" data-open-link="https://www.youtube.com/@SHOPNASGFX">YouTube</button>
+          <button type="button" data-open-link="https://ownyourweb.xyz/#now-hire">Hire</button>
+          <button type="button" data-open-link="https://github.com/SHOPNASGFX">GitHub</button>
+        </nav>
+
+        <section class="content">
+          <section class="panel is-active" data-panel="business">
+            <div class="card heading">
+              <div>
+                <p>Business core</p>
+                <h2>Set the brand foundation</h2>
+              </div>
+            </div>
+            <label>Business name <input name="businessName" /></label>
+            <label>Owner name <input name="ownerName" /></label>
+            <label>Primary niche <textarea name="niche"></textarea></label>
+            <label>Contact method <input name="contactMethod" /></label>
+            <label>Positioning <textarea name="positioning"></textarea></label>
+          </section>
+
+          <section class="panel" data-panel="services">
+            <div class="card heading">
+              <div>
+                <p>Offer stack</p>
+                <h2>Services and packages</h2>
+              </div>
+              <button class="primary add-offer" type="button" id="add-offer" aria-label="Add service or package">+</button>
+            </div>
+            <div id="offers" class="offers"></div>
+            <label>Average timeline <input name="timeline" /></label>
+            <label>Deliverables <textarea name="deliverables"></textarea></label>
+          </section>
+
+          <section class="panel" data-panel="workflow">
+            <div class="card heading">
+              <div>
+                <p>Operations</p>
+                <h2>Map the client journey</h2>
+              </div>
+            </div>
+            <label>First step <input name="firstStep" /></label>
+            <label>Payment policy <input name="paymentPolicy" /></label>
+            <label>Revision policy <input name="revisionPolicy" /></label>
+            <label>Folder location <input name="folderRoot" /></label>
+            <label>Workflow stages <textarea name="workflowStages"></textarea></label>
+          </section>
+
+          <section class="panel" data-panel="outputs">
+            <div class="card heading">
+              <div>
+                <p>Generated outputs</p>
+                <h2>System ready</h2>
+              </div>
+              <button id="generate" class="primary" type="button">Refresh</button>
+            </div>
+            <article class="output">
+              <div class="output-title">
+                <h3>Website</h3>
+                <button class="copy-output" type="button" data-copy="websiteCopy">Copy</button>
+              </div>
+              <pre id="websiteCopy"></pre>
+            </article>
+            <article class="output">
+              <div class="output-title">
+                <h3>Dashboard</h3>
+                <button class="copy-output" type="button" data-copy="dashboardCopy">Copy</button>
+              </div>
+              <pre id="dashboardCopy"></pre>
+            </article>
+            <article class="output">
+              <div class="output-title">
+                <h3>Folders</h3>
+                <button class="copy-output" type="button" data-copy="folderScript">Copy</button>
+              </div>
+              <pre id="folderScript"></pre>
+            </article>
+          </section>
+        </section>
+
+        <nav class="tabbar" aria-label="App screens">
+          <button class="is-active" type="button" data-target="business">Business</button>
+          <button type="button" data-target="services">Offers</button>
+          <button type="button" data-target="workflow">Flow</button>
+          <button type="button" data-target="outputs">Output</button>
+        </nav>
+      </section>
+    </main>
+
+    <script type="module">
+      const defaultInput = {
+        businessName: "Studio Nova Creative",
+        ownerName: "Nas",
+        niche: "brand identity and launch graphics for local founders",
+        contactMethod: "Instagram DM or inquiry form",
+        positioning:
+          "We help service-based creators turn scattered ideas into clean visual systems, launch-ready assets, and repeatable client workflows.",
+        offers: [
+          {
+            type: "Package",
+            name: "Brand Starter Kit",
+            price: "$350",
+            notes: "Logo direction, color palette, typography, and starter social assets.",
+          },
+          {
+            type: "Package",
+            name: "Launch Identity System",
+            price: "$850",
+            notes: "Full brand identity system with launch-ready graphics and organized handoff.",
+          },
+          {
+            type: "Service",
+            name: "Client Folder Automation Setup",
+            price: "$150",
+            notes: "A clean local folder structure and project checklist for repeat client work.",
+          },
+        ],
+        timeline: "5 to 14 business days",
+        deliverables:
+          "Logo suite, color palette, typography guide, social media templates, launch graphics, client-ready file handoff, and project folder organization.",
+        firstStep: "Inquiry review and fit check",
+        paymentPolicy: "50% deposit to book, balance due before final files",
+        revisionPolicy: "Two revision rounds included",
+        folderRoot: "$HOME/Creative Clients",
+        workflowStages: "Inquiry, Proposal, Deposit, Discovery, Design, Revision, Approval, Handoff, Follow-up",
+      };
+
+      const panels = document.querySelectorAll("[data-panel]");
+      const tabButtons = document.querySelectorAll("[data-target]");
+      const offersEl = document.querySelector("#offers");
+      let latestOutputs = null;
+      let rpcId = 0;
+      const pendingRequests = new Map();
+
+      function rpcNotify(method, params) {
+        window.parent.postMessage({ jsonrpc: "2.0", method, params }, "*");
+      }
+
+      function rpcRequest(method, params) {
+        return new Promise((resolve, reject) => {
+          const id = ++rpcId;
+          pendingRequests.set(id, { resolve, reject });
+          window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+        });
+      }
+
+      function initializeBridge() {
+        if (window.parent === window) return Promise.resolve(false);
+        return rpcRequest("ui/initialize", {
+          appInfo: { name: "ownyourweb-automation-box", version: "0.1.0" },
+          appCapabilities: {},
+          protocolVersion: "2026-01-26",
+        })
+          .then(() => {
+            rpcNotify("ui/notifications/initialized", {});
+            return true;
+          })
+          .catch(() => false);
+      }
+
+      const bridgeReady = initializeBridge();
+
+      window.addEventListener(
+        "message",
+        (event) => {
+          if (event.source !== window.parent) return;
+          const message = event.data;
+          if (!message || message.jsonrpc !== "2.0") return;
+
+          if (typeof message.id === "number") {
+            const pending = pendingRequests.get(message.id);
+            if (!pending) return;
+            pendingRequests.delete(message.id);
+            if (message.error) pending.reject(message.error);
+            else pending.resolve(message.result);
+            return;
+          }
+
+          if (message.method === "ui/notifications/tool-result") {
+            applyToolResult(message.params);
+          }
+        },
+        { passive: true },
+      );
+
+      function setScreen(target) {
+        panels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.panel === target));
+        tabButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.target === target));
+        if (target === "outputs") generate();
+      }
+
+      function setField(name, value) {
+        const field = document.querySelector(`[name="${name}"]`);
+        if (field) field.value = value ?? "";
+      }
+
+      function getField(name) {
+        return document.querySelector(`[name="${name}"]`)?.value.trim() ?? "";
+      }
+
+      function offerRow(offer = { type: "Service", name: "", price: "", notes: "" }) {
+        const row = document.createElement("article");
+        row.className = "offer";
+        row.innerHTML = `
+          <div class="offer-inline">
+            <label>Type
+              <select name="offerType">
+                <option value="Service">Service</option>
+                <option value="Package">Package</option>
+              </select>
+            </label>
+            <label>Price
+              <input name="offerPrice" placeholder="$250" />
+            </label>
+          </div>
+          <label>Name
+            <input name="offerName" placeholder="AI workflow audit" />
+          </label>
+          <label>Details
+            <textarea name="offerNotes" placeholder="What is included"></textarea>
+          </label>
+          <button class="remove-offer" type="button">Remove offer</button>
+        `;
+        row.querySelector('[name="offerType"]').value = offer.type || "Service";
+        row.querySelector('[name="offerName"]').value = offer.name || "";
+        row.querySelector('[name="offerPrice"]').value = offer.price || "";
+        row.querySelector('[name="offerNotes"]').value = offer.notes || "";
+        row.querySelector(".remove-offer").addEventListener("click", () => {
+          if (offersEl.children.length > 1) {
+            row.remove();
+            saveWidgetState();
+            generateLocal();
+          }
+        });
+        row.addEventListener("input", saveWidgetState);
+        row.addEventListener("change", saveWidgetState);
+        return row;
+      }
+
+      function renderOffers(offers) {
+        offersEl.replaceChildren(...(offers.length ? offers : defaultInput.offers).map((offer) => offerRow(offer)));
+      }
+
+      function readOffers() {
+        return Array.from(offersEl.querySelectorAll(".offer"))
+          .map((row) => ({
+            type: row.querySelector('[name="offerType"]').value,
+            name: row.querySelector('[name="offerName"]').value.trim(),
+            price: row.querySelector('[name="offerPrice"]').value.trim(),
+            notes: row.querySelector('[name="offerNotes"]').value.trim(),
+          }))
+          .filter((offer) => offer.name || offer.price || offer.notes);
+      }
+
+      function readInput() {
+        return {
+          businessName: getField("businessName"),
+          ownerName: getField("ownerName"),
+          niche: getField("niche"),
+          contactMethod: getField("contactMethod"),
+          positioning: getField("positioning"),
+          offers: readOffers(),
+          timeline: getField("timeline"),
+          deliverables: getField("deliverables"),
+          firstStep: getField("firstStep"),
+          paymentPolicy: getField("paymentPolicy"),
+          revisionPolicy: getField("revisionPolicy"),
+          folderRoot: getField("folderRoot"),
+          workflowStages: getField("workflowStages"),
+        };
+      }
+
+      function hydrateInput(input = defaultInput) {
+        Object.entries({ ...defaultInput, ...input }).forEach(([key, value]) => {
+          if (key !== "offers") setField(key, value);
+        });
+        renderOffers(input.offers || defaultInput.offers);
+      }
+
+      function splitList(value) {
+        return value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function formatOffer(offer, index) {
+        const price = offer.price ? ` - ${offer.price}` : "";
+        const notes = offer.notes ? `\n   ${offer.notes}` : "";
+        return `${index + 1}. [${offer.type}] ${offer.name || "Untitled offer"}${price}${notes}`;
+      }
+
+      function generateLocal() {
+        const input = readInput();
+        const offers = input.offers.length ? input.offers : defaultInput.offers;
+        const stages = splitList(input.workflowStages);
+        const safeBusiness =
+          input.businessName
+            .replace(/[^a-z0-9\s-_]/gi, "")
+            .trim()
+            .replace(/\s+/g, "_") || "Creative_Business";
+        const folders = [
+          "01_Admin",
+          "02_Client_Intake",
+          "03_Strategy",
+          "04_Design_Working_Files",
+          "05_Review_Exports",
+          "06_Final_Deliverables",
+          "07_Invoices_Receipts",
+          "08_Testimonial_Follow_Up",
+        ];
+
+        return {
+          input,
+          websiteCopy: `${input.businessName}
+Curated by SHOPNASGFX under the OWNYOURWEB ecosystem
+
+For ${input.niche}
+
+${input.positioning}
+
+Services and Packages
+${offers.map(formatOffer).join("\n")}
+
+What clients receive
+${input.deliverables}
+
+Project timeline
+Most projects are completed within ${input.timeline}, depending on scope, feedback speed, and final approval.
+
+How to start
+Step 1: ${input.firstStep}
+Step 2: Submit details through ${input.contactMethod}
+Step 3: Review the proposal, approve scope, and book the project
+Step 4: Complete onboarding so creative work begins with clarity
+
+Policies
+Payment: ${input.paymentPolicy}
+Revisions: ${input.revisionPolicy}
+
+Client flow
+${stages.map((stage, index) => `${index + 1}. ${stage}`).join("\n")}`,
+          dashboardCopy: `Client Dashboard Template
+Business: ${input.businessName}
+Owner: ${input.ownerName}
+Primary niche: ${input.niche}
+
+Client Record
+- Client name:
+- Business name:
+- Email:
+- Phone or social handle:
+- Selected service/package:
+- Project investment:
+- Start date:
+- Target delivery date:
+- Deposit status:
+- Final payment status:
+
+Project Stages
+${stages.map((stage) => `- [ ] ${stage}`).join("\n")}
+
+Offer Menu
+${offers.map((offer) => `- [ ] ${offer.type}: ${offer.name || "Untitled offer"}${offer.price ? ` (${offer.price})` : ""}`).join("\n")}
+
+Onboarding Checklist
+- [ ] Confirm project fit
+- [ ] Send proposal
+- [ ] Collect deposit
+- [ ] Create project folder
+- [ ] Collect brand questionnaire
+- [ ] Collect inspiration and assets
+- [ ] Confirm timeline
+- [ ] Schedule review points`,
+          folderScript: `# macOS / Linux folder setup
+CLIENT_NAME="New Client"
+PROJECT_NAME="${safeBusiness}_Project"
+ROOT="${input.folderRoot}"
+PROJECT_PATH="$ROOT/$CLIENT_NAME/$PROJECT_NAME"
+
+mkdir -p "$PROJECT_PATH"
+${folders.map((folder) => `mkdir -p "$PROJECT_PATH/${folder}"`).join("\n")}
+
+echo "Client project system created at: $PROJECT_PATH"`,
+        };
+      }
+
+      function renderOutputs(outputs) {
+        latestOutputs = outputs;
+        document.querySelector("#websiteCopy").textContent = outputs.websiteCopy;
+        document.querySelector("#dashboardCopy").textContent = outputs.dashboardCopy;
+        document.querySelector("#folderScript").textContent = outputs.folderScript;
+      }
+
+      function applyToolResult(result) {
+        const data = result?.structuredContent || result;
+        if (!data) return;
+        if (data.input) hydrateInput(data.input);
+        if (data.websiteCopy && data.dashboardCopy && data.folderScript) renderOutputs(data);
+      }
+
+      async function callTool(name, args) {
+        await bridgeReady;
+        if (window.parent !== window) {
+          return rpcRequest("tools/call", { name, arguments: args });
+        }
+        return { structuredContent: generateLocal() };
+      }
+
+      async function generate() {
+        const local = generateLocal();
+        renderOutputs(local);
+        saveWidgetState();
+
+        try {
+          const response = await callTool("generate_creator_system", readInput());
+          applyToolResult(response);
+        } catch {
+          renderOutputs(local);
+        }
+      }
+
+      function saveWidgetState() {
+        window.openai?.setWidgetState?.({ input: readInput(), latestOutputs });
+      }
+
+      function openExternal(href) {
+        if (window.openai?.openExternal) {
+          window.openai.openExternal({ href });
+        } else {
+          window.open(href, "_blank", "noopener,noreferrer");
+        }
+      }
+
+      async function copyText(button, text) {
+        const original = button.textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const fallback = document.createElement("textarea");
+          fallback.value = text;
+          fallback.setAttribute("readonly", "");
+          fallback.style.position = "fixed";
+          fallback.style.opacity = "0";
+          document.body.append(fallback);
+          fallback.select();
+          document.execCommand("copy");
+          fallback.remove();
+        }
+        button.textContent = "Copied";
+        setTimeout(() => {
+          button.textContent = original;
+        }, 1300);
+      }
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => setScreen(button.dataset.target));
+      });
+
+      document.querySelector("#add-offer").addEventListener("click", () => {
+        offersEl.append(offerRow());
+        saveWidgetState();
+      });
+
+      document.querySelector("#generate").addEventListener("click", generate);
+
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const target = document.querySelector(`#${button.dataset.copy}`);
+          copyText(button, target.textContent);
+        });
+      });
+
+      document.querySelectorAll("[data-open-link]").forEach((button) => {
+        button.addEventListener("click", () => openExternal(button.dataset.openLink));
+      });
+
+      document.addEventListener("input", (event) => {
+        if (event.target.matches("input, textarea, select")) {
+          saveWidgetState();
+          renderOutputs(generateLocal());
+        }
+      });
+
+      const savedState = window.openai?.widgetState;
+      const initialOutput = window.openai?.toolOutput;
+      hydrateInput(savedState?.input || initialOutput?.input || defaultInput);
+      renderOutputs(savedState?.latestOutputs || initialOutput || generateLocal());
+
+      document.querySelector("#time").textContent = new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    </script>
+  </body>
+</html>

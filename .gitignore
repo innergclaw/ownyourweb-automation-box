@@ -1,0 +1,15 @@
+.DS_Store
+.xcodebuildmcp/
+node_modules/
+chatgpt-app/node_modules/
+
+# Local build output
+dist/
+build/
+.next/
+.vite/
+
+# Xcode local state
+DerivedData/
+*.xcuserstate
+xcuserdata/

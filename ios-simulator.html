@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OWNYOURWEB iOS Simulator</title>
+    <link rel="stylesheet" href="ios-simulator.css" />
+  </head>
+  <body>
+    <main class="sim-stage">
+      <section class="sim-copy" aria-labelledby="sim-title">
+        <p class="eyebrow">Browser-built iOS simulator</p>
+        <h1 id="sim-title">OWNYOURWEB App Simulator</h1>
+        <p>
+          A working phone-style preview for the creative automation box. Use the device controls to edit intake data, add
+          services or packages, and preview the generated business system.
+        </p>
+        <div class="sim-actions">
+          <a href="index.html">Generator</a>
+          <a href="https://www.youtube.com/@SHOPNASGFX" target="_blank" rel="noreferrer">YouTube</a>
+          <a href="https://github.com/SHOPNASGFX" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
+      </section>
+
+      <section class="phone-shell" aria-label="OWNYOURWEB simulated iPhone">
+        <div class="phone-hardware">
+          <div class="phone-button side-left"></div>
+          <div class="phone-button side-right"></div>
+          <div class="phone-screen">
+            <div class="dynamic-island" aria-hidden="true"></div>
+
+            <header class="ios-status">
+              <span id="sim-time">9:41</span>
+              <span>5G</span>
+              <span class="battery" aria-hidden="true"></span>
+            </header>
+
+            <section class="app-top">
+              <div class="app-mark">OY</div>
+              <div>
+                <p>SHOPNASGFX</p>
+                <h2>Automation Box</h2>
+              </div>
+            </section>
+
+            <nav class="app-links" aria-label="Creator links">
+              <a href="https://www.youtube.com/@SHOPNASGFX" target="_blank" rel="noreferrer">YouTube</a>
+              <a href="#now-hire" target="_blank" rel="noreferrer">Hire</a>
+              <a href="https://github.com/SHOPNASGFX" target="_blank" rel="noreferrer">GitHub</a>
+            </nav>
+
+            <section class="app-content">
+              <section class="sim-panel is-active" data-screen="business">
+                <div class="screen-heading">
+                  <p>Business core</p>
+                  <h3>Set the brand foundation</h3>
+                </div>
+                <label>Business name <input name="businessName" value="Studio Nova Creative" /></label>
+                <label>Owner name <input name="ownerName" value="Nas" /></label>
+                <label>Primary niche <textarea name="niche">brand identity and launch graphics for local founders</textarea></label>
+                <label>Contact method <input name="contactMethod" value="Instagram DM or inquiry form" /></label>
+                <label>Positioning <textarea name="positioning">We help service-based creators turn scattered ideas into clean visual systems, launch-ready assets, and repeatable client workflows.</textarea></label>
+              </section>
+
+              <section class="sim-panel" data-screen="services">
+                <div class="screen-heading split-heading">
+                  <div>
+                    <p>Offer stack</p>
+                    <h3>Services and packages</h3>
+                  </div>
+                  <button id="sim-add-offer" type="button" aria-label="Add service or package">+</button>
+                </div>
+                <div id="sim-offers" class="sim-offers"></div>
+                <label>Average timeline <input name="timeline" value="5 to 14 business days" /></label>
+                <label>Deliverables <textarea name="deliverables">Logo suite, color palette, typography guide, social media templates, launch graphics, client-ready file handoff, and project folder organization.</textarea></label>
+              </section>
+
+              <section class="sim-panel" data-screen="workflow">
+                <div class="screen-heading">
+                  <p>Operations</p>
+                  <h3>Map the client journey</h3>
+                </div>
+                <label>First step <input name="firstStep" value="Inquiry review and fit check" /></label>
+                <label>Payment policy <input name="paymentPolicy" value="50% deposit to book, balance due before final files" /></label>
+                <label>Revision policy <input name="revisionPolicy" value="Two revision rounds included" /></label>
+                <label>Folder location <input name="folderRoot" value="$HOME/Creative Clients" /></label>
+                <label>Workflow stages <textarea name="workflowStages">Inquiry, Proposal, Deposit, Discovery, Design, Revision, Approval, Handoff, Follow-up</textarea></label>
+              </section>
+
+              <section class="sim-panel" data-screen="outputs">
+                <div class="screen-heading split-heading">
+                  <div>
+                    <p>Generated outputs</p>
+                    <h3>System ready</h3>
+                  </div>
+                  <button id="sim-generate" type="button">Refresh</button>
+                </div>
+                <article class="sim-output">
+                  <div class="output-title-row">
+                    <h4>Website</h4>
+                    <button class="copy-output" type="button" data-copy-output="sim-website" aria-label="Copy website output">Copy</button>
+                  </div>
+                  <pre id="sim-website"></pre>
+                </article>
+                <article class="sim-output">
+                  <div class="output-title-row">
+                    <h4>Dashboard</h4>
+                    <button class="copy-output" type="button" data-copy-output="sim-dashboard" aria-label="Copy dashboard output">Copy</button>
+                  </div>
+                  <pre id="sim-dashboard"></pre>
+                </article>
+                <article class="sim-output">
+                  <div class="output-title-row">
+                    <h4>Folders</h4>
+                    <button class="copy-output" type="button" data-copy-output="sim-script" aria-label="Copy folder script output">Copy</button>
+                  </div>
+                  <pre id="sim-script"></pre>
+                </article>
+              </section>
+            </section>
+
+            <nav class="tab-bar" aria-label="App screens">
+              <button class="is-active" type="button" data-target="business">
+                <span>⌂</span>
+                Business
+              </button>
+              <button type="button" data-target="services">
+                <span>＋</span>
+                Offers
+              </button>
+              <button type="button" data-target="workflow">
+                <span>□</span>
+                Flow
+              </button>
+              <button type="button" data-target="outputs">
+                <span>▣</span>
+                Output
+              </button>
+            </nav>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="ios-simulator.js"></script>
+  </body>
+</html>

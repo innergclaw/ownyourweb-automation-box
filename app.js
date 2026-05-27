@@ -48,6 +48,10 @@ const outputs = {
   script: document.querySelector("#script-output"),
 };
 
+const leadCaptureEndpoint =
+  window.OWNYOURWEB_LEAD_CAPTURE_ENDPOINT ||
+  "https://zkyhhoxcrjkhywblzehr.supabase.co/functions/v1/ownyourweb-lead-capture";
+
 function unlockTool(email) {
   if (email) localStorage.setItem("ownyourwebAccessEmail", email);
   document.body.classList.remove("is-locked");
@@ -57,12 +61,35 @@ function validateEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+async function saveAccessLead(email) {
+  if (!leadCaptureEndpoint) return;
+
+  const response = await fetch(leadCaptureEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      source: "ownyourweb-automation-box",
+      page: window.location.href,
+      referrer: document.referrer || "",
+      createdAt: new Date().toISOString(),
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Lead capture request failed");
+  }
+}
+
 const savedAccessEmail = localStorage.getItem("ownyourwebAccessEmail");
 if (savedAccessEmail) unlockTool(savedAccessEmail);
 
-accessForm.addEventListener("submit", (event) => {
+accessForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = accessEmail.value.trim();
+  const submitButton = accessForm.querySelector('button[type="submit"]');
 
   if (!validateEmail(email)) {
     accessStatus.textContent = "Enter a valid email to unlock the tool.";
@@ -70,8 +97,17 @@ accessForm.addEventListener("submit", (event) => {
     return;
   }
 
-  accessStatus.textContent = "Access granted. Opening the Automation Box.";
-  unlockTool(email);
+  submitButton.disabled = true;
+  accessStatus.textContent = leadCaptureEndpoint ? "Saving access..." : "Access granted. Opening the Automation Box.";
+
+  try {
+    await saveAccessLead(email);
+    accessStatus.textContent = "Access granted. Opening the Automation Box.";
+    unlockTool(email);
+  } catch {
+    accessStatus.textContent = "Could not save access. Please try again.";
+    submitButton.disabled = false;
+  }
 });
 
 function formData() {

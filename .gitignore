@@ -8,6 +8,8 @@ dist/
 build/
 .next/
 .vite/
+.private/
+site-config.js
 
 # Xcode local state
 DerivedData/

@@ -935,6 +935,10 @@ pre {
     font-size: 10px;
   }
 
+  .footer-links .footer-link:last-child {
+    grid-column: 1 / -1;
+  }
+
   .brand-block {
     gap: 12px;
     text-align: center;

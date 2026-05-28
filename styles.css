@@ -939,6 +939,10 @@ pre {
     grid-column: 1 / -1;
   }
 
+  .top-links .creator-link:last-child {
+    grid-column: 1 / -1;
+  }
+
   .brand-block {
     gap: 12px;
     text-align: center;

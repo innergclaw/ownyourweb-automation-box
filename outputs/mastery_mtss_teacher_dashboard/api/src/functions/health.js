@@ -1,20 +1,17 @@
 const { app } = require("@azure/functions");
-const { getPrincipal, allowedUploadEmails } = require("../lib/auth");
 const { json } = require("../lib/http");
 
 app.http("data-health", {
   methods: ["GET"],
   authLevel: "anonymous",
   route: "data/health",
-  handler: async (request) => {
-    const principal = getPrincipal(request);
-    const email = String(principal?.userDetails || "").toLowerCase();
-    const allowed = allowedUploadEmails();
+  handler: async () => {
+    const storageConfigured = Boolean(process.env.AZURE_STORAGE_CONNECTION_STRING);
+    const uploadListConfigured = Boolean(String(process.env.DATA_UPLOAD_ALLOWED_EMAILS || "").trim());
     return json(200, {
-      authenticated: Boolean(principal?.userRoles?.includes("authenticated")),
-      storageConfigured: Boolean(process.env.AZURE_STORAGE_CONNECTION_STRING),
-      uploadListConfigured: allowed.size > 0,
-      canUpload: Boolean(email && allowed.has(email) && process.env.AZURE_STORAGE_CONNECTION_STRING),
+      storageConfigured,
+      uploadListConfigured,
+      canUpload: storageConfigured && uploadListConfigured,
       acceptedFileTypes: [".csv", ".xlsx"],
       maxFileSizeMb: 8,
     });

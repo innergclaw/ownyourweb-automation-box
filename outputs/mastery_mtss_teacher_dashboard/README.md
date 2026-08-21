@@ -36,6 +36,8 @@ Start with [`sample-data/mastery_mtss_upload_template.csv`](sample-data/mastery_
 
 PSSA workbooks can contain separate ELA and Math worksheets. The importer reads every sheet, normalizes `E` to Reading and `M` to Math, and keeps scale score, performance, tested year, teacher of record, DRC Student ID, Unique Matching ID, PAsecureID, raw scores, reporting categories, anchors, strength profiles, accommodations, and all other source columns with the assessment record.
 
+The importer also recognizes the Lenfest Keystone export (`ID`, `Test Name`, `Admin Scale Score`, performance level, module results, IEP, composite fields) and converts `A1` to Algebra I and `LIT` to Literature. Fall MAP files can carry Reading and Math RIT values in one row. Repeated header rows and the duplicated `Focal Students - Tutoring` view are removed before sync so the main MAP roster is counted once.
+
 The import API stores:
 
 - Raw source files in the private `mtss-imports` Blob container

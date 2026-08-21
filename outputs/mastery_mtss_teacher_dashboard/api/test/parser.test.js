@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 const { strToU8, unzipSync, zipSync } = require("fflate");
-const { parseDataset, analyzeDataset, numberValue } = require("../src/lib/parser");
+const { parseDataset, analyzeDataset, numberValue, rowsFromMatrix } = require("../src/lib/parser");
 
 test("maps and normalizes a CSV student record", async () => {
   const csv = Buffer.from([
@@ -102,4 +102,38 @@ test("flags identity conflicts for the same student ID", async () => {
 
   assert.equal(analysis.summary.identityConflicts, 1);
   assert.match(analysis.summary.warnings.join(" "), /conflicting names or matching IDs/);
+});
+
+test("recognizes the Lenfest Keystone export fields", () => {
+  const parsed = rowsFromMatrix([
+    ["Test Name", "ID", "Last Name", "First Name", "Grade", "Admin Scale Score", "Admin Perf. Level", "Best Performance Level Code", "IEP (not gifted)"],
+    ["A1", "151411", "EVERETT", "KAHMORA", 9, 1546, "Adv", 4, "N"],
+  ]);
+  parsed.rows[0].__sourceSheet = "Keystone 2025-26";
+  const analysis = analyzeDataset(parsed);
+  const [record] = analysis.records;
+  assert.equal(record.valid, true);
+  assert.equal(record.student.studentId, "151411");
+  assert.equal(record.student.studentName, "Kahmora Everett");
+  assert.equal(record.assessment.assessment, "Keystone Algebra I");
+  assert.equal(record.assessment.subject, "Math");
+  assert.equal(record.assessment.scaleScore, 1546);
+  assert.equal(record.assessment.testedYear, "2025-26");
+});
+
+test("recognizes Fall MAP RIT columns and removes repeated sheet rows", () => {
+  const headers = ["Student ID", "Student Name", "Grade", "MAP RIT Math (most recent)", "MAP RIT Read (most recent)"];
+  const parsed = {
+    headers,
+    rows: [
+      { "Student ID": "132393", "Student Name": "Young, Shareef", Grade: 8, "MAP RIT Math (most recent)": 210, "MAP RIT Read (most recent)": 213, __sourceSheet: "PSSA & Fall MAP 2025" },
+      { "Student ID": "132393", "Student Name": "Young, Shareef", Grade: 8, "MAP RIT Math (most recent)": 210, "MAP RIT Read (most recent)": 213, __sourceSheet: "Focal Students - Tutoring" },
+    ],
+  };
+  const analysis = analyzeDataset(parsed);
+  assert.equal(analysis.summary.validRows, 1);
+  assert.equal(analysis.records[0].student.studentName, "Shareef Young");
+  assert.equal(analysis.records[0].assessment.assessmentType, "MAP");
+  assert.equal(analysis.records[0].assessment.mathRit, 210);
+  assert.equal(analysis.records[0].assessment.readingRit, 213);
 });

@@ -64,6 +64,10 @@ function safeFilename(filename) {
   return `${stem}${extension}`;
 }
 
+function populatedFields(record) {
+  return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== "" && value !== null && value !== undefined));
+}
+
 async function stageImport({ importId, filename, buffer, analysis, uploader }) {
   await ensureStorage();
   const current = getClients();
@@ -146,7 +150,7 @@ async function commitRecords({ entity, analysis, uploader }) {
     await current.students.upsertEntity({
       partitionKey: SCHOOL_ID,
       rowKey: studentKey,
-      ...record.student,
+      ...populatedFields(record.student),
       lastImportId: entity.rowKey,
       updatedAt: now,
       updatedBy: uploader.email,
@@ -257,6 +261,7 @@ async function listDashboardStudents(limit = 500) {
       "studentId", "subject", "assessment", "score", "scoreMax", "percent", "testDate",
       "reportingPeriod", "readingRit", "mathRit", "growthGoal", "scaleScore", "performanceCode",
       "performance", "testedYear", "totalRawScore", "teacherOfRecord", "sourceSheet", "createdAt",
+      "assessmentType", "compositeScore", "algebraResult", "biologyResult", "literatureResult", "compositeStatus",
     ] },
   });
   for await (const entity of entities) {

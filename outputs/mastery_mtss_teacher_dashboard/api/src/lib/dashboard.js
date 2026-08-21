@@ -31,6 +31,16 @@ function latestValue(records, field) {
     .find((record) => numeric(record[field]) !== null)?.[field] ?? null;
 }
 
+function assessmentKind(record) {
+  const explicit = String(record.assessmentType || "").trim();
+  if (explicit) return explicit;
+  const name = String(record.assessment || "");
+  if (/keystone/i.test(name)) return "Keystone";
+  if (/map/i.test(name) || numeric(record.readingRit) !== null || numeric(record.mathRit) !== null) return "MAP";
+  if (/pssa/i.test(name) || numeric(record.scaleScore) !== null) return "PSSA";
+  return "Interim";
+}
+
 function subjectSummary(records, subject) {
   const subjectRecords = records
     .filter((record) => String(record.subject || "").toLowerCase() === subject.toLowerCase())
@@ -51,6 +61,30 @@ function subjectSummary(records, subject) {
     testedYear: String(latestRecord.testedYear || "").trim(),
     totalRawScore: numeric(latestRecord.totalRawScore),
   };
+}
+
+function latestAssessment(records, pattern) {
+  const matching = records
+    .filter((record) => pattern.test(String(record.assessment || "")))
+    .sort((a, b) => assessmentTime(a) - assessmentTime(b));
+  const record = matching[matching.length - 1];
+  if (!record) return null;
+  return {
+    assessment: record.assessment,
+    subject: record.subject,
+    scaleScore: numeric(record.scaleScore),
+    performanceCode: numeric(record.performanceCode),
+    performance: performanceLabel(record.performance),
+    testedYear: String(record.testedYear || "").trim(),
+  };
+}
+
+function keystoneText(results) {
+  if (!results.length) return "No Keystone score imported";
+  return results.map((result) => {
+    const name = result.assessment.replace(/^Keystone\s*/i, "");
+    return `${name}: ${result.scaleScore ?? "N/A"}${result.performance ? ` (${result.performance})` : ""}`;
+  }).join(" | ");
 }
 
 function dedupeAssessments(records) {
@@ -116,6 +150,14 @@ function buildDashboardStudents(students, assessments) {
     const records = byStudent.get(student.studentId) || [];
     const reading = subjectSummary(records, "Reading");
     const math = subjectSummary(records, "Math");
+    const pssaRecords = records.filter((record) => assessmentKind(record) === "PSSA");
+    const pssaReading = subjectSummary(pssaRecords, "Reading");
+    const pssaMath = subjectSummary(pssaRecords, "Math");
+    const keystoneResults = [
+      latestAssessment(records, /keystone algebra/i),
+      latestAssessment(records, /keystone literature/i),
+      latestAssessment(records, /keystone biology/i),
+    ].filter(Boolean);
     const grade = gradeNumber(student.grade);
     const assessmentCount = records.length;
     const reportingPeriods = [...new Set(records.map((record) => String(record.reportingPeriod || "").trim()).filter(Boolean))].sort();
@@ -152,20 +194,26 @@ function buildDashboardStudents(students, assessments) {
       attendance: numeric(student.attendance),
       status,
       owner: status === "Review" ? "MTSS Case Team" : status === "Watch" ? "Grade Team" : "Instructional Team",
-      readingText: scoreText(reading, readingRit, growthGoal),
-      mathText: scoreText(math, mathRit, growthGoal),
-      readingScaleScore: reading.scaleScore,
-      mathScaleScore: math.scaleScore,
-      readingPerformance: reading.performance,
-      mathPerformance: math.performance,
-      readingPerformanceCode: reading.performanceCode,
-      mathPerformanceCode: math.performanceCode,
-      readingTeacher: reading.teacherOfRecord || "Not listed",
-      mathTeacher: math.teacherOfRecord || "Not listed",
-      readingTestedYear: reading.testedYear,
-      mathTestedYear: math.testedYear,
-      readingRawScore: reading.totalRawScore,
-      mathRawScore: math.totalRawScore,
+      readingText: scoreText({ ...reading, scaleScore: pssaReading.scaleScore, performance: pssaReading.performance }, readingRit, growthGoal),
+      mathText: scoreText({ ...math, scaleScore: pssaMath.scaleScore, performance: pssaMath.performance }, mathRit, growthGoal),
+      readingScaleScore: pssaReading.scaleScore,
+      mathScaleScore: pssaMath.scaleScore,
+      readingPerformance: pssaReading.performance,
+      mathPerformance: pssaMath.performance,
+      readingPerformanceCode: pssaReading.performanceCode,
+      mathPerformanceCode: pssaMath.performanceCode,
+      readingTeacher: pssaReading.teacherOfRecord || "Not listed",
+      mathTeacher: pssaMath.teacherOfRecord || "Not listed",
+      readingTestedYear: pssaReading.testedYear,
+      mathTestedYear: pssaMath.testedYear,
+      readingRawScore: pssaReading.totalRawScore,
+      mathRawScore: pssaMath.totalRawScore,
+      mapReadingRit: readingRit,
+      mapMathRit: mathRit,
+      keystoneResults,
+      keystoneText: keystoneText(keystoneResults),
+      assessmentTypes: [...new Set(records.map(assessmentKind))].sort(),
+      testedYears: [...new Set(records.map((record) => String(record.testedYear || "").trim()).filter(Boolean))].sort(),
       drcStudentId: student.drcStudentId || "",
       uniqueMatchingId: student.uniqueMatchingId || "",
       paSecureId: student.paSecureId || "",
@@ -190,4 +238,4 @@ function buildDashboardStudents(students, assessments) {
   });
 }
 
-module.exports = { buildDashboardStudents, dedupeAssessments, subjectSummary };
+module.exports = { buildDashboardStudents, dedupeAssessments, subjectSummary, assessmentKind };

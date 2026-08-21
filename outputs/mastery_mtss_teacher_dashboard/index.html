@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mastery Charter | PSSA + MTSS Data Dashboard</title>
+    <title>Mastery Charter | Assessment + MTSS Data Dashboard</title>
     <style>
       :root {
         color-scheme: light;
@@ -360,7 +360,7 @@
       }
 
       .sidebar-section[aria-label="Filters"] {
-        grid-template-columns: repeat(5, minmax(118px, 1fr));
+        grid-template-columns: repeat(6, minmax(110px, 1fr));
       }
 
       .sidebar-section[aria-label="Filters"] h2 {
@@ -1916,7 +1916,7 @@
       <aside class="sidebar">
         <section class="brand" aria-label="Mastery Charter">
           <strong>MASTERY<br />CHARTER</strong>
-          <span>PSSA + MTSS Staff Workspace</span>
+          <span>Assessment + MTSS Staff Workspace</span>
         </section>
 
         <section class="sidebar-section" aria-label="Filters">
@@ -1930,9 +1930,20 @@
           <div class="field">
             <label for="subject-filter">Subject</label>
             <select id="subject-filter">
-              <option value="all">ELA and Math</option>
+              <option value="all">All subjects</option>
               <option value="Reading">ELA</option>
               <option value="Math">Math</option>
+              <option value="Science">Science</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="source-filter">Data source</label>
+            <select id="source-filter">
+              <option value="all">All sources</option>
+              <option value="PSSA">PSSA</option>
+              <option value="MAP">Fall MAP</option>
+              <option value="Keystone">Keystone</option>
+              <option value="Interim">Interim</option>
             </select>
           </div>
           <div class="field">
@@ -1976,8 +1987,8 @@
       <main class="main">
         <header class="topbar">
           <div class="page-title">
-            <h1>PSSA + MTSS Data Dashboard</h1>
-            <p>Search student records, compare ELA and Math performance, and prepare the next staff action.</p>
+            <h1>Assessment + MTSS Data Dashboard</h1>
+            <p>Search PSSA, Fall MAP, and Keystone evidence in one connected student record.</p>
           </div>
           <div class="top-actions">
             <div class="signed-in-user">
@@ -1994,11 +2005,11 @@
         <div class="content">
           <section class="hero-band">
             <article class="purpose-panel">
-              <h2>Find the student record. Understand the score. Assign the next step.</h2>
+              <h2>One student record across PSSA, MAP, Keystone, and MTSS.</h2>
               <p>
-                The current upload covers Grades 7 and 8 PSSA ELA and Math. Grade options update
-                from the files in secure storage, so Grades 9 through 12 will appear when those
-                records are added.
+                Grade and source menus update from secure uploads. Staff can compare Grades 7–8
+                PSSA and Fall MAP evidence now, then add Grades 8–12 Keystone, attendance, and
+                future assessment files without creating a separate student roster.
               </p>
               <div class="data-flow" aria-label="Data flow">
                 <span>PSSA</span>
@@ -2053,9 +2064,9 @@
               <small>70% interim or PSSA Proficient+</small>
             </article>
             <article class="metric">
-              <span>Missing PSSA</span>
+              <span>Missing Fall MAP</span>
               <strong id="metric-missing">22</strong>
-              <small>Missing ELA or Math scale score</small>
+              <small>Missing Reading or Math RIT score</small>
             </article>
           </section>
 
@@ -2065,11 +2076,11 @@
                 <h2>Admin Access Only</h2>
                 <span class="status sync">Full View</span>
               </header>
-              <p>Search PSSA records, compare ELA and Math results, review data gaps, and prepare biweekly staff actions.</p>
+              <p>Search connected PSSA, MAP, and Keystone records, review data gaps, and prepare biweekly staff actions.</p>
               <ul>
                 <li><span>Can view</span><strong>Current uploaded grades</strong></li>
                 <li><span>Can edit</span><strong>Roster, tiers, outcomes</strong></li>
-                <li><span>Current scope</span><strong>Grades 7-8 PSSA</strong></li>
+                <li><span>Import readiness</span><strong>Grades 7-11 assessment data</strong></li>
               </ul>
             </article>
           </section>
@@ -2136,11 +2147,11 @@
             <article class="panel">
               <div class="panel-head queue-head">
                 <div>
-                  <h2>PSSA student search</h2>
-                  <p id="queue-copy">Loading authorized PSSA records.</p>
+                  <h2>Connected student search</h2>
+                  <p id="queue-copy">Loading authorized assessment records.</p>
                 </div>
                 <div class="queue-tools">
-                  <input id="student-search" type="search" placeholder="Search name, ID, matching ID, or teacher" aria-label="Search PSSA student records" />
+                  <input id="student-search" type="search" placeholder="Search name, ID, score, or teacher" aria-label="Search connected student assessment records" />
                   <span class="pill" id="data-source-pill">Loading data</span>
                 </div>
               </div>
@@ -2150,8 +2161,9 @@
                     <tr>
                       <th>Student</th>
                       <th>Grade</th>
-                      <th>ELA PSSA</th>
-                      <th>Math PSSA</th>
+                      <th>ELA evidence</th>
+                      <th>Math evidence</th>
+                      <th>Keystone</th>
                       <th>Teachers</th>
                       <th>Status</th>
                       <th>Next review</th>
@@ -2290,6 +2302,8 @@
                 <ul class="evidence-list">
                   <li><strong>PSSA teachers</strong><span id="student-pssa-teachers">ELA: not listed | Math: not listed</span></li>
                   <li><strong>PSSA performance</strong><span id="student-pssa-performance">No PSSA performance imported</span></li>
+                  <li><strong>Fall MAP</strong><span id="student-map-performance">Reading and Math RIT not imported</span></li>
+                  <li><strong>Keystone</strong><span id="student-keystone-performance">No Keystone score imported</span></li>
                   <li><strong>Matching identifiers</strong><span id="student-matching-ids">Not imported</span></li>
                   <li><strong>Assessment trend</strong><span id="student-trend">MAP improved, Amplify below target</span></li>
                   <li><strong>Intervention</strong><span id="student-intervention">Small-group reading, 3x weekly</span></li>
@@ -2497,6 +2511,7 @@
       const studentSearch = document.querySelector("#student-search");
       const gradeFilterControl = document.querySelector("#grade-filter");
       const subjectFilterControl = document.querySelector("#subject-filter");
+      const sourceFilterControl = document.querySelector("#source-filter");
       const yearFilterControl = document.querySelector("#year-filter");
       const performanceFilterControl = document.querySelector("#performance-filter");
       const teacherFilterControl = document.querySelector("#teacher-filter");
@@ -2607,13 +2622,15 @@
       }
 
       function refreshSearchFilters() {
-        const pssaStudents = students.filter((student) => numericValue(student.readingScaleScore) !== null || numericValue(student.mathScaleScore) !== null);
-        const gradeSource = pssaStudents.length ? pssaStudents : students;
-        const grades = [...new Set(gradeSource.map((student) => String(student.gradeShort || "").trim()).filter(Boolean))]
+        const grades = [...new Set(students.map((student) => String(student.gradeShort || "").trim()).filter(Boolean))]
           .sort((a, b) => Number(a) - Number(b));
-        const years = [...new Set(students.flatMap((student) => [student.readingTestedYear, student.mathTestedYear]).map((value) => String(value || "").trim()).filter(Boolean))]
+        const years = [...new Set(students.flatMap((student) => student.testedYears?.length ? student.testedYears : [student.readingTestedYear, student.mathTestedYear]).map((value) => String(value || "").trim()).filter(Boolean))]
           .sort((a, b) => Number(b) - Number(a));
-        const performances = [...new Set(students.flatMap((student) => [student.readingPerformance, student.mathPerformance]).map((value) => String(value || "").trim()).filter(Boolean))]
+        const performances = [...new Set(students.flatMap((student) => [
+          student.readingPerformance,
+          student.mathPerformance,
+          ...(student.keystoneResults || []).map((result) => result.performance),
+        ]).map((value) => String(value || "").trim()).filter(Boolean))]
           .sort();
         const teachers = [...new Set(students.flatMap((student) => [student.readingTeacher, student.mathTeacher]).map((value) => String(value || "").trim()).filter((value) => value && value !== "Not listed"))]
           .sort((a, b) => a.localeCompare(b));
@@ -2634,7 +2651,7 @@
         document.querySelector("#agent-mode").textContent = usingLiveData ? "Live Data Preview" : "Rules-Based Preview";
         queueCopy.textContent = usingLiveData
           ? `${students.length} students loaded. Search by name, ID, matching ID, or teacher, then narrow the results with the dropdown menus.`
-          : "Fictional records are shown until an authorized PSSA workbook is synced.";
+          : "Fictional records are shown until an authorized assessment workbook is synced.";
         selectedStudentId = students.some((student) => student.id === selectedStudentId) ? selectedStudentId : students[0]?.id;
         renderRows();
         updateMetrics(false);
@@ -2681,13 +2698,18 @@
         previewRows.replaceChildren();
         payload.previewRows.forEach((record) => {
           const row = document.createElement("tr");
+          const score = record.assessment.scaleScore
+            ?? record.assessment.percent
+            ?? record.assessment.score
+            ?? [record.assessment.readingRit, record.assessment.mathRit].filter((value) => value !== null).join(" / ")
+            ?? "-";
           const values = [
             record.rowNumber,
             record.student.studentName || "Missing",
             record.student.studentId || "Missing",
             record.student.grade || "-",
             record.assessment.assessment || record.assessment.subject || "-",
-            record.assessment.percent === null ? (record.assessment.score ?? "-") : `${record.assessment.percent}%`,
+            record.assessment.percent !== null ? `${record.assessment.percent}%` : score || "-",
             record.valid ? "Ready" : record.errors.join(", "),
           ];
           values.forEach((value) => {
@@ -2875,41 +2897,40 @@
       function subjectScoreCell(student, subject) {
         const field = subject === "reading" ? "reading" : "math";
         const percent = numericValue(student[field]);
-        if (percent !== null) {
-          return `<div class="bar"><span>${scoreDisplay(percent)}</span><div class="track"><i style="--value: ${percent}%"></i></div></div>`;
-        }
         const scale = numericValue(student[`${field}ScaleScore`]);
         const performance = performanceLabel(student[`${field}Performance`]) || "PSSA";
-        return scale === null
-          ? '<span class="score-stack"><strong>N/A</strong><span>No scale score</span></span>'
-          : `<span class="score-stack"><strong>${scale}</strong><span>${escapeHtml(performance)}</span></span>`;
+        const rit = numericValue(student[subject === "reading" ? "mapReadingRit" : "mapMathRit"]);
+        const primary = scale !== null ? `${scale} ${performance}` : percent !== null ? scoreDisplay(percent) : "N/A";
+        const source = scale !== null ? "PSSA" : percent !== null ? "Interim" : "No PSSA/interim score";
+        return `<span class="score-stack"><strong>${escapeHtml(primary)}</strong><span>${escapeHtml(source)}</span><span>Fall MAP RIT: ${rit ?? "N/A"}</span></span>`;
       }
 
       function filteredStudents() {
         const gradeFilter = gradeFilterControl.value;
         const subjectFilter = subjectFilterControl.value;
+        const sourceFilter = sourceFilterControl.value;
         const yearFilter = yearFilterControl.value;
         const performanceFilter = performanceFilterControl.value;
         const teacherFilter = teacherFilterControl.value;
         const query = normalize(studentSearch.value);
-        const pssaScopeActive = students.some((student) => numericValue(student.readingScaleScore) !== null || numericValue(student.mathScaleScore) !== null);
         return students.filter((student) => {
           const gradeMatches = gradeFilter === "all" || String(student.gradeShort) === gradeFilter;
-          const readingAvailable = numericValue(student.reading) !== null || numericValue(student.readingScaleScore) !== null;
-          const mathAvailable = numericValue(student.math) !== null || numericValue(student.mathScaleScore) !== null;
-          const scopeMatches = !pssaScopeActive || numericValue(student.readingScaleScore) !== null || numericValue(student.mathScaleScore) !== null;
-          const subjectMatches = subjectFilter === "all" || (subjectFilter === "Reading" ? readingAvailable : mathAvailable);
-          const years = subjectFilter === "Reading"
-            ? [String(student.readingTestedYear || "")]
-            : subjectFilter === "Math"
-              ? [String(student.mathTestedYear || "")]
-              : [student.readingTestedYear, student.mathTestedYear].map((value) => String(value || ""));
+          const keystoneResults = student.keystoneResults || [];
+          const readingAvailable = numericValue(student.reading) !== null || numericValue(student.readingScaleScore) !== null || numericValue(student.mapReadingRit) !== null || keystoneResults.some((result) => result.subject === "Reading");
+          const mathAvailable = numericValue(student.math) !== null || numericValue(student.mathScaleScore) !== null || numericValue(student.mapMathRit) !== null || keystoneResults.some((result) => result.subject === "Math");
+          const scienceAvailable = keystoneResults.some((result) => result.subject === "Science");
+          const subjectMatches = subjectFilter === "all"
+            || (subjectFilter === "Reading" && readingAvailable)
+            || (subjectFilter === "Math" && mathAvailable)
+            || (subjectFilter === "Science" && scienceAvailable);
+          const sourceMatches = sourceFilter === "all" || (student.assessmentTypes || []).includes(sourceFilter);
+          const years = student.testedYears?.length ? student.testedYears.map(String) : [student.readingTestedYear, student.mathTestedYear].map((value) => String(value || ""));
           const yearMatches = yearFilter === "all" || years.includes(yearFilter);
           const performances = subjectFilter === "Reading"
             ? [String(student.readingPerformance || "")]
             : subjectFilter === "Math"
               ? [String(student.mathPerformance || "")]
-              : [student.readingPerformance, student.mathPerformance].map((value) => String(value || ""));
+              : [student.readingPerformance, student.mathPerformance, ...keystoneResults.map((result) => result.performance)].map((value) => String(value || ""));
           const performanceMatches = performanceFilter === "all" || performances.includes(performanceFilter);
           const teachers = subjectFilter === "Reading"
             ? [String(student.readingTeacher || "")]
@@ -2920,16 +2941,17 @@
           const searchable = [
             student.name, student.id, student.uniqueMatchingId, student.drcStudentId, student.paSecureId,
             student.readingTeacher, student.mathTeacher,
+            student.keystoneText, student.mapReadingRit, student.mapMathRit,
           ].join(" ");
           const searchMatches = !query || normalize(searchable).includes(query);
-          return scopeMatches && gradeMatches && subjectMatches && yearMatches && performanceMatches && teacherMatches && searchMatches;
+          return gradeMatches && subjectMatches && sourceMatches && yearMatches && performanceMatches && teacherMatches && searchMatches;
         });
       }
 
       function renderRows() {
         const visible = filteredStudents();
         if (!visible.length) {
-          rows.innerHTML = '<tr><td colspan="7" class="empty-state">No student records match this search. Clear a dropdown or try another ID.</td></tr>';
+          rows.innerHTML = '<tr><td colspan="8" class="empty-state">No student records match this search. Clear a dropdown or try another ID.</td></tr>';
           return;
         }
         rows.innerHTML = visible
@@ -2940,6 +2962,7 @@
                 <td>${escapeHtml(student.gradeShort || "-")}</td>
                 <td>${subjectScoreCell(student, "reading")}</td>
                 <td>${subjectScoreCell(student, "math")}</td>
+                <td><span class="score-stack"><strong>${escapeHtml(student.keystoneResults?.length ? `${student.keystoneResults.length} result${student.keystoneResults.length === 1 ? "" : "s"}` : "N/A")}</strong><span>${escapeHtml(student.keystoneText || "No Keystone score imported")}</span></span></td>
                 <td><span class="teacher-stack"><span>ELA: ${escapeHtml(student.readingTeacher || "Not listed")}</span><span>Math: ${escapeHtml(student.mathTeacher || "Not listed")}</span></span></td>
                 <td><span class="status ${statusClass(student.status)}">${escapeHtml(student.status)}</span></td>
                 <td>${escapeHtml(student.next)}</td>
@@ -3016,6 +3039,8 @@
         document.querySelector("#student-math").textContent = student.mathText;
         document.querySelector("#student-pssa-teachers").textContent = `ELA: ${student.readingTeacher || "Not listed"} | Math: ${student.mathTeacher || "Not listed"}`;
         document.querySelector("#student-pssa-performance").textContent = `ELA: ${student.readingPerformance || "Not imported"}${numericValue(student.readingScaleScore) === null ? "" : ` (${student.readingScaleScore})`} | Math: ${student.mathPerformance || "Not imported"}${numericValue(student.mathScaleScore) === null ? "" : ` (${student.mathScaleScore})`}`;
+        document.querySelector("#student-map-performance").textContent = `Reading RIT: ${numericValue(student.mapReadingRit) ?? "Not imported"} | Math RIT: ${numericValue(student.mapMathRit) ?? "Not imported"}`;
+        document.querySelector("#student-keystone-performance").textContent = student.keystoneText || "No Keystone score imported";
         const matchingIds = [
           student.uniqueMatchingId ? `Matching ID ${student.uniqueMatchingId}` : "",
           student.drcStudentId ? `DRC ID ${student.drcStudentId}` : "",
@@ -3234,10 +3259,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const gradeCounts = [...new Set(visible.map((student) => student.gradeShort).filter(Boolean))]
           .sort((a, b) => Number(a) - Number(b))
           .map((grade) => `Grade ${grade}: ${visible.filter((student) => student.gradeShort === grade).length}`);
-        const hasPssa = visible.some((student) => numericValue(student.readingScaleScore) !== null || numericValue(student.mathScaleScore) !== null);
-        const missing = hasPssa
-          ? visible.filter((student) => numericValue(student.readingScaleScore) === null || numericValue(student.mathScaleScore) === null).length
-          : visible.filter((student) => Number(student.missingAssessmentCount || 0) > 0).length;
+        const missing = visible.filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
 
         document.querySelector("#reading-summary-1").textContent = `${percentageMeeting(visible, "reading")} meeting the interim or PSSA proficiency benchmark`;
         document.querySelector("#reading-summary-2").textContent = usingLiveData
@@ -3248,9 +3270,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
           ? `${mathCount} unique Math assessment records loaded`
           : "Fictional Math scores shown for interface testing";
         document.querySelector("#tier-summary").textContent = gradeCounts.length ? gradeCounts.join(" | ") : "No grades in the current view";
-        document.querySelector("#data-summary").textContent = hasPssa
-          ? `${missing} student${missing === 1 ? "" : "s"} missing an ELA or Math PSSA scale score`
-          : `${missing} student${missing === 1 ? "" : "s"} missing the four-point interim minimum`;
+        document.querySelector("#data-summary").textContent = `${missing} student${missing === 1 ? "" : "s"} missing a Fall MAP Reading or Math RIT score`;
         document.querySelector("#tier-1-summary").textContent = `${tier1} students in core monitoring based on the current filters.`;
         document.querySelector("#tier-2-summary").textContent = `${tier2} students receiving targeted support based on imported tiers.`;
         document.querySelector("#tier-3-summary").textContent = `${tier3} students requiring intensive review based on imported tiers.`;
@@ -3268,10 +3288,8 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         document.querySelector("#metric-review").textContent = needsReview;
         document.querySelector("#metric-reading").textContent = subject === "Math" ? "N/A" : percentageMeeting(visible, "reading");
         document.querySelector("#metric-math").textContent = subject === "Reading" ? "N/A" : percentageMeeting(visible, "math");
-        const hasPssa = visible.some((student) => numericValue(student.readingScaleScore) !== null || numericValue(student.mathScaleScore) !== null);
-        document.querySelector("#metric-missing").textContent = hasPssa
-          ? visible.filter((student) => numericValue(student.readingScaleScore) === null || numericValue(student.mathScaleScore) === null).length
-          : visible.filter((student) => Number(student.missingAssessmentCount || 0) > 0).length;
+        document.querySelector("#metric-missing").textContent = visible
+          .filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
         updateLivePanels(visible);
         renderRows();
         if (notify) showToast("Dashboard view updated.");
@@ -3282,7 +3300,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         if (row) selectStudent(row.dataset.studentId);
       });
 
-      document.querySelectorAll("#grade-filter, #subject-filter, #year-filter, #performance-filter, #teacher-filter").forEach((select) => {
+      document.querySelectorAll("#grade-filter, #subject-filter, #source-filter, #year-filter, #performance-filter, #teacher-filter").forEach((select) => {
         select.addEventListener("change", updateMetrics);
       });
 

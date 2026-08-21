@@ -63,3 +63,20 @@ test("surfaces PSSA scale score, performance, teacher, and matching identifiers"
   assert.equal(result.uniqueMatchingId, "MATCH-3");
   assert.match(result.readingText, /PSSA 1048 \(Proficient\)/);
 });
+
+test("keeps PSSA, Fall MAP, and Keystone evidence separated", () => {
+  const [result] = buildDashboardStudents(
+    [{ studentId: "DEMO-4", studentName: "Jordan Example", grade: "9" }],
+    [
+      { studentId: "DEMO-4", subject: "Reading", assessment: "PSSA Reading Grade 8", assessmentType: "PSSA", scaleScore: 1048, performance: "Pro", testedYear: "2025" },
+      { studentId: "DEMO-4", subject: "MAP", assessment: "Fall MAP Reading + Math", assessmentType: "MAP", readingRit: 218, mathRit: 221, testedYear: "2025-26" },
+      { studentId: "DEMO-4", subject: "Math", assessment: "Keystone Algebra I", assessmentType: "Keystone", scaleScore: 1502, performance: "Bas", testedYear: "2025-26" },
+    ],
+  );
+  assert.equal(result.readingScaleScore, 1048);
+  assert.equal(result.mathScaleScore, null);
+  assert.equal(result.mapReadingRit, 218);
+  assert.equal(result.mapMathRit, 221);
+  assert.match(result.keystoneText, /Algebra I: 1502 \(Basic\)/);
+  assert.deepEqual(result.assessmentTypes, ["Keystone", "MAP", "PSSA"]);
+});

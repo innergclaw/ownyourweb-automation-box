@@ -118,21 +118,75 @@ function normalizedSubject(value) {
   return subject;
 }
 
+function titleCaseName(value) {
+  const name = String(value || "").trim();
+  if (!name || name !== name.toUpperCase()) return name;
+  return name.toLowerCase().replace(/(^|[\s'-])([a-z])/g, (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`);
+}
+
+function normalizedStudentName(providedName, firstName, lastName) {
+  if (providedName.includes(",")) {
+    const [family, ...given] = providedName.split(",");
+    return titleCaseName([given.join(",").trim(), family.trim()].filter(Boolean).join(" "));
+  }
+  return titleCaseName(providedName || [firstName, lastName].filter(Boolean).join(" "));
+}
+
+function inferredYear(row) {
+  const source = String(row.__sourceSheet || "");
+  return source.match(/20\d{2}\s*[-/]\s*\d{2,4}/)?.[0].replace(/\s/g, "") || "";
+}
+
+function keystoneDetails(testName) {
+  const code = String(testName || "").trim().toUpperCase();
+  if (code === "A1" || code.includes("ALGEBRA")) return { subject: "Math", assessment: "Keystone Algebra I" };
+  if (code === "LIT" || code.includes("LITERATURE")) return { subject: "Reading", assessment: "Keystone Literature" };
+  if (code === "BIO" || code.includes("BIOLOGY")) return { subject: "Science", assessment: "Keystone Biology" };
+  return { subject: "", assessment: code ? `Keystone ${code}` : "Keystone" };
+}
+
+function isRepeatedHeaderRow(row, mapping) {
+  const studentId = String(valueFor(row, mapping, "studentId") || "").trim().toLowerCase();
+  const studentName = String(valueFor(row, mapping, "studentName") || "").trim().toLowerCase();
+  return ["student id", "id"].includes(studentId) || studentName === "student name";
+}
+
 function normalizeRecord(row, mapping, index) {
   const firstName = String(valueFor(row, mapping, "firstName") || "").trim();
   const lastName = String(valueFor(row, mapping, "lastName") || "").trim();
   const providedName = String(valueFor(row, mapping, "studentName") || "").trim();
-  const studentName = providedName || [firstName, lastName].filter(Boolean).join(" ");
+  const studentName = normalizedStudentName(providedName, firstName, lastName);
   const studentId = String(valueFor(row, mapping, "studentId") || "").trim();
-  const subject = normalizedSubject(valueFor(row, mapping, "subject"));
+  let subject = normalizedSubject(valueFor(row, mapping, "subject"));
   const grade = String(valueFor(row, mapping, "grade") || "").trim();
-  const testedYear = String(valueFor(row, mapping, "testedYear") || "").trim();
+  let testedYear = String(valueFor(row, mapping, "testedYear") || "").trim() || inferredYear(row);
   const scaleScore = numberValue(valueFor(row, mapping, "scaleScore"));
   const score = numberValue(valueFor(row, mapping, "score"));
   const scoreMax = numberValue(valueFor(row, mapping, "scoreMax"));
   let percent = numberValue(valueFor(row, mapping, "percent"));
   if (percent !== null && percent > 0 && percent <= 1) percent *= 100;
   if (percent === null && score !== null && scoreMax) percent = (score / scoreMax) * 100;
+
+  const sourceHeaders = Object.keys(row);
+  const isKeystone = sourceHeaders.some((header) => /admin scale score/i.test(header));
+  const hasMapRit = sourceHeaders.some((header) => /map rit/i.test(header));
+  let assessment = String(valueFor(row, mapping, "assessment") || "").trim();
+  let assessmentType = "Interim";
+  let reportingPeriod = String(valueFor(row, mapping, "reportingPeriod") || "").trim();
+  if (isKeystone) {
+    const details = keystoneDetails(assessment);
+    subject = details.subject;
+    assessment = details.assessment;
+    assessmentType = "Keystone";
+  } else if (hasMapRit) {
+    subject = "MAP";
+    assessment = "Fall MAP Reading + Math";
+    assessmentType = "MAP";
+    reportingPeriod ||= "Fall 2025";
+    testedYear ||= "2025-26";
+  } else if (scaleScore !== null || /pssa/i.test(assessment)) {
+    assessmentType = "PSSA";
+  }
 
   const errors = [];
   if (!studentId) errors.push("Missing student ID");
@@ -162,14 +216,15 @@ function normalizeRecord(row, mapping, index) {
     },
     assessment: {
       subject,
-      assessment: String(valueFor(row, mapping, "assessment") || "").trim()
+      assessment: assessment
         || (scaleScore !== null ? `PSSA ${subject || "Assessment"} Grade ${grade || "Unknown"}` : ""),
+      assessmentType,
       teacherOfRecord: String(valueFor(row, mapping, "teacherOfRecord") || "").trim(),
       score,
       scoreMax,
       percent: percent === null ? null : Math.round(percent * 100) / 100,
       testDate: String(valueFor(row, mapping, "testDate") || "").trim(),
-      reportingPeriod: String(valueFor(row, mapping, "reportingPeriod") || "").trim(),
+      reportingPeriod,
       readingRit: numberValue(valueFor(row, mapping, "readingRit")),
       mathRit: numberValue(valueFor(row, mapping, "mathRit")),
       growthGoal: numberValue(valueFor(row, mapping, "growthGoal")),
@@ -178,6 +233,11 @@ function normalizeRecord(row, mapping, index) {
       performance: String(valueFor(row, mapping, "performance") || "").trim(),
       testedYear,
       totalRawScore: numberValue(valueFor(row, mapping, "totalRawScore")),
+      compositeScore: numberValue(valueFor(row, mapping, "compositeScore")),
+      algebraResult: String(valueFor(row, mapping, "algebraResult") || "").trim(),
+      biologyResult: String(valueFor(row, mapping, "biologyResult") || "").trim(),
+      literatureResult: String(valueFor(row, mapping, "literatureResult") || "").trim(),
+      compositeStatus: String(valueFor(row, mapping, "compositeStatus") || "").trim(),
       sourceSheet: String(row.__sourceSheet || "").trim(),
     },
     raw: row,
@@ -186,13 +246,33 @@ function normalizeRecord(row, mapping, index) {
 
 function analyzeDataset(parsed) {
   const mapping = detectMapping(parsed.headers);
-  const records = parsed.rows.map((row, index) => {
+  let repeatedHeaders = 0;
+  const normalized = parsed.rows.flatMap((row, index) => {
     const rowMapping = detectMapping(Object.keys(row).filter((header) => !header.startsWith("__")));
-    return normalizeRecord(row, { ...mapping, ...rowMapping }, index);
+    const currentMapping = { ...mapping, ...rowMapping };
+    if (isRepeatedHeaderRow(row, currentMapping)) {
+      repeatedHeaders += 1;
+      return [];
+    }
+    return [normalizeRecord(row, currentMapping, index)];
   });
+  const uniqueRecords = new Map();
+  for (const record of normalized) {
+    const key = [
+      record.student.studentId, record.assessment.assessmentType, record.assessment.subject,
+      record.assessment.assessment, record.assessment.testedYear, record.assessment.reportingPeriod,
+      record.assessment.scaleScore, record.assessment.performance, record.assessment.readingRit,
+      record.assessment.mathRit,
+    ].map((value) => String(value ?? "").trim().toLowerCase()).join("|");
+    if (!uniqueRecords.has(key)) uniqueRecords.set(key, record);
+  }
+  const records = [...uniqueRecords.values()];
+  const duplicateRows = normalized.length - records.length;
   const validRecords = records.filter((record) => record.valid);
   const invalidRecords = records.filter((record) => !record.valid);
   const warnings = [...(parsed.warnings || [])];
+  if (repeatedHeaders) warnings.push(`${repeatedHeaders} repeated header row${repeatedHeaders === 1 ? " was" : "s were"} skipped.`);
+  if (duplicateRows) warnings.push(`${duplicateRows} duplicate assessment row${duplicateRows === 1 ? " was" : "s were"} skipped.`);
   const identities = new Map();
   for (const record of validRecords) {
     const key = record.student.studentId;

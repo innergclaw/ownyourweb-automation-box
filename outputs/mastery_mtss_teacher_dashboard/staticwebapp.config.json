@@ -12,6 +12,20 @@
   },
   "routes": [
     {
+      "route": "/fresh-login",
+      "redirect": "/.auth/logout?post_logout_redirect_uri=%2Fonboarding.html",
+      "statusCode": 302
+    },
+    {
+      "route": "/onboarding",
+      "rewrite": "/onboarding.html",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/onboarding.html",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/*",
       "allowedRoles": ["authenticated"]
     }

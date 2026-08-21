@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mastery Charter | Staff Dashboard Onboarding</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18212f;
+        --muted: #617084;
+        --line: #d9e0e8;
+        --bg: #f3f6fa;
+        --panel: #ffffff;
+        --navy: #102b4b;
+        --blue: #2d6cdf;
+        --blue-dark: #1f56b5;
+        --teal: #0f8f82;
+        --warning: #8a5a13;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        color: var(--ink);
+        background: var(--bg);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        display: grid;
+        grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1.28fr);
+        min-height: 100vh;
+      }
+
+      .access-panel {
+        display: grid;
+        align-content: space-between;
+        gap: 34px;
+        padding: clamp(28px, 5vw, 58px);
+        color: #ffffff;
+        background: var(--navy);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 8px;
+        color: #cfe3ff;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .brand strong,
+      .brand span {
+        display: block;
+      }
+
+      .brand strong {
+        font-size: 16px;
+      }
+
+      .brand span {
+        margin-top: 3px;
+        color: #bad1ee;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .access-copy {
+        max-width: 470px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: #91ddd4;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 4vw, 48px);
+        line-height: 1.05;
+      }
+
+      .access-copy > p:last-of-type {
+        margin: 16px 0 0;
+        color: #cfdded;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 26px;
+      }
+
+      .button {
+        display: flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .button-primary {
+        color: #ffffff;
+        background: var(--blue);
+      }
+
+      .button-primary:hover,
+      .button-primary:focus-visible {
+        background: var(--blue-dark);
+      }
+
+      .button-secondary {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #e8f2ff;
+        background: transparent;
+      }
+
+      .button-secondary:hover,
+      .button-secondary:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .access-footnote {
+        margin: 0;
+        color: #a9bed8;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .walkthrough {
+        display: grid;
+        align-content: center;
+        gap: 26px;
+        padding: clamp(28px, 5vw, 62px);
+        background: var(--panel);
+      }
+
+      .walkthrough-header {
+        max-width: 720px;
+      }
+
+      .walkthrough h2 {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 34px);
+      }
+
+      .walkthrough-header p {
+        margin: 9px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 12px;
+        min-height: 128px;
+        padding: 20px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .step-number {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border-radius: 50%;
+        color: #ffffff;
+        background: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .step h3 {
+        margin: 2px 0 6px;
+        font-size: 15px;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .notes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .note {
+        padding: 16px 0 0;
+        border-top: 3px solid #c9d7e6;
+      }
+
+      .note.warning {
+        border-top-color: #d9a441;
+      }
+
+      .note h3 {
+        margin: 0 0 6px;
+        font-size: 13px;
+      }
+
+      .note p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .note.warning h3 {
+        color: var(--warning);
+      }
+
+      .support {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .support a {
+        color: var(--blue-dark);
+        font-weight: 700;
+      }
+
+      @media (max-width: 850px) {
+        .page {
+          grid-template-columns: 1fr;
+        }
+
+        .access-panel {
+          min-height: auto;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .steps,
+        .notes {
+          grid-template-columns: 1fr;
+        }
+
+        .step {
+          min-height: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="access-panel" aria-labelledby="access-title">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">MC</span>
+          <div>
+            <strong>MASTERY CHARTER</strong>
+            <span>MTSS Data Dashboard</span>
+          </div>
+        </div>
+
+        <div class="access-copy">
+          <p class="eyebrow">Staff access onboarding</p>
+          <h1 id="access-title">Start your dashboard access.</h1>
+          <p>Use your existing Microsoft school or professional account. Microsoft handles your password and multifactor authentication.</p>
+          <div class="actions">
+            <a class="button button-primary" href="/.auth/login/aad?post_login_redirect_uri=/">Continue with Microsoft</a>
+            <a class="button button-secondary" href="/fresh-login">Restart sign-in test</a>
+          </div>
+        </div>
+
+        <p class="access-footnote">First sign-in creates an authenticated dashboard profile using your Microsoft name and email. The dashboard never receives your Microsoft password.</p>
+      </section>
+
+      <section class="walkthrough" aria-labelledby="walkthrough-title">
+        <div class="walkthrough-header">
+          <p class="eyebrow">Quick walkthrough</p>
+          <h2 id="walkthrough-title">From sign-in to the MTSS workspace</h2>
+          <p>This process is the same for teachers and administrators. Use the Microsoft account your school expects you to use for staff systems.</p>
+        </div>
+
+        <div class="steps" aria-label="Dashboard onboarding steps">
+          <article class="step">
+            <span class="step-number">1</span>
+            <div>
+              <h3>Open the staff link</h3>
+              <p>Use this onboarding page from any computer or phone with a modern browser.</p>
+            </div>
+          </article>
+          <article class="step">
+            <span class="step-number">2</span>
+            <div>
+              <h3>Choose Microsoft</h3>
+              <p>Select Continue with Microsoft, then enter your school or professional Microsoft account.</p>
+            </div>
+          </article>
+          <article class="step">
+            <span class="step-number">3</span>
+            <div>
+              <h3>Review first-time consent</h3>
+              <p>Microsoft may ask to share your basic profile and email. These details identify your dashboard account.</p>
+            </div>
+          </article>
+          <article class="step">
+            <span class="step-number">4</span>
+            <div>
+              <h3>Enter the workspace</h3>
+              <p>After authentication, the MTSS dashboard opens with student review, intervention, GPA, assessment, and messaging views.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="notes">
+          <article class="note">
+            <h3>Testing another account</h3>
+            <p>Use Restart sign-in test to clear the dashboard session and return to this page before choosing another Microsoft account.</p>
+          </article>
+          <article class="note warning">
+            <h3>Demo data only</h3>
+            <p>The current workspace contains fictional records. Do not enter real student data until staff email restrictions and assigned roles are active.</p>
+          </article>
+        </div>
+
+        <p class="support">Already authenticated? <a href="/">Open the dashboard</a>. A teacher or administrator who cannot sign in should confirm the Microsoft email being used with the dashboard owner.</p>
+      </section>
+    </main>
+  </body>
+</html>

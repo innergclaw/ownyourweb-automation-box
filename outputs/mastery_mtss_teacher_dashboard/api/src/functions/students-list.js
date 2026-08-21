@@ -11,7 +11,7 @@ app.http("students-list", {
     try {
       requireUploader(request);
       const requestedLimit = Number(request.query.get("limit"));
-      const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 500) : 100;
+      const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 5000) : 500;
       const students = await listDashboardStudents(limit);
       return json(200, { students, count: students.length });
     } catch (error) {

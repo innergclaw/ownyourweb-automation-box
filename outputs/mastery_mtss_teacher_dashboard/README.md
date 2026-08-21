@@ -11,7 +11,7 @@ Microsoft-authenticated staff workspace for Mastery Charter's MTSS review and st
 - Preservation of every original source column alongside normalized dashboard fields
 - Validation and a ten-row preview; clean files sync automatically while conflicts pause for review
 - Private raw-file staging, normalized student and assessment records, import history, and audit events
-- Live student queue, search, grade/reporting-period filters, assessment summaries, MTSS counts, GPA/credit profiles, and data-completeness indicators from authorized imports
+- Live student search with dynamic grade, subject, test-year, performance, and teacher filters. Search includes names, Student ID, Unique Matching ID, DRC ID, PAsecureID, and teacher of record
 - Rules-based staff assistant workflows that use the currently loaded records without calling an AI model
 
 Azure AI search and lesson generation remain off until their protected server-side service, spending controls, and school-approved policies are connected.

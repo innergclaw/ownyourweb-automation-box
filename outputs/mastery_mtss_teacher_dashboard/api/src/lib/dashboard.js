@@ -4,6 +4,11 @@ function numeric(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function performanceLabel(value) {
+  const normalized = String(value || "").trim();
+  return ({ Adv: "Advanced", Pro: "Proficient", Bas: "Basic", Bel: "Below Basic" })[normalized] || normalized;
+}
+
 function gradeNumber(value) {
   const match = String(value || "").match(/\d+/);
   return match ? Number(match[0]) : null;
@@ -41,7 +46,7 @@ function subjectSummary(records, subject) {
     change: first !== null && latest !== null ? Math.round((latest - first) * 10) / 10 : null,
     scaleScore: numeric(latestRecord.scaleScore),
     performanceCode: numeric(latestRecord.performanceCode),
-    performance: String(latestRecord.performance || "").trim(),
+    performance: performanceLabel(latestRecord.performance),
     teacherOfRecord: String(latestRecord.teacherOfRecord || "").trim(),
     testedYear: String(latestRecord.testedYear || "").trim(),
     totalRawScore: numeric(latestRecord.totalRawScore),

@@ -57,9 +57,9 @@ test("surfaces PSSA scale score, performance, teacher, and matching identifiers"
   }]);
 
   assert.equal(result.readingScaleScore, 1048);
-  assert.equal(result.readingPerformance, "Pro");
+  assert.equal(result.readingPerformance, "Proficient");
   assert.equal(result.readingTeacher, "Teacher Sample");
   assert.equal(result.readingPerformanceCode, 3);
   assert.equal(result.uniqueMatchingId, "MATCH-3");
-  assert.match(result.readingText, /PSSA 1048 \(Pro\)/);
+  assert.match(result.readingText, /PSSA 1048 \(Proficient\)/);
 });

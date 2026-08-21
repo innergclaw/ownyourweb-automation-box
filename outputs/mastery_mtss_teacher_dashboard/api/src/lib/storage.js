@@ -137,10 +137,12 @@ async function commitRecords({ entity, analysis, uploader }) {
   const current = getClients();
   let studentsSaved = 0;
   let assessmentsSaved = 0;
+  const uniqueStudentIds = new Set();
   const now = new Date().toISOString();
 
   for (const record of analysis.records.filter((item) => item.valid)) {
     const studentKey = safeKey(record.student.studentId);
+    uniqueStudentIds.add(record.student.studentId);
     await current.students.upsertEntity({
       partitionKey: SCHOOL_ID,
       rowKey: studentKey,
@@ -173,6 +175,7 @@ async function commitRecords({ entity, analysis, uploader }) {
     committedAt: now,
     committedBy: uploader.email,
     studentsSaved,
+    uniqueStudentsSaved: uniqueStudentIds.size,
     assessmentsSaved,
     invalidRows: analysis.summary.invalidRows,
   }, "Merge");
@@ -184,7 +187,7 @@ async function commitRecords({ entity, analysis, uploader }) {
     detail: `${studentsSaved} valid rows and ${assessmentsSaved} assessment records stored`,
   });
 
-  return { studentsSaved, assessmentsSaved, invalidRows: analysis.summary.invalidRows };
+  return { studentsSaved, uniqueStudentsSaved: uniqueStudentIds.size, assessmentsSaved, invalidRows: analysis.summary.invalidRows };
 }
 
 async function listImports(limit = 20) {

@@ -18,8 +18,21 @@ function rowsFromMatrix(matrix) {
   const nonEmpty = matrix.filter((row) => row.some((value) => cleanCell(value) !== ""));
   if (!nonEmpty.length) return { headers: [], rows: [] };
 
-  const headers = nonEmpty[0].map((value, index) => cleanCell(value) || `Column ${index + 1}`);
-  const rows = nonEmpty.slice(1, MAX_ROWS + 1).map((values) => {
+  const candidates = nonEmpty.slice(0, 25).map((values, index) => {
+    const mapping = detectMapping(values.map(cleanCell));
+    const identityScore = mapping.studentId && (mapping.studentName || (mapping.firstName && mapping.lastName)) ? 6 : 0;
+    return { index, score: Object.keys(mapping).length + identityScore };
+  });
+  const bestCandidate = candidates.reduce((best, candidate) => candidate.score > best.score ? candidate : best, candidates[0]);
+  const headerIndex = bestCandidate.score > 0 ? bestCandidate.index : 0;
+  const seenHeaders = new Map();
+  const headers = nonEmpty[headerIndex].map((value, index) => {
+    const base = cleanCell(value) || `Column ${index + 1}`;
+    const count = (seenHeaders.get(base) || 0) + 1;
+    seenHeaders.set(base, count);
+    return count === 1 ? base : `${base} (${count})`;
+  });
+  const rows = nonEmpty.slice(headerIndex + 1, headerIndex + MAX_ROWS + 1).map((values) => {
     const row = {};
     headers.forEach((header, index) => {
       row[header] = cleanCell(values[index]);
@@ -170,4 +183,5 @@ module.exports = {
   analyzeDataset,
   normalizeRecord,
   numberValue,
+  rowsFromMatrix,
 };

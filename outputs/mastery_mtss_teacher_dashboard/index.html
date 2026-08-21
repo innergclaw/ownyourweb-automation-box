@@ -1266,7 +1266,7 @@
 
       .history-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
         gap: 12px;
         align-items: center;
         padding: 9px 0;
@@ -1280,6 +1280,12 @@
 
       .history-row span {
         color: var(--muted);
+      }
+
+      .history-row .button {
+        min-height: 30px;
+        padding: 5px 9px;
+        font-size: 11px;
       }
 
       .message-portal {
@@ -2017,7 +2023,7 @@
               <form class="upload-pane" id="dataset-form">
                 <label class="upload-drop" for="dataset-file">
                   <strong>Choose a student dataset</strong>
-                  <span>CSV or XLSX, one header row, up to 8 MB and 10,000 records.</span>
+                  <span>CSV or XLSX, up to 8 MB and 10,000 records. Export title rows are detected automatically.</span>
                   <input id="dataset-file" name="dataset" type="file" accept=".csv,.xlsx" required />
                 </label>
                 <div class="intake-actions">
@@ -2046,7 +2052,7 @@
                       <tbody id="preview-rows"></tbody>
                     </table>
                   </div>
-                  <p class="intake-note" id="import-warnings"></p>
+                  <p class="intake-note" id="import-warnings" aria-live="polite"></p>
                   <div class="intake-actions">
                     <button class="button primary" id="confirm-import" type="button" disabled>Confirm Import</button>
                     <button class="button" id="cancel-import" type="button">Clear Preview</button>
@@ -2605,8 +2611,42 @@
           const date = document.createElement("span");
           date.textContent = new Date(item.committedAt || item.uploadedAt).toLocaleString();
           row.append(name, detail, date);
+          if (item.status === "pending") {
+            const finishButton = document.createElement("button");
+            finishButton.className = "button";
+            finishButton.type = "button";
+            finishButton.textContent = "Finish import";
+            finishButton.addEventListener("click", () => commitImportById(item.importId, finishButton));
+            row.appendChild(finishButton);
+          } else {
+            const complete = document.createElement("span");
+            complete.textContent = "Complete";
+            row.appendChild(complete);
+          }
           history.appendChild(row);
         });
+      }
+
+      async function commitImportById(importId, button = confirmImportButton) {
+        if (!importId) return;
+        const originalLabel = button.textContent;
+        button.disabled = true;
+        button.textContent = "Importing...";
+        try {
+          const result = await apiRequest(`/api/imports/${encodeURIComponent(importId)}/commit`, { method: "POST" });
+          const uniqueCount = result.uniqueStudentsSaved || result.studentsSaved;
+          showToast(`${uniqueCount} student records securely imported.`);
+          button.textContent = originalLabel;
+          clearImportPreview();
+          const history = await apiRequest("/api/imports");
+          renderImportHistory(history.imports || []);
+          await refreshDashboardData();
+        } catch (error) {
+          showToast(error.message);
+          document.querySelector("#import-warnings").textContent = `Import stopped: ${error.message}`;
+          button.disabled = false;
+          button.textContent = originalLabel;
+        }
       }
 
       async function loadDataService() {
@@ -2658,21 +2698,7 @@
 
       async function confirmDatasetImport() {
         if (!pendingImportId) return;
-        confirmImportButton.disabled = true;
-        confirmImportButton.textContent = "Importing...";
-        try {
-          const result = await apiRequest(`/api/imports/${encodeURIComponent(pendingImportId)}/commit`, { method: "POST" });
-          showToast(`${result.studentsSaved} student rows securely imported.`);
-          clearImportPreview();
-          const history = await apiRequest("/api/imports");
-          renderImportHistory(history.imports || []);
-          await refreshDashboardData();
-        } catch (error) {
-          showToast(error.message);
-          confirmImportButton.disabled = false;
-        } finally {
-          confirmImportButton.textContent = "Confirm Import";
-        }
+        await commitImportById(pendingImportId, confirmImportButton);
       }
 
       const accessContent = {

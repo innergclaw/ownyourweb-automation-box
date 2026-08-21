@@ -55,3 +55,18 @@ test("normalizes percent and numeric formatting", () => {
   assert.equal(numberValue("$1,250"), 1250);
   assert.equal(numberValue("not scored"), null);
 });
+
+test("finds the actual header row below export title rows", async () => {
+  const csv = Buffer.from([
+    "MAP Student Progress Report",
+    "Generated for school use",
+    "Local Student ID,Student Name,Grade Level,Term Name,RIT Score",
+    "MC-3003,Robin Example,7,Spring 2026,221",
+  ].join("\n"));
+  const analysis = analyzeDataset(await parseDataset(csv, "map-export.csv"));
+
+  assert.equal(analysis.summary.validRows, 1);
+  assert.equal(analysis.records[0].student.studentId, "MC-3003");
+  assert.equal(analysis.records[0].assessment.score, 221);
+  assert.equal(analysis.records[0].assessment.reportingPeriod, "Spring 2026");
+});

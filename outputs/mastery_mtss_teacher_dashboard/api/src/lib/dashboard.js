@@ -146,7 +146,12 @@ function buildDashboardStudents(students, assessments) {
     byStudent.get(record.studentId).push(record);
   }
 
-  return students.map((student) => {
+  return students
+    .filter((student) => {
+      const grade = gradeNumber(student.grade);
+      return grade !== null && grade >= 7 && grade <= 12;
+    })
+    .map((student) => {
     const records = byStudent.get(student.studentId) || [];
     const reading = subjectSummary(records, "Reading");
     const math = subjectSummary(records, "Math");
@@ -245,7 +250,7 @@ function buildDashboardStudents(students, assessments) {
       reportingPeriods,
       updatedAt: student.updatedAt || null,
     };
-  });
+    });
 }
 
 module.exports = { buildDashboardStudents, dedupeAssessments, subjectSummary, assessmentKind };

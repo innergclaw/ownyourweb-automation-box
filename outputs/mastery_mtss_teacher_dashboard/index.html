@@ -2674,8 +2674,8 @@
         {
           id: "MC-0821",
           name: "Aaliyah Carter",
-          grade: "6 / Team Phoenix",
-          gradeShort: "6",
+          grade: "8 / Team Phoenix",
+          gradeShort: "8",
           tier: "Tier 2",
           reading: 58,
           math: 72,
@@ -2724,8 +2724,8 @@
         {
           id: "MC-0632",
           name: "Sofia Nguyen",
-          grade: "4 / Reading Lab",
-          gradeShort: "4",
+          grade: "12 / College Readiness",
+          gradeShort: "12",
           tier: "Tier 1",
           reading: 82,
           math: 76,
@@ -2958,8 +2958,12 @@
       }
 
       function applyDashboardData(nextStudents, source = "live") {
-        usingLiveData = source === "live" && nextStudents.length > 0;
-        students = usingLiveData ? nextStudents : [...demoStudents];
+        const scopedStudents = nextStudents.filter((student) => {
+          const grade = Number(student.gradeShort);
+          return Number.isFinite(grade) && grade >= 7 && grade <= 12;
+        });
+        usingLiveData = source === "live" && scopedStudents.length > 0;
+        students = usingLiveData ? scopedStudents : [...demoStudents];
         refreshSearchFilters();
         dataSourcePill.textContent = usingLiveData ? "Live imported data" : "Fictional fallback";
         document.querySelector("#agent-mode").textContent = usingLiveData ? "Live Data Preview" : "Rules-Based Preview";

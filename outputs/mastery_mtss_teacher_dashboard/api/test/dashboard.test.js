@@ -38,12 +38,23 @@ test("deduplicates repeated imports of the same assessment", () => {
 
 test("handles students whose optional academic fields are missing", () => {
   const [result] = buildDashboardStudents([
-    { studentId: "DEMO-2", studentName: "Jordan Sample", grade: "4", mtssTier: "Tier 1", gpa: null, attendance: null },
+    { studentId: "DEMO-2", studentName: "Jordan Sample", grade: "7", mtssTier: "Tier 1", gpa: null, attendance: null },
   ], []);
   assert.equal(result.reading, null);
   assert.equal(result.gpa, null);
   assert.equal(result.missingAssessmentCount, 4);
   assert.match(result.next, /Add 4 interim/);
+});
+
+test("limits dashboard records to grades 7 through 12", () => {
+  const results = buildDashboardStudents([
+    { studentId: "GRADE-6", studentName: "Grade Six Sample", grade: "6" },
+    { studentId: "GRADE-7", studentName: "Grade Seven Sample", grade: "7" },
+    { studentId: "GRADE-12", studentName: "Grade Twelve Sample", grade: "12" },
+    { studentId: "GRADE-13", studentName: "Grade Thirteen Sample", grade: "13" },
+  ], []);
+
+  assert.deepEqual(results.map((student) => student.gradeShort), ["7", "12"]);
 });
 
 test("surfaces PSSA scale score, performance, teacher, and matching identifiers", () => {

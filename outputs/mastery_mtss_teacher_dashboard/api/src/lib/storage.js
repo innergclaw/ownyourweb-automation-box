@@ -44,7 +44,7 @@ async function ensureStorage() {
   if (!initialized) {
     initialized = (async () => {
       const current = getClients();
-      await current.container.createIfNotExists({ access: "private" });
+      await current.container.createIfNotExists();
       await Promise.all(Object.values(TABLES).map((name) => current.tableService.createTable(name).catch((error) => {
         if (error.statusCode !== 409) throw error;
       })));

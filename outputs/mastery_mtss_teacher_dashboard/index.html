@@ -360,7 +360,7 @@
       }
 
       .sidebar-section[aria-label="Filters"] {
-        grid-template-columns: repeat(6, minmax(110px, 1fr));
+        grid-template-columns: repeat(8, minmax(92px, 1fr));
       }
 
       .sidebar-section[aria-label="Filters"] h2 {
@@ -639,7 +639,7 @@
 
       .metrics {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 8px;
       }
 
@@ -1710,7 +1710,7 @@
         }
 
         .sidebar-section[aria-label="Filters"] {
-          grid-template-columns: repeat(3, minmax(140px, 1fr));
+          grid-template-columns: repeat(4, minmax(140px, 1fr));
         }
 
         .sidebar-section[aria-label="Sync status"] {
@@ -1928,6 +1928,12 @@
             </select>
           </div>
           <div class="field">
+            <label for="campus-filter">School / campus</label>
+            <select id="campus-filter">
+              <option value="all">All campuses</option>
+            </select>
+          </div>
+          <div class="field">
             <label for="subject-filter">Subject</label>
             <select id="subject-filter">
               <option value="all">All subjects</option>
@@ -1943,7 +1949,19 @@
               <option value="PSSA">PSSA</option>
               <option value="MAP">Fall MAP</option>
               <option value="Keystone">Keystone</option>
+              <option value="Attendance">Attendance</option>
               <option value="Interim">Interim</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="attendance-filter">Attendance</label>
+            <select id="attendance-filter">
+              <option value="all">All attendance</option>
+              <option value="below80">Below 80%</option>
+              <option value="80to89">80–89.9%</option>
+              <option value="90to92">90–92.9%</option>
+              <option value="93plus">93% and above</option>
+              <option value="missing">Not imported</option>
             </select>
           </div>
           <div class="field">
@@ -2068,6 +2086,11 @@
               <strong id="metric-missing">22</strong>
               <small>Missing Reading or Math RIT score</small>
             </article>
+            <article class="metric">
+              <span>Attendance concern</span>
+              <strong id="metric-attendance">0</strong>
+              <small>Students below 90% attendance</small>
+            </article>
           </section>
 
           <section class="access-grid" aria-label="Admin access view">
@@ -2164,6 +2187,7 @@
                       <th>ELA evidence</th>
                       <th>Math evidence</th>
                       <th>Keystone</th>
+                      <th>Attendance</th>
                       <th>Teachers</th>
                       <th>Status</th>
                       <th>Next review</th>
@@ -2304,7 +2328,9 @@
                   <li><strong>PSSA performance</strong><span id="student-pssa-performance">No PSSA performance imported</span></li>
                   <li><strong>Fall MAP</strong><span id="student-map-performance">Reading and Math RIT not imported</span></li>
                   <li><strong>Keystone</strong><span id="student-keystone-performance">No Keystone score imported</span></li>
+                  <li><strong>Attendance snapshot</strong><span id="student-attendance-performance">Attendance not imported</span></li>
                   <li><strong>Matching identifiers</strong><span id="student-matching-ids">Not imported</span></li>
+                  <li><strong>School / campus</strong><span id="student-campus">Not imported</span></li>
                   <li><strong>Assessment trend</strong><span id="student-trend">MAP improved, Amplify below target</span></li>
                   <li><strong>Intervention</strong><span id="student-intervention">Small-group reading, 3x weekly</span></li>
                   <li><strong>IEP / Firefly</strong><span id="student-iep">No IEP, Firefly watch</span></li>
@@ -2510,8 +2536,10 @@
       const dataSourcePill = document.querySelector("#data-source-pill");
       const studentSearch = document.querySelector("#student-search");
       const gradeFilterControl = document.querySelector("#grade-filter");
+      const campusFilterControl = document.querySelector("#campus-filter");
       const subjectFilterControl = document.querySelector("#subject-filter");
       const sourceFilterControl = document.querySelector("#source-filter");
+      const attendanceFilterControl = document.querySelector("#attendance-filter");
       const yearFilterControl = document.querySelector("#year-filter");
       const performanceFilterControl = document.querySelector("#performance-filter");
       const teacherFilterControl = document.querySelector("#teacher-filter");
@@ -2624,6 +2652,8 @@
       function refreshSearchFilters() {
         const grades = [...new Set(students.map((student) => String(student.gradeShort || "").trim()).filter(Boolean))]
           .sort((a, b) => Number(a) - Number(b));
+        const campuses = [...new Set(students.map((student) => String(student.campus || "").trim()).filter((value) => value && value !== "Campus not imported"))]
+          .sort((a, b) => a.localeCompare(b));
         const years = [...new Set(students.flatMap((student) => student.testedYears?.length ? student.testedYears : [student.readingTestedYear, student.mathTestedYear]).map((value) => String(value || "").trim()).filter(Boolean))]
           .sort((a, b) => Number(b) - Number(a));
         const performances = [...new Set(students.flatMap((student) => [
@@ -2635,6 +2665,7 @@
         const teachers = [...new Set(students.flatMap((student) => [student.readingTeacher, student.mathTeacher]).map((value) => String(value || "").trim()).filter((value) => value && value !== "Not listed"))]
           .sort((a, b) => a.localeCompare(b));
         replaceFilterOptions(gradeFilterControl, grades, "All grades");
+        replaceFilterOptions(campusFilterControl, campuses, "All campuses");
         replaceFilterOptions(yearFilterControl, years, "All years");
         replaceFilterOptions(performanceFilterControl, performances, "All levels", performanceLabel);
         replaceFilterOptions(teacherFilterControl, teachers, "All teachers");
@@ -2894,6 +2925,31 @@
         return score === null ? "N/A" : `${Math.round(score)}%`;
       }
 
+      function attendanceDisplay(value) {
+        const attendance = numericValue(value);
+        return attendance === null ? "N/A" : `${attendance.toFixed(attendance % 1 ? 1 : 0)}%`;
+      }
+
+      function attendanceCell(student) {
+        const rate = numericValue(student.attendance);
+        if (rate === null) return '<span class="score-stack"><strong>N/A</strong><span>Not imported</span></span>';
+        const enrolled = numericValue(student.enrolledDays);
+        const absent = numericValue(student.daysAbsent);
+        return `<span class="score-stack"><strong>${attendanceDisplay(rate)}</strong><span>${enrolled === null ? "Enrollment days not imported" : `${enrolled} enrolled days`}</span><span>${absent === null ? "Absences not calculated" : `${absent.toFixed(absent % 1 ? 1 : 0)} days absent`}</span></span>`;
+      }
+
+      function attendanceMatchesFilter(student, filter) {
+        const rate = numericValue(student.attendance);
+        if (filter === "all") return true;
+        if (filter === "missing") return rate === null;
+        if (rate === null) return false;
+        if (filter === "below80") return rate < 80;
+        if (filter === "80to89") return rate >= 80 && rate < 90;
+        if (filter === "90to92") return rate >= 90 && rate < 93;
+        if (filter === "93plus") return rate >= 93;
+        return true;
+      }
+
       function subjectScoreCell(student, subject) {
         const field = subject === "reading" ? "reading" : "math";
         const percent = numericValue(student[field]);
@@ -2907,14 +2963,17 @@
 
       function filteredStudents() {
         const gradeFilter = gradeFilterControl.value;
+        const campusFilter = campusFilterControl.value;
         const subjectFilter = subjectFilterControl.value;
         const sourceFilter = sourceFilterControl.value;
+        const attendanceFilter = attendanceFilterControl.value;
         const yearFilter = yearFilterControl.value;
         const performanceFilter = performanceFilterControl.value;
         const teacherFilter = teacherFilterControl.value;
         const query = normalize(studentSearch.value);
         return students.filter((student) => {
           const gradeMatches = gradeFilter === "all" || String(student.gradeShort) === gradeFilter;
+          const campusMatches = campusFilter === "all" || String(student.campus || "") === campusFilter;
           const keystoneResults = student.keystoneResults || [];
           const readingAvailable = numericValue(student.reading) !== null || numericValue(student.readingScaleScore) !== null || numericValue(student.mapReadingRit) !== null || keystoneResults.some((result) => result.subject === "Reading");
           const mathAvailable = numericValue(student.math) !== null || numericValue(student.mathScaleScore) !== null || numericValue(student.mapMathRit) !== null || keystoneResults.some((result) => result.subject === "Math");
@@ -2924,6 +2983,7 @@
             || (subjectFilter === "Math" && mathAvailable)
             || (subjectFilter === "Science" && scienceAvailable);
           const sourceMatches = sourceFilter === "all" || (student.assessmentTypes || []).includes(sourceFilter);
+          const attendanceMatches = attendanceMatchesFilter(student, attendanceFilter);
           const years = student.testedYears?.length ? student.testedYears.map(String) : [student.readingTestedYear, student.mathTestedYear].map((value) => String(value || ""));
           const yearMatches = yearFilter === "all" || years.includes(yearFilter);
           const performances = subjectFilter === "Reading"
@@ -2939,30 +2999,32 @@
               : [student.readingTeacher, student.mathTeacher].map((value) => String(value || ""));
           const teacherMatches = teacherFilter === "all" || teachers.includes(teacherFilter);
           const searchable = [
-            student.name, student.id, student.uniqueMatchingId, student.drcStudentId, student.paSecureId,
+            student.name, student.id, student.campus, student.uniqueMatchingId, student.drcStudentId, student.paSecureId,
             student.readingTeacher, student.mathTeacher,
             student.keystoneText, student.mapReadingRit, student.mapMathRit,
+            student.attendance, student.enrolledDays, student.daysPresent, student.daysAbsent, student.participation,
           ].join(" ");
           const searchMatches = !query || normalize(searchable).includes(query);
-          return gradeMatches && subjectMatches && sourceMatches && yearMatches && performanceMatches && teacherMatches && searchMatches;
+          return gradeMatches && campusMatches && subjectMatches && sourceMatches && attendanceMatches && yearMatches && performanceMatches && teacherMatches && searchMatches;
         });
       }
 
       function renderRows() {
         const visible = filteredStudents();
         if (!visible.length) {
-          rows.innerHTML = '<tr><td colspan="8" class="empty-state">No student records match this search. Clear a dropdown or try another ID.</td></tr>';
+          rows.innerHTML = '<tr><td colspan="9" class="empty-state">No student records match this search. Clear a dropdown or try another ID.</td></tr>';
           return;
         }
         rows.innerHTML = visible
           .map(
             (student) => `
               <tr data-student-id="${escapeHtml(student.id)}" class="${student.id === selectedStudentId ? "is-selected" : ""}">
-                <td><span class="student-identity"><strong>${escapeHtml(student.name)}</strong><span>Student ID ${escapeHtml(student.id)}</span>${student.uniqueMatchingId ? `<span>Matching ID ${escapeHtml(student.uniqueMatchingId)}</span>` : ""}</span></td>
+                <td><span class="student-identity"><strong>${escapeHtml(student.name)}</strong><span>Student ID ${escapeHtml(student.id)}</span><span>${escapeHtml(student.campus || "Campus not imported")}</span>${student.uniqueMatchingId ? `<span>Matching ID ${escapeHtml(student.uniqueMatchingId)}</span>` : ""}</span></td>
                 <td>${escapeHtml(student.gradeShort || "-")}</td>
                 <td>${subjectScoreCell(student, "reading")}</td>
                 <td>${subjectScoreCell(student, "math")}</td>
                 <td><span class="score-stack"><strong>${escapeHtml(student.keystoneResults?.length ? `${student.keystoneResults.length} result${student.keystoneResults.length === 1 ? "" : "s"}` : "N/A")}</strong><span>${escapeHtml(student.keystoneText || "No Keystone score imported")}</span></span></td>
+                <td>${attendanceCell(student)}</td>
                 <td><span class="teacher-stack"><span>ELA: ${escapeHtml(student.readingTeacher || "Not listed")}</span><span>Math: ${escapeHtml(student.mathTeacher || "Not listed")}</span></span></td>
                 <td><span class="status ${statusClass(student.status)}">${escapeHtml(student.status)}</span></td>
                 <td>${escapeHtml(student.next)}</td>
@@ -3041,6 +3103,15 @@
         document.querySelector("#student-pssa-performance").textContent = `ELA: ${student.readingPerformance || "Not imported"}${numericValue(student.readingScaleScore) === null ? "" : ` (${student.readingScaleScore})`} | Math: ${student.mathPerformance || "Not imported"}${numericValue(student.mathScaleScore) === null ? "" : ` (${student.mathScaleScore})`}`;
         document.querySelector("#student-map-performance").textContent = `Reading RIT: ${numericValue(student.mapReadingRit) ?? "Not imported"} | Math RIT: ${numericValue(student.mapMathRit) ?? "Not imported"}`;
         document.querySelector("#student-keystone-performance").textContent = student.keystoneText || "No Keystone score imported";
+        document.querySelector("#student-campus").textContent = student.campus || "Campus not imported";
+        const attendanceParts = [
+          `Rate: ${attendanceDisplay(student.attendance)}`,
+          numericValue(student.enrolledDays) === null ? "" : `${student.enrolledDays} enrolled days`,
+          numericValue(student.daysPresent) === null ? "" : `${student.daysPresent} present`,
+          numericValue(student.daysAbsent) === null ? "" : `${student.daysAbsent} absent`,
+          numericValue(student.participation) === null ? "" : `${attendanceDisplay(student.participation)} participation`,
+        ].filter(Boolean);
+        document.querySelector("#student-attendance-performance").textContent = attendanceParts.join(" | ");
         const matchingIds = [
           student.uniqueMatchingId ? `Matching ID ${student.uniqueMatchingId}` : "",
           student.drcStudentId ? `DRC ID ${student.drcStudentId}` : "",
@@ -3290,6 +3361,8 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         document.querySelector("#metric-math").textContent = subject === "Reading" ? "N/A" : percentageMeeting(visible, "math");
         document.querySelector("#metric-missing").textContent = visible
           .filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
+        document.querySelector("#metric-attendance").textContent = visible
+          .filter((student) => numericValue(student.attendance) !== null && student.attendance < 90).length;
         updateLivePanels(visible);
         renderRows();
         if (notify) showToast("Dashboard view updated.");
@@ -3300,7 +3373,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         if (row) selectStudent(row.dataset.studentId);
       });
 
-      document.querySelectorAll("#grade-filter, #subject-filter, #source-filter, #year-filter, #performance-filter, #teacher-filter").forEach((select) => {
+      document.querySelectorAll("#grade-filter, #campus-filter, #subject-filter, #source-filter, #attendance-filter, #year-filter, #performance-filter, #teacher-filter").forEach((select) => {
         select.addEventListener("change", updateMetrics);
       });
 

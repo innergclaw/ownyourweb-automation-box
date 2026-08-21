@@ -157,7 +157,7 @@ async function commitRecords({ entity, analysis, uploader }) {
     }, "Merge");
     studentsSaved += 1;
 
-    const hasAssessment = Object.entries(record.assessment).some(([key, value]) => !["reportingPeriod", "sourceSheet"].includes(key) && value !== "" && value !== null);
+    const hasAssessment = Object.entries(record.assessment).some(([key, value]) => !["assessmentType", "reportingPeriod", "sourceSheet", "sourceFilename"].includes(key) && value !== "" && value !== null);
     if (hasAssessment) {
       const sourceData = Object.fromEntries(Object.entries(record.raw).filter(([key]) => !key.startsWith("__")));
       await current.assessments.upsertEntity({
@@ -223,8 +223,8 @@ async function listStudents(limit = 100) {
   const results = [];
   const entities = getClients().students.listEntities({
     queryOptions: { filter: `PartitionKey eq '${SCHOOL_ID}'`, select: [
-      "studentId", "studentName", "firstName", "lastName", "drcStudentId", "uniqueMatchingId", "paSecureId", "grade", "attendance", "gpa", "creditsEarned",
-      "creditsRequired", "mtssTier", "hasIep", "firefly", "intervention", "updatedAt",
+      "studentId", "studentName", "firstName", "lastName", "drcStudentId", "uniqueMatchingId", "paSecureId", "grade", "campus", "attendance",
+      "enrolledDays", "participation", "daysPresent", "daysAbsent", "gpa", "creditsEarned", "creditsRequired", "mtssTier", "hasIep", "firefly", "intervention", "updatedAt",
     ] },
   });
   for await (const entity of entities) {
@@ -237,7 +237,12 @@ async function listStudents(limit = 100) {
       uniqueMatchingId: entity.uniqueMatchingId || "",
       paSecureId: entity.paSecureId || "",
       grade: entity.grade || "",
+      campus: entity.campus || "",
       attendance: entity.attendance ?? null,
+      enrolledDays: entity.enrolledDays ?? null,
+      participation: entity.participation ?? null,
+      daysPresent: entity.daysPresent ?? null,
+      daysAbsent: entity.daysAbsent ?? null,
       gpa: entity.gpa ?? null,
       creditsEarned: entity.creditsEarned ?? null,
       creditsRequired: entity.creditsRequired ?? null,
@@ -261,7 +266,7 @@ async function listDashboardStudents(limit = 500) {
       "studentId", "subject", "assessment", "score", "scoreMax", "percent", "testDate",
       "reportingPeriod", "readingRit", "mathRit", "growthGoal", "scaleScore", "performanceCode",
       "performance", "testedYear", "totalRawScore", "teacherOfRecord", "sourceSheet", "createdAt",
-      "assessmentType", "compositeScore", "algebraResult", "biologyResult", "literatureResult", "compositeStatus",
+      "assessmentType", "compositeScore", "algebraResult", "biologyResult", "literatureResult", "compositeStatus", "sourceFilename",
     ] },
   });
   for await (const entity of entities) {

@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 const { strToU8, unzipSync, zipSync } = require("fflate");
-const { parseDataset, analyzeDataset, numberValue, rowsFromMatrix } = require("../src/lib/parser");
+const { parseDataset, analyzeDataset, numberValue, percentageValue, rowsFromMatrix } = require("../src/lib/parser");
 
 test("maps and normalizes a CSV student record", async () => {
   const csv = Buffer.from([
@@ -138,4 +138,25 @@ test("recognizes Fall MAP RIT columns and removes repeated sheet rows", () => {
   assert.equal(analysis.records[0].assessment.readingRit, 213);
   assert.equal(analysis.records[0].assessment.reportingPeriod, "Fall 2025");
   assert.equal(analysis.records[0].assessment.testedYear, "2025-26");
+});
+
+test("normalizes the attendance dashboard fields", () => {
+  const parsed = rowsFromMatrix([
+    ["Student ID", "Student First Name", "Student Last Name", "Grade", "Has IEP", "Enrolled Days", "Pct Attendance", "Participation"],
+    ["145784", "Taniyah", "Mitchell", "08", "Y", 180, 0.9, 0.85],
+  ]);
+  parsed.rows[0].__sourceFilename = "APSC Dashboard - Student Att.xlsx";
+  const analysis = analyzeDataset(parsed);
+  const [record] = analysis.records;
+  assert.equal(record.valid, true);
+  assert.equal(record.student.studentName, "Taniyah Mitchell");
+  assert.equal(record.student.grade, "08");
+  assert.equal(record.student.campus, "APSC");
+  assert.equal(record.student.hasIep, true);
+  assert.equal(record.student.attendance, 90);
+  assert.equal(record.student.participation, 85);
+  assert.equal(record.student.daysPresent, 162);
+  assert.equal(record.student.daysAbsent, 18);
+  assert.equal(record.assessment.assessment, "");
+  assert.equal(percentageValue(0.9333), 93.33);
 });

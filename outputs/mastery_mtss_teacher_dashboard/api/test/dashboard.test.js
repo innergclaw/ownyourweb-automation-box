@@ -80,3 +80,16 @@ test("keeps PSSA, Fall MAP, and Keystone evidence separated", () => {
   assert.match(result.keystoneText, /Algebra I: 1502 \(Basic\)/);
   assert.deepEqual(result.assessmentTypes, ["Keystone", "MAP", "PSSA"]);
 });
+
+test("surfaces attendance evidence and prioritizes low attendance", () => {
+  const [result] = buildDashboardStudents(
+    [{ studentId: "DEMO-5", studentName: "Taylor Example", grade: "10", attendance: 88.5, enrolledDays: 180, daysPresent: 159.3, daysAbsent: 20.7, participation: 84 }],
+    [],
+  );
+  assert.equal(result.attendance, 88.5);
+  assert.equal(result.enrolledDays, 180);
+  assert.equal(result.daysAbsent, 20.7);
+  assert.equal(result.participation, 84);
+  assert.equal(result.status, "Review");
+  assert.equal(result.next, "Review attendance plan this week");
+});

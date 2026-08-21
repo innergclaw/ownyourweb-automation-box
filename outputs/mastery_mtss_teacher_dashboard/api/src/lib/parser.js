@@ -82,6 +82,7 @@ async function parseDataset(buffer, filename) {
   }
 
   const parsed = extension === ".csv" || extension === ".cvc" ? parseCsv(buffer) : await parseWorkbook(buffer);
+  parsed.rows.forEach((row) => { row.__sourceFilename = path.basename(filename || ""); });
   if (!parsed.headers.length || !parsed.rows.length) {
     const error = new Error("The uploaded file does not contain a header row and student records.");
     error.statusCode = 400;
@@ -97,6 +98,12 @@ function numberValue(value) {
   if (value === "" || value === null || value === undefined) return null;
   const numeric = Number(String(value).replace(/[%,$]/g, "").trim());
   return Number.isFinite(numeric) ? numeric : null;
+}
+
+function percentageValue(value) {
+  const numeric = numberValue(value);
+  if (numeric === null) return null;
+  return Math.round((numeric > 0 && numeric <= 1 ? numeric * 100 : numeric) * 100) / 100;
 }
 
 function booleanValue(value) {
@@ -143,6 +150,15 @@ function inferredFallMapPeriod(row) {
   return { reportingPeriod: `Fall ${year}`, testedYear: `${year}-${String(Number(year) + 1).slice(-2)}` };
 }
 
+function inferredCampus(row, mapping) {
+  const explicit = String(valueFor(row, mapping, "campus") || "").trim();
+  if (explicit) return explicit;
+  const filename = String(row.__sourceFilename || "");
+  if (/^lenfest\b/i.test(filename)) return "Lenfest";
+  if (/^apsc\b/i.test(filename)) return "APSC";
+  return "";
+}
+
 function keystoneDetails(testName) {
   const code = String(testName || "").trim().toUpperCase();
   if (code === "A1" || code.includes("ALGEBRA")) return { subject: "Math", assessment: "Keystone Algebra I" };
@@ -169,6 +185,11 @@ function normalizeRecord(row, mapping, index) {
   const scaleScore = numberValue(valueFor(row, mapping, "scaleScore"));
   const score = numberValue(valueFor(row, mapping, "score"));
   const scoreMax = numberValue(valueFor(row, mapping, "scoreMax"));
+  const attendance = percentageValue(valueFor(row, mapping, "attendance"));
+  const enrolledDays = numberValue(valueFor(row, mapping, "enrolledDays"));
+  const participation = percentageValue(valueFor(row, mapping, "participation"));
+  const daysPresent = attendance === null || enrolledDays === null ? null : Math.round(enrolledDays * attendance) / 100;
+  const daysAbsent = daysPresent === null ? null : Math.round((enrolledDays - daysPresent) * 100) / 100;
   let percent = numberValue(valueFor(row, mapping, "percent"));
   if (percent !== null && percent > 0 && percent <= 1) percent *= 100;
   if (percent === null && score !== null && scoreMax) percent = (score / scoreMax) * 100;
@@ -209,10 +230,15 @@ function normalizeRecord(row, mapping, index) {
       firstName,
       lastName,
       grade,
+      campus: inferredCampus(row, mapping),
       drcStudentId: String(valueFor(row, mapping, "drcStudentId") || "").trim(),
       uniqueMatchingId: String(valueFor(row, mapping, "uniqueMatchingId") || "").trim(),
       paSecureId: String(valueFor(row, mapping, "paSecureId") || "").trim(),
-      attendance: numberValue(valueFor(row, mapping, "attendance")),
+      attendance,
+      enrolledDays,
+      participation,
+      daysPresent,
+      daysAbsent,
       gpa: numberValue(valueFor(row, mapping, "gpa")),
       creditsEarned: numberValue(valueFor(row, mapping, "creditsEarned")),
       creditsRequired: numberValue(valueFor(row, mapping, "creditsRequired")),
@@ -246,6 +272,7 @@ function normalizeRecord(row, mapping, index) {
       literatureResult: String(valueFor(row, mapping, "literatureResult") || "").trim(),
       compositeStatus: String(valueFor(row, mapping, "compositeStatus") || "").trim(),
       sourceSheet: String(row.__sourceSheet || "").trim(),
+      sourceFilename: String(row.__sourceFilename || "").trim(),
     },
     raw: row,
   };
@@ -296,7 +323,7 @@ function analyzeDataset(parsed) {
   if (!mapping.studentName && !(mapping.firstName && mapping.lastName)) {
     warnings.push("Student name was not matched automatically.");
   }
-  if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit && !mapping.scaleScore) {
+  if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit && !mapping.scaleScore && !mapping.attendance) {
     warnings.push("No assessment score columns were matched automatically.");
   }
   if (identityConflicts) warnings.push(`${identityConflicts} student ID record${identityConflicts === 1 ? " has" : "s have"} conflicting names or matching IDs.`);
@@ -324,5 +351,6 @@ module.exports = {
   analyzeDataset,
   normalizeRecord,
   numberValue,
+  percentageValue,
   rowsFromMatrix,
 };

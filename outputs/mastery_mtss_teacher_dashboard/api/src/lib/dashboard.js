@@ -175,8 +175,13 @@ function buildDashboardStudents(students, assessments) {
     const gpaStatus = gpa === null ? status : gpa < 2 ? "Review" : gpa < 2.75 ? "Watch" : "On Track";
     const iep = student.hasIep === true ? "IEP on file" : student.hasIep === false ? "No IEP" : "IEP status not imported";
     const firefly = student.firefly ? `Firefly ${String(student.firefly).toLowerCase()}` : "Firefly not imported";
-    const next = missingAssessmentCount
-      ? `Add ${missingAssessmentCount} interim data point${missingAssessmentCount === 1 ? "" : "s"}`
+    const attendance = numeric(student.attendance);
+    const assessmentTypes = [...new Set(records.map(assessmentKind))];
+    if (attendance !== null) assessmentTypes.push("Attendance");
+    const next = attendance !== null && attendance < 90
+      ? "Review attendance plan this week"
+      : missingAssessmentCount
+        ? `Add ${missingAssessmentCount} interim data point${missingAssessmentCount === 1 ? "" : "s"}`
       : status === "Review"
         ? "Review intervention outcome this week"
         : status === "Watch"
@@ -188,10 +193,15 @@ function buildDashboardStudents(students, assessments) {
       name: student.studentName,
       grade: grade === null ? String(student.grade || "Grade not imported") : `Grade ${grade}`,
       gradeShort: grade === null ? "" : String(grade),
+      campus: student.campus || "Campus not imported",
       tier: student.mtssTier || "Tier not assigned",
       reading: reading.latest,
       math: math.latest,
-      attendance: numeric(student.attendance),
+      attendance,
+      enrolledDays: numeric(student.enrolledDays),
+      participation: numeric(student.participation),
+      daysPresent: numeric(student.daysPresent),
+      daysAbsent: numeric(student.daysAbsent),
       status,
       owner: status === "Review" ? "MTSS Case Team" : status === "Watch" ? "Grade Team" : "Instructional Team",
       readingText: scoreText({ ...reading, scaleScore: pssaReading.scaleScore, performance: pssaReading.performance }, readingRit, growthGoal),
@@ -212,7 +222,7 @@ function buildDashboardStudents(students, assessments) {
       mapMathRit: mathRit,
       keystoneResults,
       keystoneText: keystoneText(keystoneResults),
-      assessmentTypes: [...new Set(records.map(assessmentKind))].sort(),
+      assessmentTypes: [...new Set(assessmentTypes)].sort(),
       testedYears: [...new Set(records.map((record) => String(record.testedYear || "").trim()).filter(Boolean))].sort(),
       drcStudentId: student.drcStudentId || "",
       uniqueMatchingId: student.uniqueMatchingId || "",

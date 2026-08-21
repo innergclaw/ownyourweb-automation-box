@@ -38,6 +38,8 @@ PSSA workbooks can contain separate ELA and Math worksheets. The importer reads 
 
 The importer also recognizes the Lenfest Keystone export (`ID`, `Test Name`, `Admin Scale Score`, performance level, module results, IEP, composite fields) and converts `A1` to Algebra I and `LIT` to Literature. Fall MAP files can carry Reading and Math RIT values in one row. Repeated header rows and the duplicated `Focal Students - Tutoring` view are removed before sync so the main MAP roster is counted once.
 
+Attendance dashboard exports can include `Student ID`, student first and last name, grade, IEP status, enrolled days, attendance rate, and participation. Decimal rates are normalized to percentages, present and absent days are calculated from enrolled days, and blank assessment records are not created.
+
 The import API stores:
 
 - Raw source files in the private `mtss-imports` Blob container

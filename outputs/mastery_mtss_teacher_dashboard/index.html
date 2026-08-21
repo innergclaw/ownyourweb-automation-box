@@ -1068,6 +1068,195 @@
         font-size: 12px;
       }
 
+      .data-intake {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .intake-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: start;
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .intake-head h2,
+      .intake-head p {
+        margin: 0;
+      }
+
+      .intake-head h2 {
+        font-size: 18px;
+      }
+
+      .intake-head p {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .intake-workspace {
+        display: grid;
+        grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.28fr);
+      }
+
+      .upload-pane,
+      .preview-pane {
+        min-width: 0;
+        padding: 16px;
+      }
+
+      .upload-pane {
+        border-right: 1px solid var(--line);
+        background: #f8fafc;
+      }
+
+      .upload-drop {
+        display: grid;
+        gap: 10px;
+        padding: 18px;
+        border: 1px dashed #9bacc0;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .upload-drop strong,
+      .upload-drop span {
+        display: block;
+      }
+
+      .upload-drop span,
+      .intake-note,
+      .empty-state {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .upload-drop input {
+        width: 100%;
+        color: var(--ink);
+        font-size: 13px;
+      }
+
+      .intake-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .intake-note {
+        margin: 12px 0 0;
+      }
+
+      .intake-note strong {
+        color: var(--red);
+      }
+
+      .preview-pane {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+      }
+
+      .import-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .import-stat {
+        padding: 10px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .import-stat span,
+      .import-stat strong {
+        display: block;
+      }
+
+      .import-stat span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .import-stat strong {
+        margin-top: 3px;
+        font-size: 20px;
+      }
+
+      .mapping-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .mapping-list span {
+        padding: 5px 7px;
+        border: 1px solid #cbd7e4;
+        border-radius: 6px;
+        background: #f3f7fb;
+        font-size: 11px;
+      }
+
+      .preview-table {
+        max-height: 300px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .preview-table table {
+        min-width: 680px;
+      }
+
+      .preview-table th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      .import-history {
+        padding: 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      .import-history h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+      }
+
+      .history-list {
+        display: grid;
+        gap: 7px;
+      }
+
+      .history-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 9px 0;
+        border-top: 1px solid var(--soft-line);
+        font-size: 12px;
+      }
+
+      .history-row:first-child {
+        border-top: 0;
+      }
+
+      .history-row span {
+        color: var(--muted);
+      }
+
       .message-portal {
         display: grid;
         grid-template-columns: 260px minmax(0, 1fr);
@@ -1463,9 +1652,15 @@
         .hero-band,
         .grid,
         .lower-grid,
+        .intake-workspace,
         .message-portal,
         .agent-prototype {
           grid-template-columns: 1fr;
+        }
+
+        .upload-pane {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
         }
 
         .agent-sidebar,
@@ -1489,6 +1684,18 @@
       }
 
       @media (max-width: 720px) {
+        .intake-head {
+          display: grid;
+        }
+
+        .import-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .history-row {
+          grid-template-columns: 1fr;
+          gap: 3px;
+        }
         .auth-shell {
           grid-template-columns: 1fr;
         }
@@ -1737,6 +1944,63 @@
                 <li><span>Current scope</span><strong>Admin/staff prototype only</strong></li>
               </ul>
             </article>
+          </section>
+
+          <section class="data-intake" aria-labelledby="data-intake-title">
+            <header class="intake-head">
+              <div>
+                <h2 id="data-intake-title">Student Data Intake</h2>
+                <p>Upload a CSV or Excel file, verify the detected fields, then confirm what enters the MTSS tracker.</p>
+              </div>
+              <span class="status watch" id="data-service-status">Checking secure storage</span>
+            </header>
+
+            <div class="intake-workspace">
+              <form class="upload-pane" id="dataset-form">
+                <label class="upload-drop" for="dataset-file">
+                  <strong>Choose a student dataset</strong>
+                  <span>CSV or XLSX, one header row, up to 8 MB and 10,000 records.</span>
+                  <input id="dataset-file" name="dataset" type="file" accept=".csv,.xlsx" required />
+                </label>
+                <div class="intake-actions">
+                  <button class="button primary" id="preview-dataset" type="submit">Analyze File</button>
+                  <a class="button" href="sample-data/mastery_mtss_upload_template.csv" download>Download Template</a>
+                </div>
+                <p class="intake-note"><strong>Student privacy:</strong> Use this only after school approval. Uploads are limited to approved staff accounts and are not shared with students or parents.</p>
+              </form>
+
+              <div class="preview-pane" id="import-preview">
+                <div class="empty-state" id="preview-empty">Select a file to see field matching, validation results, and the first ten records before anything is committed.</div>
+                <div id="preview-results" hidden>
+                  <div class="import-stats" aria-label="Dataset analysis">
+                    <div class="import-stat"><span>Total rows</span><strong id="import-total">0</strong></div>
+                    <div class="import-stat"><span>Valid rows</span><strong id="import-valid">0</strong></div>
+                    <div class="import-stat"><span>Rejected rows</span><strong id="import-invalid">0</strong></div>
+                    <div class="import-stat"><span>Students found</span><strong id="import-students">0</strong></div>
+                  </div>
+                  <div>
+                    <strong>Detected columns</strong>
+                    <div class="mapping-list" id="mapping-list"></div>
+                  </div>
+                  <div class="preview-table">
+                    <table aria-label="Dataset preview">
+                      <thead><tr><th>Row</th><th>Student</th><th>ID</th><th>Grade</th><th>Assessment</th><th>Score</th><th>Validation</th></tr></thead>
+                      <tbody id="preview-rows"></tbody>
+                    </table>
+                  </div>
+                  <p class="intake-note" id="import-warnings"></p>
+                  <div class="intake-actions">
+                    <button class="button primary" id="confirm-import" type="button" disabled>Confirm Import</button>
+                    <button class="button" id="cancel-import" type="button">Clear Preview</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="import-history">
+              <h3>Recent Import Activity</h3>
+              <div class="history-list" id="import-history"><p class="empty-state">Import history will appear here after secure storage is connected.</p></div>
+            </div>
           </section>
 
           <section class="grid">
@@ -2100,6 +2364,15 @@
       const agentForm = document.querySelector("#agent-form");
       const agentInput = document.querySelector("#agent-input");
       const agentPromptButtons = document.querySelectorAll("[data-agent-prompt]");
+      const datasetForm = document.querySelector("#dataset-form");
+      const datasetFile = document.querySelector("#dataset-file");
+      const previewButton = document.querySelector("#preview-dataset");
+      const confirmImportButton = document.querySelector("#confirm-import");
+      const cancelImportButton = document.querySelector("#cancel-import");
+      const previewResults = document.querySelector("#preview-results");
+      const previewEmpty = document.querySelector("#preview-empty");
+      const dataServiceStatus = document.querySelector("#data-service-status");
+      let pendingImportId = null;
       let currentAccess = "admin";
 
       function getRedirectPath() {
@@ -2145,6 +2418,162 @@
           if (payload.clientPrincipal) enterMicrosoftWorkspace(payload.clientPrincipal);
         } catch (error) {
           authMode.textContent = "Secure host detected. Continue with Microsoft to use the school staff workspace.";
+        }
+      }
+
+      function setDataServiceStatus(text, state = "watch") {
+        dataServiceStatus.textContent = text;
+        dataServiceStatus.className = `status ${state}`;
+      }
+
+      async function apiRequest(url, options = {}) {
+        const response = await fetch(url, {
+          headers: { Accept: "application/json", ...(options.headers || {}) },
+          ...options,
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const error = new Error(payload.error || "The secure data service could not complete this request.");
+          error.status = response.status;
+          throw error;
+        }
+        return payload;
+      }
+
+      function clearImportPreview() {
+        pendingImportId = null;
+        previewResults.hidden = true;
+        previewEmpty.hidden = false;
+        confirmImportButton.disabled = true;
+        datasetForm.reset();
+      }
+
+      function renderImportPreview(payload) {
+        pendingImportId = payload.importId;
+        previewEmpty.hidden = true;
+        previewResults.hidden = false;
+        document.querySelector("#import-total").textContent = payload.summary.totalRows;
+        document.querySelector("#import-valid").textContent = payload.summary.validRows;
+        document.querySelector("#import-invalid").textContent = payload.summary.invalidRows;
+        document.querySelector("#import-students").textContent = payload.summary.uniqueStudents;
+
+        const mappingList = document.querySelector("#mapping-list");
+        mappingList.replaceChildren();
+        Object.entries(payload.mapping).filter(([, source]) => source).forEach(([field, source]) => {
+          const chip = document.createElement("span");
+          chip.textContent = `${field}: ${source}`;
+          mappingList.appendChild(chip);
+        });
+
+        const previewRows = document.querySelector("#preview-rows");
+        previewRows.replaceChildren();
+        payload.previewRows.forEach((record) => {
+          const row = document.createElement("tr");
+          const values = [
+            record.rowNumber,
+            record.student.studentName || "Missing",
+            record.student.studentId || "Missing",
+            record.student.grade || "-",
+            record.assessment.assessment || record.assessment.subject || "-",
+            record.assessment.percent === null ? (record.assessment.score ?? "-") : `${record.assessment.percent}%`,
+            record.valid ? "Ready" : record.errors.join(", "),
+          ];
+          values.forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+          previewRows.appendChild(row);
+        });
+
+        const warnings = payload.summary.warnings || [];
+        document.querySelector("#import-warnings").textContent = warnings.length
+          ? `Review before import: ${warnings.join(" ")}`
+          : "Column matching passed. Confirm the records and import when ready.";
+        confirmImportButton.disabled = payload.summary.validRows === 0;
+      }
+
+      function renderImportHistory(imports) {
+        const history = document.querySelector("#import-history");
+        history.replaceChildren();
+        if (!imports.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty-state";
+          empty.textContent = "No datasets have been imported yet.";
+          history.appendChild(empty);
+          return;
+        }
+        imports.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "history-row";
+          const name = document.createElement("strong");
+          name.textContent = item.filename;
+          const detail = document.createElement("span");
+          const count = item.studentsSaved || item.summary?.validRows || 0;
+          detail.textContent = `${count} valid rows | ${item.status}`;
+          const date = document.createElement("span");
+          date.textContent = new Date(item.committedAt || item.uploadedAt).toLocaleString();
+          row.append(name, detail, date);
+          history.appendChild(row);
+        });
+      }
+
+      async function loadDataService() {
+        if (!isHostedSecureApp) {
+          setDataServiceStatus("Hosted workspace required", "watch");
+          previewButton.disabled = true;
+          return;
+        }
+        try {
+          const health = await apiRequest("/api/data/health");
+          const ready = health.storageConfigured && health.uploadListConfigured;
+          setDataServiceStatus(health.canUpload ? "Secure storage ready" : "Setup or staff approval required", health.canUpload ? "ontrack" : "watch");
+          previewButton.disabled = !ready || !health.canUpload;
+          if (health.canUpload) {
+            const history = await apiRequest("/api/imports");
+            renderImportHistory(history.imports || []);
+          }
+        } catch (error) {
+          setDataServiceStatus(error.status === 403 ? "Staff approval required" : "Storage setup required", "review");
+          previewButton.disabled = true;
+        }
+      }
+
+      async function previewDataset(event) {
+        event.preventDefault();
+        const file = datasetFile.files[0];
+        if (!file) return showToast("Choose a CSV or XLSX file first.");
+        previewButton.disabled = true;
+        previewButton.textContent = "Analyzing...";
+        try {
+          const formData = new FormData();
+          formData.append("dataset", file);
+          const payload = await apiRequest("/api/imports/preview", { method: "POST", body: formData });
+          renderImportPreview(payload);
+          showToast(`${payload.summary.validRows} valid rows are ready for review.`);
+        } catch (error) {
+          showToast(error.message);
+        } finally {
+          previewButton.disabled = false;
+          previewButton.textContent = "Analyze File";
+        }
+      }
+
+      async function confirmDatasetImport() {
+        if (!pendingImportId) return;
+        confirmImportButton.disabled = true;
+        confirmImportButton.textContent = "Importing...";
+        try {
+          const result = await apiRequest(`/api/imports/${encodeURIComponent(pendingImportId)}/commit`, { method: "POST" });
+          showToast(`${result.studentsSaved} student rows securely imported.`);
+          clearImportPreview();
+          const history = await apiRequest("/api/imports");
+          renderImportHistory(history.imports || []);
+        } catch (error) {
+          showToast(error.message);
+          confirmImportButton.disabled = false;
+        } finally {
+          confirmImportButton.textContent = "Confirm Import";
         }
       }
 
@@ -2482,6 +2911,10 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         button.addEventListener("click", () => runAgentPrompt(button.dataset.agentPrompt));
       });
 
+      datasetForm.addEventListener("submit", previewDataset);
+      confirmImportButton.addEventListener("click", confirmDatasetImport);
+      cancelImportButton.addEventListener("click", clearImportPreview);
+
       document.querySelector("#run-review").addEventListener("click", () => {
         syncTime.textContent = "Just now";
         showToast(accessContent[currentAccess].reviewMessage);
@@ -2529,6 +2962,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       selectStudent(students[0].id);
       setAccess("admin", true);
       loadMicrosoftSession();
+      loadDataService();
     </script>
   </body>
 </html>

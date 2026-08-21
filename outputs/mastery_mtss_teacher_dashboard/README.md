@@ -1,40 +1,55 @@
 # Mastery MTSS Dashboard
 
-Secure admin/staff dashboard prototype for Mastery Charter's MTSS workflow.
+Microsoft-authenticated staff workspace for Mastery Charter's MTSS review and student progress workflow.
 
-## Included
+## Current operational scope
 
-- `index.html` - MTSS dashboard prototype with fictional demo records and Microsoft Entra staff sign-in gate
-- `security-preview.html` - Microsoft Entra sign-in and protected workspace preview
-- `staticwebapp.config.json` - Azure Static Web Apps authenticated-route configuration
-- `microsoft_entra_setup.md` - deployment and security setup notes
-- `.github/workflows/mastery-mtss-azure.yml` - GitHub-to-Azure deployment workflow
+- Microsoft Entra sign-in through Azure Static Web Apps
+- Approved-staff CSV and XLSX uploads, limited to 8 MB and 10,000 rows
+- Automatic matching for student identity, grade, assessment, MAP RIT, growth goal, attendance, GPA, credits, MTSS, IEP, Firefly, and intervention fields
+- Validation and a ten-row preview before staff confirm an import
+- Private raw-file staging, normalized student and assessment records, import history, and audit events
+- Fictional dashboard analytics and deterministic agent examples
 
-## Data and security boundary
+The charts, lesson generation, messaging, and AI search remain prototypes until their server-side services and school-approved policies are connected.
 
-This repository contains prototype UI only. It must not contain live student names,
-student IDs, assessment scores, IEP information, passwords, tokens, or other
-confidential school data.
+## Required Azure settings
 
-Live records belong in the approved Mastery SharePoint site or Dataverse environment.
-The production application must enforce Microsoft Entra authentication, approved
-security-group membership, and data-source permissions before displaying live records.
+Set these application settings on the Azure Static Web App. Never commit their values.
 
-## Hosting boundary
+| Setting | Purpose |
+| --- | --- |
+| `AZURE_CLIENT_ID` | Microsoft Entra application client ID |
+| `AZURE_CLIENT_SECRET` | Microsoft Entra application credential |
+| `AZURE_STORAGE_CONNECTION_STRING` | Private Blob and Table storage used by the import API |
+| `DATA_UPLOAD_ALLOWED_EMAILS` | Comma-separated Microsoft email addresses approved to use the data API |
 
-GitHub Pages can publish the visual prototype, but it cannot enforce the protected
-`/.auth` routes used by this dashboard. The live staff workspace should run on Azure
-Static Web Apps, with this repository acting as the source and deployment trigger.
-The workflow requires a GitHub secret named `AZURE_STATIC_WEB_APPS_API_TOKEN`.
+The deployment workflow publishes the static dashboard and the managed Azure Functions API. The API runtime is Node 20.
 
-## Local preview
+## Dataset format
 
-Open `index.html` or `security-preview.html` in a browser for the fictional-data demo.
-The local sign-in behavior is simulated. The hosted sign-in button redirects to
-Microsoft Entra ID only after the site is deployed to Azure Static Web Apps or another
-approved authenticated hosting environment.
+Start with [`sample-data/mastery_mtss_upload_template.csv`](sample-data/mastery_mtss_upload_template.csv). Each row requires a student ID and either a full student name or first and last name. Assessment fields are optional, but the uploader warns when no score field is detected.
 
-## Intended next step
+The import API stores:
 
-Use this repository as the visual and interaction reference while building the secure
-Power Apps Canvas app connected to the private Mastery SharePoint lists.
+- Raw source files in the private `mtss-imports` Blob container
+- Import metadata in `MtssImports`
+- Current student records in `MtssStudents`
+- Assessment records in `MtssAssessments`
+- Staff actions in `MtssAudit`
+
+## Local verification
+
+Run the API tests from the `api` folder:
+
+```sh
+npm install
+npm test
+npm audit --omit=dev
+```
+
+Local authenticated API testing also requires Azurite or an approved development storage account, plus `LOCAL_DEV_AUTH=true` and a matching `DATA_UPLOAD_ALLOWED_EMAILS` value.
+
+## Student privacy boundary
+
+Do not upload real student data until Mastery approves the hosting environment, staff access list, retention policy, incident process, and data-sharing terms. Microsoft sign-in alone is not a FERPA compliance determination. The API independently checks the uploader's email before preview, commit, history, or student access.

@@ -2534,7 +2534,12 @@
             renderImportHistory(history.imports || []);
           }
         } catch (error) {
-          setDataServiceStatus(error.status === 403 ? "Staff approval required" : "Storage setup required", "review");
+          const statusText = error.status === 403
+            ? "Staff approval required"
+            : error.status
+              ? `Data service error ${error.status}`
+              : "Data service unavailable";
+          setDataServiceStatus(statusText, "review");
           previewButton.disabled = true;
         }
       }

@@ -1,3 +1,4 @@
+require("./functions/ping");
 require("./functions/health");
 require("./functions/imports-preview");
 require("./functions/imports-commit");

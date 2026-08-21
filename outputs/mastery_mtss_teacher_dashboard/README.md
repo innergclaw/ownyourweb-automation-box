@@ -24,7 +24,7 @@ Set these application settings on the Azure Static Web App. Never commit their v
 | `AZURE_STORAGE_CONNECTION_STRING` | Private Blob and Table storage used by the import API |
 | `DATA_UPLOAD_ALLOWED_EMAILS` | Comma-separated Microsoft email addresses approved to use the data API |
 
-The deployment workflow publishes the static dashboard and the managed Azure Functions API. The API runtime is Node 20.
+The deployment workflow publishes the static dashboard and the managed Azure Functions API. The API runtime is Node 22.
 
 ## Dataset format
 

@@ -45,8 +45,23 @@ function rowsFromMatrix(matrix) {
 
 async function parseWorkbook(buffer) {
   const workbook = await readXlsxFile(buffer);
-  const matrix = Array.isArray(workbook[0]) ? workbook : workbook[0]?.data || [];
-  return rowsFromMatrix(matrix);
+  const sheets = Array.isArray(workbook[0])
+    ? [{ sheet: "Sheet1", data: workbook }]
+    : workbook;
+  const headers = [];
+  const rows = [];
+  const sheetSummaries = [];
+
+  for (const worksheet of sheets) {
+    const parsed = rowsFromMatrix(worksheet.data || []);
+    parsed.headers.forEach((header) => {
+      if (!headers.includes(header)) headers.push(header);
+    });
+    parsed.rows.forEach((row) => rows.push({ ...row, __sourceSheet: worksheet.sheet || "Sheet" }));
+    sheetSummaries.push({ sheet: worksheet.sheet || "Sheet", rows: parsed.rows.length, columns: parsed.headers.length });
+  }
+
+  return { headers, rows, sheetSummaries };
 }
 
 function parseCsv(buffer) {
@@ -96,12 +111,23 @@ function valueFor(row, mapping, field) {
   return header ? row[header] : "";
 }
 
+function normalizedSubject(value) {
+  const subject = String(value || "").trim();
+  if (/^(e|ela|english|reading)$/i.test(subject)) return "Reading";
+  if (/^(m|math|mathematics)$/i.test(subject)) return "Math";
+  return subject;
+}
+
 function normalizeRecord(row, mapping, index) {
   const firstName = String(valueFor(row, mapping, "firstName") || "").trim();
   const lastName = String(valueFor(row, mapping, "lastName") || "").trim();
   const providedName = String(valueFor(row, mapping, "studentName") || "").trim();
   const studentName = providedName || [firstName, lastName].filter(Boolean).join(" ");
   const studentId = String(valueFor(row, mapping, "studentId") || "").trim();
+  const subject = normalizedSubject(valueFor(row, mapping, "subject"));
+  const grade = String(valueFor(row, mapping, "grade") || "").trim();
+  const testedYear = String(valueFor(row, mapping, "testedYear") || "").trim();
+  const scaleScore = numberValue(valueFor(row, mapping, "scaleScore"));
   const score = numberValue(valueFor(row, mapping, "score"));
   const scoreMax = numberValue(valueFor(row, mapping, "scoreMax"));
   let percent = numberValue(valueFor(row, mapping, "percent"));
@@ -121,7 +147,10 @@ function normalizeRecord(row, mapping, index) {
       studentName,
       firstName,
       lastName,
-      grade: String(valueFor(row, mapping, "grade") || "").trim(),
+      grade,
+      drcStudentId: String(valueFor(row, mapping, "drcStudentId") || "").trim(),
+      uniqueMatchingId: String(valueFor(row, mapping, "uniqueMatchingId") || "").trim(),
+      paSecureId: String(valueFor(row, mapping, "paSecureId") || "").trim(),
       attendance: numberValue(valueFor(row, mapping, "attendance")),
       gpa: numberValue(valueFor(row, mapping, "gpa")),
       creditsEarned: numberValue(valueFor(row, mapping, "creditsEarned")),
@@ -132,8 +161,10 @@ function normalizeRecord(row, mapping, index) {
       intervention: String(valueFor(row, mapping, "intervention") || "").trim(),
     },
     assessment: {
-      subject: String(valueFor(row, mapping, "subject") || "").trim(),
-      assessment: String(valueFor(row, mapping, "assessment") || "").trim(),
+      subject,
+      assessment: String(valueFor(row, mapping, "assessment") || "").trim()
+        || (scaleScore !== null ? `PSSA ${subject || "Assessment"} Grade ${grade || "Unknown"}` : ""),
+      teacherOfRecord: String(valueFor(row, mapping, "teacherOfRecord") || "").trim(),
       score,
       scoreMax,
       percent: percent === null ? null : Math.round(percent * 100) / 100,
@@ -142,6 +173,12 @@ function normalizeRecord(row, mapping, index) {
       readingRit: numberValue(valueFor(row, mapping, "readingRit")),
       mathRit: numberValue(valueFor(row, mapping, "mathRit")),
       growthGoal: numberValue(valueFor(row, mapping, "growthGoal")),
+      scaleScore,
+      performanceCode: String(valueFor(row, mapping, "performanceCode") || "").trim(),
+      performance: String(valueFor(row, mapping, "performance") || "").trim(),
+      testedYear,
+      totalRawScore: numberValue(valueFor(row, mapping, "totalRawScore")),
+      sourceSheet: String(row.__sourceSheet || "").trim(),
     },
     raw: row,
   };
@@ -149,18 +186,31 @@ function normalizeRecord(row, mapping, index) {
 
 function analyzeDataset(parsed) {
   const mapping = detectMapping(parsed.headers);
-  const records = parsed.rows.map((row, index) => normalizeRecord(row, mapping, index));
+  const records = parsed.rows.map((row, index) => {
+    const rowMapping = detectMapping(Object.keys(row).filter((header) => !header.startsWith("__")));
+    return normalizeRecord(row, { ...mapping, ...rowMapping }, index);
+  });
   const validRecords = records.filter((record) => record.valid);
   const invalidRecords = records.filter((record) => !record.valid);
   const warnings = [...(parsed.warnings || [])];
+  const identities = new Map();
+  for (const record of validRecords) {
+    const key = record.student.studentId;
+    if (!identities.has(key)) identities.set(key, { names: new Set(), matchingIds: new Set() });
+    const identity = identities.get(key);
+    identity.names.add(record.student.studentName.toLowerCase());
+    if (record.student.uniqueMatchingId) identity.matchingIds.add(record.student.uniqueMatchingId);
+  }
+  const identityConflicts = [...identities.values()].filter((identity) => identity.names.size > 1 || identity.matchingIds.size > 1).length;
 
   if (!mapping.studentId) warnings.push("Student ID was not matched automatically.");
   if (!mapping.studentName && !(mapping.firstName && mapping.lastName)) {
     warnings.push("Student name was not matched automatically.");
   }
-  if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit) {
+  if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit && !mapping.scaleScore) {
     warnings.push("No assessment score columns were matched automatically.");
   }
+  if (identityConflicts) warnings.push(`${identityConflicts} student ID record${identityConflicts === 1 ? " has" : "s have"} conflicting names or matching IDs.`);
 
   return {
     headers: parsed.headers,
@@ -171,7 +221,9 @@ function analyzeDataset(parsed) {
       validRows: validRecords.length,
       invalidRows: invalidRecords.length,
       uniqueStudents: new Set(validRecords.map((record) => record.student.studentId)).size,
+      identityConflicts,
       warnings,
+      sheets: parsed.sheetSummaries || [],
     },
   };
 }

@@ -45,3 +45,21 @@ test("handles students whose optional academic fields are missing", () => {
   assert.equal(result.missingAssessmentCount, 4);
   assert.match(result.next, /Add 4 interim/);
 });
+
+test("surfaces PSSA scale score, performance, teacher, and matching identifiers", () => {
+  const [result] = buildDashboardStudents([{
+    studentId: "DEMO-3", studentName: "Taylor Sample", grade: "7",
+    drcStudentId: "DRC-3", uniqueMatchingId: "MATCH-3", paSecureId: "PA-3",
+  }], [{
+    studentId: "DEMO-3", subject: "Reading", assessment: "PSSA Reading Grade 7",
+    testedYear: "2026", scaleScore: 1048, performanceCode: "3", performance: "Pro",
+    teacherOfRecord: "Teacher Sample", totalRawScore: 39, createdAt: "2026-08-21",
+  }]);
+
+  assert.equal(result.readingScaleScore, 1048);
+  assert.equal(result.readingPerformance, "Pro");
+  assert.equal(result.readingTeacher, "Teacher Sample");
+  assert.equal(result.readingPerformanceCode, 3);
+  assert.equal(result.uniqueMatchingId, "MATCH-3");
+  assert.match(result.readingText, /PSSA 1048 \(Pro\)/);
+});

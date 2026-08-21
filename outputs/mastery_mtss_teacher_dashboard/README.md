@@ -5,9 +5,11 @@ Microsoft-authenticated staff workspace for Mastery Charter's MTSS review and st
 ## Current operational scope
 
 - Microsoft Entra sign-in through Azure Static Web Apps
-- Approved-staff CSV and XLSX uploads, limited to 8 MB and 10,000 rows
+- Approved-staff CSV, CVC, and XLSX uploads, limited to 8 MB and 10,000 rows
 - Automatic matching for student identity, grade, assessment, MAP RIT, growth goal, attendance, GPA, credits, MTSS, IEP, Firefly, and intervention fields
-- Validation and a ten-row preview before staff confirm an import
+- Multi-sheet PSSA parsing with Student ID matching, name and Unique Matching ID verification, and subject-specific teacher records
+- Preservation of every original source column alongside normalized dashboard fields
+- Validation and a ten-row preview; clean files sync automatically while conflicts pause for review
 - Private raw-file staging, normalized student and assessment records, import history, and audit events
 - Live student queue, search, grade/reporting-period filters, assessment summaries, MTSS counts, GPA/credit profiles, and data-completeness indicators from authorized imports
 - Rules-based staff assistant workflows that use the currently loaded records without calling an AI model
@@ -31,6 +33,8 @@ The deployment workflow publishes the static dashboard and the managed Azure Fun
 ## Dataset format
 
 Start with [`sample-data/mastery_mtss_upload_template.csv`](sample-data/mastery_mtss_upload_template.csv). Each row requires a student ID and either a full student name or first and last name. Assessment fields are optional, but the uploader warns when no score field is detected.
+
+PSSA workbooks can contain separate ELA and Math worksheets. The importer reads every sheet, normalizes `E` to Reading and `M` to Math, and keeps scale score, performance, tested year, teacher of record, DRC Student ID, Unique Matching ID, PAsecureID, raw scores, reporting categories, anchors, strength profiles, accommodations, and all other source columns with the assessment record.
 
 The import API stores:
 

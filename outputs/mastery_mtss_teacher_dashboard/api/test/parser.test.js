@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { strToU8, zipSync } = require("fflate");
+const { strToU8, unzipSync, zipSync } = require("fflate");
 const { parseDataset, analyzeDataset, numberValue } = require("../src/lib/parser");
 
 test("maps and normalizes a CSV student record", async () => {
@@ -40,6 +40,27 @@ test("reads the first worksheet from an XLSX upload", async () => {
   assert.equal(analysis.records[0].assessment.readingRit, 218);
 });
 
+function sampleMultiSheetWorkbook() {
+  const files = unzipSync(sampleWorkbook());
+  files["[Content_Types].xml"] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`);
+  files["xl/workbook.xml"] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PSSA Grade 7 ELA" sheetId="1" r:id="rId1"/><sheet name="PSSA Grade 7 Math" sheetId="2" r:id="rId2"/></sheets></workbook>`);
+  files["xl/_rels/workbook.xml.rels"] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`);
+  files["xl/worksheets/sheet2.xml"] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Subject</t></is></c><c r="B1" t="inlineStr"><is><t>Student ID</t></is></c><c r="C1" t="inlineStr"><is><t>First Name</t></is></c><c r="D1" t="inlineStr"><is><t>Last Name</t></is></c><c r="E1" t="inlineStr"><is><t>Teacher on Record</t></is></c><c r="F1" t="inlineStr"><is><t>Grade</t></is></c><c r="G1" t="inlineStr"><is><t>Scale Score</t></is></c><c r="H1" t="inlineStr"><is><t>Performance</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>M</t></is></c><c r="B2" t="inlineStr"><is><t>MC-2002</t></is></c><c r="C2" t="inlineStr"><is><t>Sam</t></is></c><c r="D2" t="inlineStr"><is><t>Example</t></is></c><c r="E2" t="inlineStr"><is><t>Teacher B</t></is></c><c r="F2"><v>7</v></c><c r="G2"><v>1050</v></c><c r="H2" t="inlineStr"><is><t>Pro</t></is></c></row></sheetData></worksheet>`);
+  return Buffer.from(zipSync(files));
+}
+
+test("reads every worksheet and preserves PSSA subject details", async () => {
+  const analysis = analyzeDataset(await parseDataset(sampleMultiSheetWorkbook(), "pssa.xlsx"));
+
+  assert.equal(analysis.summary.validRows, 2);
+  assert.equal(analysis.summary.sheets.length, 2);
+  assert.equal(analysis.records[1].assessment.subject, "Math");
+  assert.equal(analysis.records[1].assessment.teacherOfRecord, "Teacher B");
+  assert.equal(analysis.records[1].assessment.scaleScore, 1050);
+  assert.equal(analysis.records[1].assessment.performance, "Pro");
+  assert.equal(analysis.records[1].assessment.sourceSheet, "PSSA Grade 7 Math");
+});
+
 test("rejects rows missing required identity fields", async () => {
   const csv = Buffer.from("Student ID,Student Name,Score\n,Missing ID,70\nMC-3,,80");
   const analysis = analyzeDataset(await parseDataset(csv, "invalid.csv"));
@@ -69,4 +90,16 @@ test("finds the actual header row below export title rows", async () => {
   assert.equal(analysis.records[0].student.studentId, "MC-3003");
   assert.equal(analysis.records[0].assessment.score, 221);
   assert.equal(analysis.records[0].assessment.reportingPeriod, "Spring 2026");
+});
+
+test("flags identity conflicts for the same student ID", async () => {
+  const csv = Buffer.from([
+    "Student ID,Student Name,Unique Matching ID,Scale Score",
+    "MC-9,Student One,MATCH-1,1000",
+    "MC-9,Student Two,MATCH-2,1010",
+  ].join("\n"));
+  const analysis = analyzeDataset(await parseDataset(csv, "conflict.csv"));
+
+  assert.equal(analysis.summary.identityConflicts, 1);
+  assert.match(analysis.summary.warnings.join(" "), /conflicting names or matching IDs/);
 });

@@ -33,18 +33,25 @@ function subjectSummary(records, subject) {
   const scored = subjectRecords.filter((record) => numeric(record.percent) !== null);
   const first = scored.length ? numeric(scored[0].percent) : null;
   const latest = scored.length ? numeric(scored[scored.length - 1].percent) : null;
+  const latestRecord = subjectRecords[subjectRecords.length - 1] || {};
   return {
     count: subjectRecords.length,
     first,
     latest,
     change: first !== null && latest !== null ? Math.round((latest - first) * 10) / 10 : null,
+    scaleScore: numeric(latestRecord.scaleScore),
+    performanceCode: numeric(latestRecord.performanceCode),
+    performance: String(latestRecord.performance || "").trim(),
+    teacherOfRecord: String(latestRecord.teacherOfRecord || "").trim(),
+    testedYear: String(latestRecord.testedYear || "").trim(),
+    totalRawScore: numeric(latestRecord.totalRawScore),
   };
 }
 
 function dedupeAssessments(records) {
   const unique = new Map();
   for (const record of records) {
-    const key = [record.studentId, record.subject, record.assessment, record.testDate, record.reportingPeriod]
+    const key = [record.studentId, record.subject, record.assessment, record.testedYear, record.testDate, record.reportingPeriod]
       .map((value) => String(value || "").trim().toLowerCase())
       .join("|");
     const current = unique.get(key);
@@ -60,16 +67,19 @@ function statusFor(student, reading, math) {
   const gpa = numeric(student.gpa);
   const scores = [reading.latest, math.latest].filter((value) => value !== null);
   const lowestScore = scores.length ? Math.min(...scores) : null;
+  const performanceCodes = [reading.performanceCode, math.performanceCode].filter((value) => value !== null);
+  const lowestPerformance = performanceCodes.length ? Math.min(...performanceCodes) : null;
 
   if (tier.includes("3") || firefly.includes("intensive") || (attendance !== null && attendance < 90)
-    || (gpa !== null && gpa < 2) || (lowestScore !== null && lowestScore < 60)) return "Review";
+    || (gpa !== null && gpa < 2) || (lowestScore !== null && lowestScore < 60) || lowestPerformance === 1) return "Review";
   if (tier.includes("2") || firefly.includes("watch") || (attendance !== null && attendance < 93)
-    || (lowestScore !== null && lowestScore < 70)) return "Watch";
+    || (lowestScore !== null && lowestScore < 70) || lowestPerformance === 2) return "Watch";
   return "On Track";
 }
 
 function scoreText(summary, rit, goal) {
   const parts = [];
+  if (summary.scaleScore !== null) parts.push(`PSSA ${summary.scaleScore}${summary.performance ? ` (${summary.performance})` : ""}`);
   if (numeric(rit) !== null) parts.push(`RIT ${numeric(rit)}`);
   if (numeric(goal) !== null) parts.push(`+${numeric(goal)} goal`);
   if (summary.latest !== null) parts.push(`latest ${summary.latest}%`);
@@ -139,6 +149,21 @@ function buildDashboardStudents(students, assessments) {
       owner: status === "Review" ? "MTSS Case Team" : status === "Watch" ? "Grade Team" : "Instructional Team",
       readingText: scoreText(reading, readingRit, growthGoal),
       mathText: scoreText(math, mathRit, growthGoal),
+      readingScaleScore: reading.scaleScore,
+      mathScaleScore: math.scaleScore,
+      readingPerformance: reading.performance,
+      mathPerformance: math.performance,
+      readingPerformanceCode: reading.performanceCode,
+      mathPerformanceCode: math.performanceCode,
+      readingTeacher: reading.teacherOfRecord || "Not listed",
+      mathTeacher: math.teacherOfRecord || "Not listed",
+      readingTestedYear: reading.testedYear,
+      mathTestedYear: math.testedYear,
+      readingRawScore: reading.totalRawScore,
+      mathRawScore: math.totalRawScore,
+      drcStudentId: student.drcStudentId || "",
+      uniqueMatchingId: student.uniqueMatchingId || "",
+      paSecureId: student.paSecureId || "",
       gpa,
       passingGpa: 2,
       targetGpa: 2.75,

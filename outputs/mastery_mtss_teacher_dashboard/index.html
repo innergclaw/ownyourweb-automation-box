@@ -1979,14 +1979,14 @@
               <small>Tier, attendance, growth, or IEP concern</small>
             </article>
             <article class="metric">
-              <span>Reading At/Above 70%</span>
+              <span>Reading Benchmark</span>
               <strong id="metric-reading">71%</strong>
-              <small>Latest imported interim score</small>
+              <small>70% interim or PSSA Proficient+</small>
             </article>
             <article class="metric">
-              <span>Math At/Above 70%</span>
+              <span>Math Benchmark</span>
               <strong id="metric-math">66%</strong>
-              <small>Latest imported interim score</small>
+              <small>70% interim or PSSA Proficient+</small>
             </article>
             <article class="metric">
               <span>Missing Data</span>
@@ -2014,7 +2014,7 @@
             <header class="intake-head">
               <div>
                 <h2 id="data-intake-title">Student Data Intake</h2>
-                <p>Upload a CSV or Excel file, verify the detected fields, then confirm what enters the MTSS tracker.</p>
+                <p>Upload a CSV or Excel workbook. Clean records sync automatically; identity conflicts or missing required fields pause for staff review.</p>
               </div>
               <span class="status watch" id="data-service-status">Checking secure storage</span>
             </header>
@@ -2177,11 +2177,11 @@
                     <strong id="student-tier">Tier 2</strong>
                   </div>
                   <div class="stat-box">
-                    <span>Reading RIT</span>
+                    <span>Reading Evidence</span>
                     <strong id="student-reading">211 / +4 goal</strong>
                   </div>
                   <div class="stat-box">
-                    <span>Math RIT</span>
+                    <span>Math Evidence</span>
                     <strong id="student-math">206 / +6 goal</strong>
                   </div>
                 </div>
@@ -2225,6 +2225,9 @@
                   <p class="gpa-note" id="credit-gap">Promotion evidence: 7 of 8 required coursework checkpoints complete.</p>
                 </section>
                 <ul class="evidence-list">
+                  <li><strong>PSSA teachers</strong><span id="student-pssa-teachers">Reading: not listed | Math: not listed</span></li>
+                  <li><strong>PSSA performance</strong><span id="student-pssa-performance">No PSSA performance imported</span></li>
+                  <li><strong>Matching identifiers</strong><span id="student-matching-ids">Not imported</span></li>
                   <li><strong>Assessment trend</strong><span id="student-trend">MAP improved, Amplify below target</span></li>
                   <li><strong>Intervention</strong><span id="student-intervention">Small-group reading, 3x weekly</span></li>
                   <li><strong>IEP / Firefly</strong><span id="student-iep">No IEP, Firefly watch</span></li>
@@ -2684,7 +2687,7 @@
       async function previewDataset(event) {
         event.preventDefault();
         const file = datasetFile.files[0];
-        if (!file) return showToast("Choose a CSV or XLSX file first.");
+        if (!file) return showToast("Choose a CSV, CVC, or XLSX file first.");
         previewButton.disabled = true;
         previewButton.textContent = "Analyzing...";
         uploadFeedback.textContent = "Reading the file and matching student fields...";
@@ -2693,12 +2696,13 @@
           formData.append("dataset", file);
           const payload = await apiRequest("/api/imports/preview", { method: "POST", body: formData });
           renderImportPreview(payload);
-          if (payload.summary.validRows > 0 && payload.summary.invalidRows === 0) {
+          if (payload.summary.validRows > 0 && payload.summary.invalidRows === 0 && !payload.summary.identityConflicts) {
             uploadFeedback.textContent = `${payload.summary.validRows} valid rows found. Syncing the shared dashboard...`;
             await commitImportById(payload.importId, previewButton);
             uploadFeedback.textContent = `${payload.summary.uniqueStudents} students synced. The dashboard is up to date.`;
           } else {
-            uploadFeedback.textContent = `${payload.summary.validRows} valid rows and ${payload.summary.invalidRows} rejected rows found. Review the results before importing.`;
+            const identityNote = payload.summary.identityConflicts ? ` ${payload.summary.identityConflicts} student identity conflict${payload.summary.identityConflicts === 1 ? "" : "s"} must be reviewed.` : "";
+            uploadFeedback.textContent = `${payload.summary.validRows} valid rows and ${payload.summary.invalidRows} rejected rows found.${identityNote} Review the results before importing.`;
             showToast("Review the file results before import.");
           }
         } catch (error) {
@@ -2758,6 +2762,17 @@
         return score === null ? "N/A" : `${Math.round(score)}%`;
       }
 
+      function subjectScoreCell(student, subject) {
+        const field = subject === "reading" ? "reading" : "math";
+        const percent = numericValue(student[field]);
+        if (percent !== null) {
+          return `<div class="bar"><span>${scoreDisplay(percent)}</span><div class="track"><i style="--value: ${percent}%"></i></div></div>`;
+        }
+        const scale = numericValue(student[`${field}ScaleScore`]);
+        const performance = student[`${field}Performance`] || "PSSA";
+        return scale === null ? "N/A" : `<strong>${scale}</strong><br><span>${escapeHtml(performance)}</span>`;
+      }
+
       function filteredStudents() {
         const gradeFilter = document.querySelector("#grade-filter").value;
         const periodFilter = document.querySelector("#period-filter").value;
@@ -2788,8 +2803,8 @@
                 <td><strong>${escapeHtml(student.name)}</strong><br><span>${escapeHtml(student.id)}</span></td>
                 <td>${escapeHtml(student.gradeShort || "-")}</td>
                 <td>${escapeHtml(student.tier)}</td>
-                <td><div class="bar"><span>${scoreDisplay(student.reading)}</span><div class="track"><i style="--value: ${numericValue(student.reading) ?? 0}%"></i></div></div></td>
-                <td><div class="bar"><span>${scoreDisplay(student.math)}</span><div class="track"><i style="--value: ${numericValue(student.math) ?? 0}%"></i></div></div></td>
+                <td>${subjectScoreCell(student, "reading")}</td>
+                <td>${subjectScoreCell(student, "math")}</td>
                 <td>${numericValue(student.attendance) === null ? "N/A" : `${numericValue(student.attendance)}%`}</td>
                 <td><span class="status ${statusClass(student.status)}">${escapeHtml(student.status)}</span></td>
                 <td>${escapeHtml(student.owner)}</td>
@@ -2864,6 +2879,14 @@
         document.querySelector("#student-tier").textContent = student.tier;
         document.querySelector("#student-reading").textContent = student.readingText;
         document.querySelector("#student-math").textContent = student.mathText;
+        document.querySelector("#student-pssa-teachers").textContent = `Reading: ${student.readingTeacher || "Not listed"} | Math: ${student.mathTeacher || "Not listed"}`;
+        document.querySelector("#student-pssa-performance").textContent = `Reading: ${student.readingPerformance || "Not imported"}${numericValue(student.readingScaleScore) === null ? "" : ` (${student.readingScaleScore})`} | Math: ${student.mathPerformance || "Not imported"}${numericValue(student.mathScaleScore) === null ? "" : ` (${student.mathScaleScore})`}`;
+        const matchingIds = [
+          student.uniqueMatchingId ? `Matching ID ${student.uniqueMatchingId}` : "",
+          student.drcStudentId ? `DRC ID ${student.drcStudentId}` : "",
+          student.paSecureId ? `PAsecureID ${student.paSecureId}` : "",
+        ].filter(Boolean);
+        document.querySelector("#student-matching-ids").textContent = matchingIds.length ? matchingIds.join(" | ") : "Not imported";
         document.querySelector("#student-trend").textContent = student.trend;
         document.querySelector("#student-intervention").textContent = student.intervention;
         document.querySelector("#student-iep").textContent = student.iep;
@@ -2907,10 +2930,10 @@
 
       function missingDataFor(student) {
         const missing = [];
-        if (numericValue(student.reading) === null) missing.push("reading score not imported");
-        else if (student.reading < 60) missing.push("reading evidence needs review");
-        if (numericValue(student.math) === null) missing.push("math score not imported");
-        else if (student.math < 60) missing.push("math evidence needs review");
+        if (numericValue(student.reading) === null && numericValue(student.readingScaleScore) === null) missing.push("reading score not imported");
+        else if ((numericValue(student.reading) !== null && student.reading < 60) || (numericValue(student.readingPerformanceCode) !== null && student.readingPerformanceCode < 3)) missing.push("reading evidence needs review");
+        if (numericValue(student.math) === null && numericValue(student.mathScaleScore) === null) missing.push("math score not imported");
+        else if ((numericValue(student.math) !== null && student.math < 60) || (numericValue(student.mathPerformanceCode) !== null && student.mathPerformanceCode < 3)) missing.push("math evidence needs review");
         if (numericValue(student.attendance) !== null && student.attendance < 90) missing.push("attendance below 90%");
         if (numericValue(student.gpa) !== null && student.gpa < student.passingGpa) missing.push("GPA below passing threshold");
         if (Number(student.creditsEarned) < Number(student.creditsExpected)) missing.push(`${student.creditLabel} below expected pace`);
@@ -2924,6 +2947,7 @@
         return `Student: ${student.name} (${student.id})
 Current status: ${student.status}, ${student.tier}, ${student.grade}
 Evidence: Reading ${student.readingText}; Math ${student.mathText}; Attendance ${numericValue(student.attendance) === null ? "not imported" : `${student.attendance}%`}; GPA ${formatGpa(student.gpa)}
+PSSA teachers: Reading ${student.readingTeacher || "not listed"}; Math ${student.mathTeacher || "not listed"}
 Risk: ${student.gpaStatus}
 Missing data / watch items: ${missing}
 Intervention: ${student.intervention}
@@ -3052,9 +3076,14 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       }
 
       function percentageMeeting(items, field, threshold = 70) {
-        const scored = items.map((student) => numericValue(student[field])).filter((value) => value !== null);
-        if (!scored.length) return "N/A";
-        return `${Math.round((scored.filter((value) => value >= threshold).length / scored.length) * 100)}%`;
+        const results = items.map((student) => {
+          const percent = numericValue(student[field]);
+          if (percent !== null) return percent >= threshold;
+          const performanceCode = numericValue(student[`${field}PerformanceCode`]);
+          return performanceCode === null ? null : performanceCode >= 3;
+        }).filter((value) => value !== null);
+        if (!results.length) return "N/A";
+        return `${Math.round((results.filter(Boolean).length / results.length) * 100)}%`;
       }
 
       function updateLivePanels(visible) {
@@ -3065,11 +3094,11 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const tier3 = visible.filter((student) => student.tier.includes("3")).length;
         const missing = visible.filter((student) => Number(student.missingAssessmentCount || 0) > 0).length;
 
-        document.querySelector("#reading-summary-1").textContent = `${percentageMeeting(visible, "reading")} at or above the 70% review benchmark`;
+        document.querySelector("#reading-summary-1").textContent = `${percentageMeeting(visible, "reading")} meeting the interim or PSSA proficiency benchmark`;
         document.querySelector("#reading-summary-2").textContent = usingLiveData
           ? `${readingCount} unique Reading assessment records loaded`
           : "Fictional Reading scores shown for interface testing";
-        document.querySelector("#math-summary-1").textContent = `${percentageMeeting(visible, "math")} at or above the 70% review benchmark`;
+        document.querySelector("#math-summary-1").textContent = `${percentageMeeting(visible, "math")} meeting the interim or PSSA proficiency benchmark`;
         document.querySelector("#math-summary-2").textContent = usingLiveData
           ? `${mathCount} unique Math assessment records loaded`
           : "Fictional Math scores shown for interface testing";
@@ -3084,8 +3113,8 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const subject = document.querySelector("#subject-filter").value;
         const visible = filteredStudents();
         const needsReview = visible.filter((student) => {
-          if (subject === "Reading") return numericValue(student.reading) === null || student.reading < 70 || student.status === "Review";
-          if (subject === "Math") return numericValue(student.math) === null || student.math < 70 || student.status === "Review";
+          if (subject === "Reading") return (numericValue(student.reading) === null ? numericValue(student.readingPerformanceCode) === null || student.readingPerformanceCode < 3 : student.reading < 70) || student.status === "Review";
+          if (subject === "Math") return (numericValue(student.math) === null ? numericValue(student.mathPerformanceCode) === null || student.mathPerformanceCode < 3 : student.math < 70) || student.status === "Review";
           return student.status !== "On Track";
         }).length;
         document.querySelector("#metric-students").textContent = visible.length;

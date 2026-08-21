@@ -153,14 +153,16 @@ async function commitRecords({ entity, analysis, uploader }) {
     }, "Merge");
     studentsSaved += 1;
 
-    const hasAssessment = Object.entries(record.assessment).some(([key, value]) => key !== "reportingPeriod" && value !== "" && value !== null);
+    const hasAssessment = Object.entries(record.assessment).some(([key, value]) => !["reportingPeriod", "sourceSheet"].includes(key) && value !== "" && value !== null);
     if (hasAssessment) {
+      const sourceData = Object.fromEntries(Object.entries(record.raw).filter(([key]) => !key.startsWith("__")));
       await current.assessments.upsertEntity({
         partitionKey: `${SCHOOL_ID}-${studentKey}`,
         rowKey: `${entity.rowKey}-${String(record.rowNumber).padStart(6, "0")}`,
         studentId: record.student.studentId,
         studentName: record.student.studentName,
         ...record.assessment,
+        sourceDataJson: JSON.stringify(sourceData),
         sourceImportId: entity.rowKey,
         createdAt: now,
       }, "Replace");
@@ -217,7 +219,7 @@ async function listStudents(limit = 100) {
   const results = [];
   const entities = getClients().students.listEntities({
     queryOptions: { filter: `PartitionKey eq '${SCHOOL_ID}'`, select: [
-      "studentId", "studentName", "grade", "attendance", "gpa", "creditsEarned",
+      "studentId", "studentName", "firstName", "lastName", "drcStudentId", "uniqueMatchingId", "paSecureId", "grade", "attendance", "gpa", "creditsEarned",
       "creditsRequired", "mtssTier", "hasIep", "firefly", "intervention", "updatedAt",
     ] },
   });
@@ -225,6 +227,11 @@ async function listStudents(limit = 100) {
     results.push({
       studentId: entity.studentId,
       studentName: entity.studentName,
+      firstName: entity.firstName || "",
+      lastName: entity.lastName || "",
+      drcStudentId: entity.drcStudentId || "",
+      uniqueMatchingId: entity.uniqueMatchingId || "",
+      paSecureId: entity.paSecureId || "",
       grade: entity.grade || "",
       attendance: entity.attendance ?? null,
       gpa: entity.gpa ?? null,
@@ -248,7 +255,8 @@ async function listDashboardStudents(limit = 500) {
   const entities = getClients().assessments.listEntities({
     queryOptions: { select: [
       "studentId", "subject", "assessment", "score", "scoreMax", "percent", "testDate",
-      "reportingPeriod", "readingRit", "mathRit", "growthGoal", "createdAt",
+      "reportingPeriod", "readingRit", "mathRit", "growthGoal", "scaleScore", "performanceCode",
+      "performance", "testedYear", "totalRawScore", "teacherOfRecord", "sourceSheet", "createdAt",
     ] },
   });
   for await (const entity of entities) {

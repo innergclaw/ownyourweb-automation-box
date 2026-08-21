@@ -739,6 +739,31 @@
         font-size: 13px;
       }
 
+      .queue-tools {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .queue-tools input {
+        width: min(240px, 42vw);
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .queue-tools input:focus {
+        border-color: var(--blue);
+        outline: 2px solid rgba(45, 108, 223, 0.15);
+        outline-offset: 1px;
+      }
+
       .table-wrap {
         overflow-x: auto;
       }
@@ -1620,6 +1645,24 @@
         transform: translateY(0);
       }
 
+      @media (max-width: 1360px) and (min-width: 1161px) {
+        .sidebar {
+          grid-template-columns: 170px minmax(0, 1fr);
+        }
+
+        .brand {
+          grid-row: 1 / span 2;
+        }
+
+        .sidebar-section[aria-label="Filters"] {
+          grid-template-columns: minmax(150px, 0.8fr) minmax(190px, 1fr) minmax(200px, 1.05fr);
+        }
+
+        .sidebar-section[aria-label="Sync status"] {
+          grid-template-columns: 130px 120px minmax(220px, 1fr) auto;
+        }
+      }
+
       @media (max-width: 1160px) {
         .app {
           grid-template-columns: 1fr;
@@ -1684,6 +1727,21 @@
       }
 
       @media (max-width: 720px) {
+        .queue-head {
+          display: grid;
+        }
+
+        .queue-tools {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          width: 100%;
+          justify-content: stretch;
+        }
+
+        .queue-tools input {
+          width: 100%;
+        }
+
         .intake-head {
           display: grid;
         }
@@ -1817,11 +1875,11 @@
           <div class="field">
             <label for="period-filter">Reporting Period</label>
             <select id="period-filter">
-              <option>SY27 Planning</option>
-              <option>Q1 Biweekly Review</option>
-              <option>Q2 Biweekly Review</option>
-              <option>Q3 Biweekly Review</option>
-              <option>Q4 Biweekly Review</option>
+              <option>All Reporting Periods</option>
+              <option>RP1</option>
+              <option>RP2</option>
+              <option>RP3</option>
+              <option>RP4</option>
             </select>
           </div>
         </section>
@@ -1915,14 +1973,14 @@
               <small>Tier, attendance, growth, or IEP concern</small>
             </article>
             <article class="metric">
-              <span>Reading Growth Met</span>
+              <span>Reading At/Above 70%</span>
               <strong id="metric-reading">71%</strong>
-              <small>MAP plus interim evidence</small>
+              <small>Latest imported interim score</small>
             </article>
             <article class="metric">
-              <span>Math Growth Met</span>
+              <span>Math At/Above 70%</span>
               <strong id="metric-math">66%</strong>
-              <small>MAP RIT and unit assessments</small>
+              <small>Latest imported interim score</small>
             </article>
             <article class="metric">
               <span>Missing Data</span>
@@ -2005,12 +2063,15 @@
 
           <section class="grid">
             <article class="panel">
-              <div class="panel-head">
+              <div class="panel-head queue-head">
                 <div>
                   <h2>Student Review Queue</h2>
-                  <p id="queue-copy">Fictional demo data showing the admin review workflow.</p>
+                  <p id="queue-copy">Loading the authorized student workspace.</p>
                 </div>
-                <span class="pill">Click a student</span>
+                <div class="queue-tools">
+                  <input id="student-search" type="search" placeholder="Search name or student ID" aria-label="Search students" />
+                  <span class="pill" id="data-source-pill">Loading data</span>
+                </div>
               </div>
               <div class="table-wrap">
                 <table aria-label="Student review queue">
@@ -2036,18 +2097,18 @@
                   <div class="matrix" aria-label="Data triangulation matrix">
                     <div class="matrix-row">
                       <strong>Reading</strong>
-                      <div class="matrix-cell">MAP RIT: 71% met projected growth</div>
-                      <div class="matrix-cell">Amplify: 4 units logged, 2 below target</div>
+                      <div class="matrix-cell" id="reading-summary-1">Loading imported Reading data</div>
+                      <div class="matrix-cell" id="reading-summary-2">Assessment coverage is being calculated</div>
                     </div>
                     <div class="matrix-row">
                       <strong>Math</strong>
-                      <div class="matrix-cell">MAP RIT: 66% met projected growth</div>
-                      <div class="matrix-cell">EM2: 3 of 4 checkpoints uploaded</div>
+                      <div class="matrix-cell" id="math-summary-1">Loading imported Math data</div>
+                      <div class="matrix-cell" id="math-summary-2">Assessment coverage is being calculated</div>
                     </div>
                     <div class="matrix-row">
                       <strong>State</strong>
-                      <div class="matrix-cell">PSSA trends tagged by standard</div>
-                      <div class="matrix-cell">Keystone pending import</div>
+                      <div class="matrix-cell" id="tier-summary">MTSS tier counts are being calculated</div>
+                      <div class="matrix-cell" id="data-summary">Data completeness is being calculated</div>
                     </div>
                   </div>
                 </article>
@@ -2076,17 +2137,17 @@
                     <article>
                       <strong>Tier 2 Reading Fluency</strong>
                       <span class="status sync">Active</span>
-                      <p>34 students, 3x weekly, outcome review due in 10 school days.</p>
+                      <p id="tier-2-summary">Tier 2 student count will appear after data loads.</p>
                     </article>
                     <article>
                       <strong>Tier 3 Math Concepts</strong>
                       <span class="status review">Review</span>
-                      <p>12 students, progress flat across two interim checks.</p>
+                      <p id="tier-3-summary">Tier 3 student count will appear after data loads.</p>
                     </article>
                     <article>
                       <strong>Extended Learning Block</strong>
                       <span class="status ontrack">Ready</span>
-                      <p>Roster aligned to MAP domain gaps and teacher availability.</p>
+                      <p id="tier-1-summary">Tier 1 student count will appear after data loads.</p>
                     </article>
                   </div>
                 </article>
@@ -2171,14 +2232,14 @@
             <aside class="agent-sidebar">
               <div>
                 <h2>Staff Agent Prototype</h2>
-                <p>Static demo agent. Uses sample records only. Built to port into Copilot Studio later.</p>
+                <p>Rules-based staff assistant using the currently loaded dashboard records. Azure AI is not active yet.</p>
               </div>
               <div class="prompt-grid" aria-label="Suggested agent prompts">
-                <button class="prompt-button" type="button" data-agent-prompt="Show me Grade 6 students who need reading review.">Grade 6 reading review</button>
-                <button class="prompt-button" type="button" data-agent-prompt="Summarize Aaliyah Carter for the biweekly MTSS meeting.">Summarize Aaliyah</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Show me students who need reading review.">Reading review</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Summarize the selected student for the biweekly MTSS meeting.">Summarize selected student</button>
                 <button class="prompt-button" type="button" data-agent-prompt="Which students are missing four interim assessment data points?">Find missing interim data</button>
-                <button class="prompt-button" type="button" data-agent-prompt="Draft a parent update for Malik Johnson.">Draft parent update</button>
-                <button class="prompt-button" type="button" data-agent-prompt="Schedule a student meeting alert for Darius Brooks Thursday at 2:15 PM.">Schedule student alert</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Draft a parent update for the selected student.">Draft parent update</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Schedule a student meeting alert for the selected student Thursday at 2:15 PM.">Schedule student alert</button>
                 <button class="prompt-button" type="button" data-agent-prompt="Send a direct message to Aaliyah Carter.">Test blocked student chat</button>
               </div>
             </aside>
@@ -2189,13 +2250,13 @@
                   <h2>Mastery MTSS Staff Agent</h2>
                   <p>Prototype workflows: student summary, risk queue, parent draft, meeting alert, and communication guardrails.</p>
                 </div>
-                <span class="status sync">Demo Mode</span>
+                <span class="status sync" id="agent-mode">Rules-Based Preview</span>
               </div>
               <div class="agent-log" id="agent-log" aria-live="polite">
                 <div class="agent-turn">
                   <div class="agent-bubble">
                     <strong>Agent</strong>
-                    <pre>Ask a staff workflow question or use a suggested prompt. This prototype is deterministic and uses only demo data.</pre>
+                    <pre>Ask a staff workflow question or use a suggested prompt. This preview uses rules and the currently authorized records; Azure AI is not active yet.</pre>
                   </div>
                 </div>
               </div>
@@ -2213,7 +2274,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
-      const students = [
+      const demoStudents = [
         {
           id: "MC-0821",
           name: "Aaliyah Carter",
@@ -2341,6 +2402,7 @@
         },
       ];
 
+      let students = [...demoStudents];
       const body = document.body;
       const staffLoginForm = document.querySelector("#staff-login-form");
       const staffRole = document.querySelector("#staff-role");
@@ -2358,6 +2420,8 @@
       const accessTabs = document.querySelectorAll("[data-access-target]");
       const accessCards = document.querySelectorAll("[data-access-card]");
       const queueCopy = document.querySelector("#queue-copy");
+      const dataSourcePill = document.querySelector("#data-source-pill");
+      const studentSearch = document.querySelector("#student-search");
       const nextLabel = document.querySelector("#next-label");
       const toggleControls = document.querySelector("#toggle-controls");
       const agentLog = document.querySelector("#agent-log");
@@ -2374,6 +2438,8 @@
       const dataServiceStatus = document.querySelector("#data-service-status");
       let pendingImportId = null;
       let currentAccess = "admin";
+      let selectedStudentId = students[0].id;
+      let usingLiveData = false;
 
       function getRedirectPath() {
         return `${window.location.pathname}${window.location.search}`;
@@ -2438,6 +2504,31 @@
           throw error;
         }
         return payload;
+      }
+
+      function applyDashboardData(nextStudents, source = "live") {
+        usingLiveData = source === "live" && nextStudents.length > 0;
+        students = usingLiveData ? nextStudents : [...demoStudents];
+        dataSourcePill.textContent = usingLiveData ? "Live imported data" : "Fictional fallback";
+        document.querySelector("#agent-mode").textContent = usingLiveData ? "Live Data Preview" : "Rules-Based Preview";
+        queueCopy.textContent = usingLiveData
+          ? `${students.length} authorized students loaded from secure storage. Filters and summaries update from imported records.`
+          : "Fictional fallback data is active. Confirm an authorized upload to replace these sample records.";
+        selectedStudentId = students.some((student) => student.id === selectedStudentId) ? selectedStudentId : students[0]?.id;
+        renderRows();
+        updateMetrics(false);
+        if (selectedStudentId) selectStudent(selectedStudentId);
+      }
+
+      async function refreshDashboardData() {
+        const payload = await apiRequest("/api/students?limit=500");
+        applyDashboardData(payload.students || [], "live");
+        if (payload.count) {
+          queueCopy.textContent = `${payload.count} authorized students loaded from secure storage. Filters and summaries update from imported records.`;
+          syncTime.textContent = "Just now";
+        } else {
+          queueCopy.textContent = "No stored students were found. Upload and confirm a dataset to replace the fictional fallback.";
+        }
       }
 
       function clearImportPreview() {
@@ -2532,6 +2623,7 @@
           if (health.canUpload) {
             const history = await apiRequest("/api/imports");
             renderImportHistory(history.imports || []);
+            await refreshDashboardData();
           }
         } catch (error) {
           const statusText = error.status === 403
@@ -2574,6 +2666,7 @@
           clearImportPreview();
           const history = await apiRequest("/api/imports");
           renderImportHistory(history.imports || []);
+          await refreshDashboardData();
         } catch (error) {
           showToast(error.message);
           confirmImportButton.disabled = false;
@@ -2584,7 +2677,7 @@
 
       const accessContent = {
         admin: {
-          queue: "Fictional demo data showing the admin review workflow.",
+          queue: "Authorized student records and imported assessment summaries.",
           nextLabel: "Next admin move",
           toast: "Admin workspace active.",
           notePrefix: "Admin note synced",
@@ -2606,19 +2699,60 @@
         showToast.timer = setTimeout(() => toast.classList.remove("is-visible"), 2400);
       }
 
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function numericValue(value) {
+        const parsed = Number(value);
+        return value !== null && value !== "" && Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function scoreDisplay(value) {
+        const score = numericValue(value);
+        return score === null ? "N/A" : `${Math.round(score)}%`;
+      }
+
+      function filteredStudents() {
+        const gradeFilter = document.querySelector("#grade-filter").value;
+        const periodFilter = document.querySelector("#period-filter").value;
+        const query = normalize(studentSearch.value);
+        return students.filter((student) => {
+          const grade = Number(student.gradeShort);
+          const gradeMatches = gradeFilter === "All Grades 3-12"
+            || (gradeFilter === "Grades 3-5" && grade >= 3 && grade <= 5)
+            || (gradeFilter === "Grades 6-8" && grade >= 6 && grade <= 8)
+            || (gradeFilter === "Grades 9-12" && grade >= 9 && grade <= 12);
+          const periodMatches = periodFilter === "All Reporting Periods"
+            || (student.reportingPeriods || []).includes(periodFilter);
+          const searchMatches = !query || normalize(`${student.name} ${student.id}`).includes(query);
+          return gradeMatches && periodMatches && searchMatches;
+        });
+      }
+
       function renderRows() {
-        rows.innerHTML = students
+        const visible = filteredStudents();
+        if (!visible.length) {
+          rows.innerHTML = '<tr><td colspan="8" class="empty-state">No students match the current filters.</td></tr>';
+          return;
+        }
+        rows.innerHTML = visible
           .map(
-            (student, index) => `
-              <tr data-student-id="${student.id}" class="${index === 0 ? "is-selected" : ""}">
-                <td><strong>${student.name}</strong><br><span>${student.id}</span></td>
-                <td>${student.gradeShort}</td>
-                <td>${student.tier}</td>
-                <td><div class="bar"><span>${student.reading}%</span><div class="track"><i style="--value: ${student.reading}%"></i></div></div></td>
-                <td><div class="bar"><span>${student.math}%</span><div class="track"><i style="--value: ${student.math}%"></i></div></div></td>
-                <td>${student.attendance}%</td>
-                <td><span class="status ${statusClass(student.status)}">${student.status}</span></td>
-                <td>${student.owner}</td>
+            (student) => `
+              <tr data-student-id="${escapeHtml(student.id)}" class="${student.id === selectedStudentId ? "is-selected" : ""}">
+                <td><strong>${escapeHtml(student.name)}</strong><br><span>${escapeHtml(student.id)}</span></td>
+                <td>${escapeHtml(student.gradeShort || "-")}</td>
+                <td>${escapeHtml(student.tier)}</td>
+                <td><div class="bar"><span>${scoreDisplay(student.reading)}</span><div class="track"><i style="--value: ${numericValue(student.reading) ?? 0}%"></i></div></div></td>
+                <td><div class="bar"><span>${scoreDisplay(student.math)}</span><div class="track"><i style="--value: ${numericValue(student.math) ?? 0}%"></i></div></div></td>
+                <td>${numericValue(student.attendance) === null ? "N/A" : `${numericValue(student.attendance)}%`}</td>
+                <td><span class="status ${statusClass(student.status)}">${escapeHtml(student.status)}</span></td>
+                <td>${escapeHtml(student.owner)}</td>
               </tr>
             `,
           )
@@ -2626,47 +2760,51 @@
       }
 
       function formatGpa(value) {
-        return Number(value).toFixed(2);
+        const gpa = numericValue(value);
+        return gpa === null ? "N/A" : gpa.toFixed(2);
       }
 
       function gpaPercent(value) {
-        return `${Math.max(0, Math.min(100, Math.round((Number(value) / 4) * 100)))}%`;
+        const gpa = numericValue(value);
+        return `${gpa === null ? 0 : Math.max(0, Math.min(100, Math.round((gpa / 4) * 100)))}%`;
       }
 
       function updateGpaTracker(student) {
-        const current = Number(student.gpa);
-        const passing = Number(student.passingGpa);
-        const target = Number(student.targetGpa);
+        const current = numericValue(student.gpa);
+        const passing = numericValue(student.passingGpa);
+        const target = numericValue(student.targetGpa);
+        const hasGpa = current !== null && Number(student.gradeShort) >= 9;
         const passingGap = current - passing;
         const targetGap = target - current;
         const creditGap = Number(student.creditsExpected) - Number(student.creditsEarned);
         const statusClassName = statusClass(student.gpaStatus);
 
-        document.querySelector("#student-gpa").textContent = formatGpa(current);
-        document.querySelector("#passing-gpa").textContent = formatGpa(passing);
-        document.querySelector("#target-gpa").textContent = formatGpa(target);
-        document.querySelector("#passing-gpa-percent").textContent = gpaPercent(passing);
-        document.querySelector("#current-gpa-percent").textContent = gpaPercent(current);
-        document.querySelector("#target-gpa-percent").textContent = gpaPercent(target);
-        document.querySelector("#passing-gpa-bar").style.setProperty("--value", gpaPercent(passing));
-        document.querySelector("#current-gpa-bar").style.setProperty("--value", gpaPercent(current));
-        document.querySelector("#target-gpa-bar").style.setProperty("--value", gpaPercent(target));
+        document.querySelector("#student-gpa").textContent = hasGpa ? formatGpa(current) : "N/A";
+        document.querySelector("#passing-gpa").textContent = hasGpa ? formatGpa(passing) : "N/A";
+        document.querySelector("#target-gpa").textContent = hasGpa ? formatGpa(target) : "N/A";
+        document.querySelector("#passing-gpa-percent").textContent = hasGpa ? gpaPercent(passing) : "N/A";
+        document.querySelector("#current-gpa-percent").textContent = hasGpa ? gpaPercent(current) : "N/A";
+        document.querySelector("#target-gpa-percent").textContent = hasGpa ? gpaPercent(target) : "N/A";
+        document.querySelector("#passing-gpa-bar").style.setProperty("--value", hasGpa ? gpaPercent(passing) : "0%");
+        document.querySelector("#current-gpa-bar").style.setProperty("--value", hasGpa ? gpaPercent(current) : "0%");
+        document.querySelector("#target-gpa-bar").style.setProperty("--value", hasGpa ? gpaPercent(target) : "0%");
 
         const status = document.querySelector("#gpa-status");
         status.textContent = student.gpaStatus;
         status.className = `status ${statusClassName}`;
-        document.querySelector("#gpa-title").textContent =
-          Number(student.gradeShort) >= 9 ? "GPA / Graduation Tracker" : "GPA / Promotion Tracker";
+        document.querySelector("#gpa-title").textContent = hasGpa ? "GPA / Graduation Tracker" : "Promotion Evidence Tracker";
 
-        const passingText =
-          passingGap >= 0
+        if (hasGpa) {
+          const passingText = passingGap >= 0
             ? `${formatGpa(passingGap)} above passing`
             : `${formatGpa(Math.abs(passingGap))} below passing`;
-        const targetText =
-          targetGap <= 0
+          const targetText = targetGap <= 0
             ? `${formatGpa(Math.abs(targetGap))} above target pace`
             : `${formatGpa(targetGap)} below target pace`;
-        document.querySelector("#gpa-gap").textContent = `Current GPA is ${passingText} and ${targetText}.`;
+          document.querySelector("#gpa-gap").textContent = `Current GPA is ${passingText} and ${targetText}.`;
+        } else {
+          document.querySelector("#gpa-gap").textContent = "GPA is not used for this grade in the imported dataset.";
+        }
 
         const creditText =
           creditGap <= 0
@@ -2678,6 +2816,7 @@
       function selectStudent(id) {
         const student = students.find((item) => item.id === id);
         if (!student) return;
+        selectedStudentId = id;
 
         document.querySelector("#student-id").textContent = student.id;
         document.querySelector("#student-name").textContent = student.name;
@@ -2723,25 +2862,28 @@
         return students.find((student) => {
           const [first, last] = student.name.toLowerCase().split(" ");
           return query.includes(student.name.toLowerCase()) || query.includes(first) || query.includes(last);
-        }) || students[0];
+        }) || students.find((student) => student.id === selectedStudentId) || students[0];
       }
 
       function missingDataFor(student) {
         const missing = [];
-        if (student.reading < 60) missing.push("reading growth evidence needs review");
-        if (student.math < 60) missing.push("math growth evidence needs review");
-        if (student.attendance < 90) missing.push("attendance below 90%");
-        if (student.gpa < student.passingGpa) missing.push("GPA below passing threshold");
-        if (student.creditsEarned < student.creditsExpected) missing.push(`${student.creditLabel} below expected pace`);
+        if (numericValue(student.reading) === null) missing.push("reading score not imported");
+        else if (student.reading < 60) missing.push("reading evidence needs review");
+        if (numericValue(student.math) === null) missing.push("math score not imported");
+        else if (student.math < 60) missing.push("math evidence needs review");
+        if (numericValue(student.attendance) !== null && student.attendance < 90) missing.push("attendance below 90%");
+        if (numericValue(student.gpa) !== null && student.gpa < student.passingGpa) missing.push("GPA below passing threshold");
+        if (Number(student.creditsEarned) < Number(student.creditsExpected)) missing.push(`${student.creditLabel} below expected pace`);
+        if (student.missingAssessmentCount > 0) missing.push(`${student.missingAssessmentCount} interim data point${student.missingAssessmentCount === 1 ? "" : "s"} missing`);
         if (student.status === "Review") missing.push("intervention outcome needs staff review");
-        return missing.length ? missing : ["no major data gaps in demo record"];
+        return missing.length ? missing : ["no major data gaps in the current record"];
       }
 
       function studentSummary(student) {
         const missing = missingDataFor(student).join("; ");
         return `Student: ${student.name} (${student.id})
 Current status: ${student.status}, ${student.tier}, ${student.grade}
-Evidence: Reading ${student.readingText}; Math ${student.mathText}; Attendance ${student.attendance}%; GPA ${formatGpa(student.gpa)} vs passing ${formatGpa(student.passingGpa)} and target ${formatGpa(student.targetGpa)}
+Evidence: Reading ${student.readingText}; Math ${student.mathText}; Attendance ${numericValue(student.attendance) === null ? "not imported" : `${student.attendance}%`}; GPA ${formatGpa(student.gpa)}
 Risk: ${student.gpaStatus}
 Missing data / watch items: ${missing}
 Intervention: ${student.intervention}
@@ -2756,24 +2898,27 @@ Owner: ${student.owner}`;
         const filtered = students.filter((student) => {
           const gradeOk = gradeMatch ? student.gradeShort === gradeMatch[1] : true;
           const subjectOk =
-            subject === "reading" ? student.reading < 70 :
-            subject === "math" ? student.math < 70 :
+            subject === "reading" ? numericValue(student.reading) === null || student.reading < 70 :
+            subject === "math" ? numericValue(student.math) === null || student.math < 70 :
             student.status !== "On Track";
           return gradeOk && subjectOk;
         });
 
-        if (!filtered.length) return "No matching demo students found for that filter.";
+        if (!filtered.length) return "No matching students were found in the currently authorized records.";
 
         return `Students needing review (${subject}):
-${filtered.map((student) => `- ${student.name}, Grade ${student.gradeShort}: ${student.status}; Reading ${student.reading}%, Math ${student.math}%, Attendance ${student.attendance}%; owner ${student.owner}`).join("\\n")}`;
+${filtered.map((student) => `- ${student.name}, Grade ${student.gradeShort}: ${student.status}; Reading ${scoreDisplay(student.reading)}, Math ${scoreDisplay(student.math)}, Attendance ${numericValue(student.attendance) === null ? "N/A" : `${student.attendance}%`}; owner ${student.owner}`).join("\\n")}`;
       }
 
       function parentDraft(student) {
+        const gpaSentence = numericValue(student.gpa) === null
+          ? "GPA is not used for this grade in the current imported dataset."
+          : `${student.name} is currently at a ${formatGpa(student.gpa)} GPA. The passing benchmark is ${formatGpa(student.passingGpa)}, and the current target is ${formatGpa(student.targetGpa)}.`;
         return `Parent update draft for ${student.name}:
 
 Hi,
 
-I’m reaching out with a progress update. ${student.name} is currently at a ${formatGpa(student.gpa)} GPA. The passing benchmark is ${formatGpa(student.passingGpa)}, and the current target is ${formatGpa(student.targetGpa)}.
+I’m reaching out with a progress update. ${gpaSentence}
 
 Current support: ${student.intervention}.
 
@@ -2796,8 +2941,9 @@ Rule: This is a one-way scheduled alert only. No direct student chat thread is o
       }
 
       function missingInterimResponse() {
-        const flagged = students.filter((student) => student.status !== "On Track" || student.reading < 60 || student.math < 60);
-        return `Students likely missing complete interim evidence in this demo:
+        const flagged = students.filter((student) => Number(student.missingAssessmentCount || 0) > 0);
+        if (!flagged.length) return "Every currently loaded student has at least four unique assessment data points.";
+        return `Students missing complete interim evidence:
 ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join("; ")}`).join("\\n")}`;
       }
 
@@ -2829,7 +2975,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
           return studentSummary(student);
         }
 
-        return `I can run these demo workflows:
+        return `I can run these rules-based workflows on the currently loaded records:
 - summarize a student
 - show students needing review
 - identify missing interim data
@@ -2841,12 +2987,14 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       function addAgentTurn(role, text) {
         const turn = document.createElement("div");
         turn.className = `agent-turn ${role === "You" ? "user" : ""}`;
-        turn.innerHTML = `
-          <div class="agent-bubble">
-            <strong>${role}</strong>
-            <pre>${text}</pre>
-          </div>
-        `;
+        const bubble = document.createElement("div");
+        bubble.className = "agent-bubble";
+        const label = document.createElement("strong");
+        label.textContent = role;
+        const content = document.createElement("pre");
+        content.textContent = text;
+        bubble.append(label, content);
+        turn.appendChild(bubble);
         agentLog.appendChild(turn);
         agentLog.scrollTop = agentLog.scrollHeight;
       }
@@ -2863,17 +3011,51 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         agentInput.value = "";
       }
 
-      function updateMetrics() {
-        const subject = document.querySelector("#subject-filter").value;
-        const grade = document.querySelector("#grade-filter").value;
-        const period = document.querySelector("#period-filter").value;
+      function percentageMeeting(items, field, threshold = 70) {
+        const scored = items.map((student) => numericValue(student[field])).filter((value) => value !== null);
+        if (!scored.length) return "N/A";
+        return `${Math.round((scored.filter((value) => value >= threshold).length / scored.length) * 100)}%`;
+      }
 
-        const baseReview = grade === "Grades 9-12" ? 24 : grade === "Grades 3-5" ? 18 : 64;
-        document.querySelector("#metric-review").textContent = subject === "Math" ? baseReview + 7 : baseReview;
-        document.querySelector("#metric-reading").textContent = subject === "Math" ? "N/A" : "71%";
-        document.querySelector("#metric-math").textContent = subject === "Reading" ? "N/A" : "66%";
-        document.querySelector("#metric-missing").textContent = period.includes("Planning") ? "22" : "14";
-        showToast("Dashboard view updated.");
+      function updateLivePanels(visible) {
+        const readingCount = visible.reduce((sum, student) => sum + Number(student.readingAssessmentCount || 0), 0);
+        const mathCount = visible.reduce((sum, student) => sum + Number(student.mathAssessmentCount || 0), 0);
+        const tier1 = visible.filter((student) => student.tier.includes("1")).length;
+        const tier2 = visible.filter((student) => student.tier.includes("2")).length;
+        const tier3 = visible.filter((student) => student.tier.includes("3")).length;
+        const missing = visible.filter((student) => Number(student.missingAssessmentCount || 0) > 0).length;
+
+        document.querySelector("#reading-summary-1").textContent = `${percentageMeeting(visible, "reading")} at or above the 70% review benchmark`;
+        document.querySelector("#reading-summary-2").textContent = usingLiveData
+          ? `${readingCount} unique Reading assessment records loaded`
+          : "Fictional Reading scores shown for interface testing";
+        document.querySelector("#math-summary-1").textContent = `${percentageMeeting(visible, "math")} at or above the 70% review benchmark`;
+        document.querySelector("#math-summary-2").textContent = usingLiveData
+          ? `${mathCount} unique Math assessment records loaded`
+          : "Fictional Math scores shown for interface testing";
+        document.querySelector("#tier-summary").textContent = `Tier 1: ${tier1} | Tier 2: ${tier2} | Tier 3: ${tier3}`;
+        document.querySelector("#data-summary").textContent = `${missing} student${missing === 1 ? "" : "s"} missing the four-point interim minimum`;
+        document.querySelector("#tier-1-summary").textContent = `${tier1} students in core monitoring based on the current filters.`;
+        document.querySelector("#tier-2-summary").textContent = `${tier2} students receiving targeted support based on imported tiers.`;
+        document.querySelector("#tier-3-summary").textContent = `${tier3} students requiring intensive review based on imported tiers.`;
+      }
+
+      function updateMetrics(notify = true) {
+        const subject = document.querySelector("#subject-filter").value;
+        const visible = filteredStudents();
+        const needsReview = visible.filter((student) => {
+          if (subject === "Reading") return numericValue(student.reading) === null || student.reading < 70 || student.status === "Review";
+          if (subject === "Math") return numericValue(student.math) === null || student.math < 70 || student.status === "Review";
+          return student.status !== "On Track";
+        }).length;
+        document.querySelector("#metric-students").textContent = visible.length;
+        document.querySelector("#metric-review").textContent = needsReview;
+        document.querySelector("#metric-reading").textContent = subject === "Math" ? "N/A" : percentageMeeting(visible, "reading");
+        document.querySelector("#metric-math").textContent = subject === "Reading" ? "N/A" : percentageMeeting(visible, "math");
+        document.querySelector("#metric-missing").textContent = visible.filter((student) => Number(student.missingAssessmentCount || 0) > 0).length;
+        updateLivePanels(visible);
+        renderRows();
+        if (notify) showToast("Dashboard view updated.");
       }
 
       document.addEventListener("click", (event) => {
@@ -2884,6 +3066,8 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       document.querySelectorAll("#grade-filter, #subject-filter, #period-filter").forEach((select) => {
         select.addEventListener("change", updateMetrics);
       });
+
+      studentSearch.addEventListener("input", () => updateMetrics(false));
 
       accessTabs.forEach((tab) => {
         tab.addEventListener("click", () => setAccess(tab.dataset.accessTarget));
@@ -2900,7 +3084,11 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         }
 
         const entry = document.createElement("article");
-        entry.innerHTML = `<strong>${accessContent[currentAccess].notePrefix}</strong><span>${value}</span>`;
+        const title = document.createElement("strong");
+        title.textContent = accessContent[currentAccess].notePrefix;
+        const message = document.createElement("span");
+        message.textContent = value;
+        entry.append(title, message);
         teacherFeed.prepend(entry);
         note.value = "";
         syncTime.textContent = "Just now";
@@ -2963,9 +3151,8 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         staffRole.focus();
       });
 
-      renderRows();
-      selectStudent(students[0].id);
       setAccess("admin", true);
+      applyDashboardData([], "demo");
       loadMicrosoftSession();
       loadDataService();
     </script>

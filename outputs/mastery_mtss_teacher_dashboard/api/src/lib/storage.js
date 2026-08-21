@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const path = require("node:path");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const { TableClient, TableServiceClient } = require("@azure/data-tables");
+const { buildDashboardStudents } = require("./dashboard");
 
 const SCHOOL_ID = "mastery-charter";
 const CONTAINER_NAME = "mtss-imports";
@@ -237,6 +238,23 @@ async function listStudents(limit = 100) {
   return results.sort((a, b) => a.studentName.localeCompare(b.studentName));
 }
 
+async function listDashboardStudents(limit = 500) {
+  const students = await listStudents(limit);
+  const studentIds = new Set(students.map((student) => student.studentId));
+  const assessments = [];
+  const entities = getClients().assessments.listEntities({
+    queryOptions: { select: [
+      "studentId", "subject", "assessment", "score", "scoreMax", "percent", "testDate",
+      "reportingPeriod", "readingRit", "mathRit", "growthGoal", "createdAt",
+    ] },
+  });
+  for await (const entity of entities) {
+    if (studentIds.has(entity.studentId)) assessments.push(entity);
+    if (assessments.length >= limit * 20) break;
+  }
+  return buildDashboardStudents(students, assessments);
+}
+
 module.exports = {
   SCHOOL_ID,
   storageConnectionString,
@@ -247,4 +265,5 @@ module.exports = {
   commitRecords,
   listImports,
   listStudents,
+  listDashboardStudents,
 };

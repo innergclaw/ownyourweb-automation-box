@@ -9,9 +9,10 @@ Microsoft-authenticated staff workspace for Mastery Charter's MTSS review and st
 - Automatic matching for student identity, grade, assessment, MAP RIT, growth goal, attendance, GPA, credits, MTSS, IEP, Firefly, and intervention fields
 - Validation and a ten-row preview before staff confirm an import
 - Private raw-file staging, normalized student and assessment records, import history, and audit events
-- Fictional dashboard analytics and deterministic agent examples
+- Live student queue, search, grade/reporting-period filters, assessment summaries, MTSS counts, GPA/credit profiles, and data-completeness indicators from authorized imports
+- Rules-based staff assistant workflows that use the currently loaded records without calling an AI model
 
-The charts, lesson generation, messaging, and AI search remain prototypes until their server-side services and school-approved policies are connected.
+Azure AI search and lesson generation remain off until their protected server-side service, spending controls, and school-approved policies are connected.
 
 ## Required Azure settings
 

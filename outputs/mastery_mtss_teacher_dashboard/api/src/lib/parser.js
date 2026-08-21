@@ -137,6 +137,12 @@ function inferredYear(row) {
   return source.match(/20\d{2}\s*[-/]\s*\d{2,4}/)?.[0].replace(/\s/g, "") || "";
 }
 
+function inferredFallMapPeriod(row) {
+  const year = String(row.__sourceSheet || "").match(/fall.*?(20\d{2})/i)?.[1];
+  if (!year) return { reportingPeriod: "Fall", testedYear: "" };
+  return { reportingPeriod: `Fall ${year}`, testedYear: `${year}-${String(Number(year) + 1).slice(-2)}` };
+}
+
 function keystoneDetails(testName) {
   const code = String(testName || "").trim().toUpperCase();
   if (code === "A1" || code.includes("ALGEBRA")) return { subject: "Math", assessment: "Keystone Algebra I" };
@@ -179,11 +185,12 @@ function normalizeRecord(row, mapping, index) {
     assessment = details.assessment;
     assessmentType = "Keystone";
   } else if (hasMapRit) {
+    const mapPeriod = inferredFallMapPeriod(row);
     subject = "MAP";
     assessment = "Fall MAP Reading + Math";
     assessmentType = "MAP";
-    reportingPeriod ||= "Fall 2025";
-    testedYear ||= "2025-26";
+    reportingPeriod ||= mapPeriod.reportingPeriod;
+    testedYear ||= mapPeriod.testedYear;
   } else if (scaleScore !== null || /pssa/i.test(assessment)) {
     assessmentType = "PSSA";
   }
@@ -258,9 +265,11 @@ function analyzeDataset(parsed) {
   });
   const uniqueRecords = new Map();
   for (const record of normalized) {
+    const isMapRecord = record.assessment.assessmentType === "MAP";
     const key = [
       record.student.studentId, record.assessment.assessmentType, record.assessment.subject,
-      record.assessment.assessment, record.assessment.testedYear, record.assessment.reportingPeriod,
+      record.assessment.assessment, isMapRecord ? "" : record.assessment.testedYear,
+      isMapRecord ? "" : record.assessment.reportingPeriod,
       record.assessment.scaleScore, record.assessment.performance, record.assessment.readingRit,
       record.assessment.mathRit,
     ].map((value) => String(value ?? "").trim().toLowerCase()).join("|");

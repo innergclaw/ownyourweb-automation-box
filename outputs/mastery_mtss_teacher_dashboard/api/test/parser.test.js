@@ -136,4 +136,6 @@ test("recognizes Fall MAP RIT columns and removes repeated sheet rows", () => {
   assert.equal(analysis.records[0].assessment.assessmentType, "MAP");
   assert.equal(analysis.records[0].assessment.mathRit, 210);
   assert.equal(analysis.records[0].assessment.readingRit, 213);
+  assert.equal(analysis.records[0].assessment.reportingPeriod, "Fall 2025");
+  assert.equal(analysis.records[0].assessment.testedYear, "2025-26");
 });

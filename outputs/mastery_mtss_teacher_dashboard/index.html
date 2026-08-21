@@ -3119,8 +3119,12 @@
             ? "Clean files sync automatically. Rows with missing student IDs or names pause for review."
             : "This Microsoft account is not approved for data uploads. Sign in with an @masterycharter.org staff account or contact the dashboard administrator.";
           if (health.canUpload) {
-            const history = await apiRequest("/api/imports");
-            renderImportHistory(history.imports || []);
+            try {
+              const history = await apiRequest("/api/imports");
+              renderImportHistory(history.imports || []);
+            } catch {
+              document.querySelector("#import-history").innerHTML = '<p class="empty-state">Import history is temporarily unavailable. Student records remain accessible.</p>';
+            }
             await refreshDashboardData();
           }
         } catch (error) {

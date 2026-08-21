@@ -68,6 +68,16 @@ function populatedFields(record) {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== "" && value !== null && value !== undefined));
 }
 
+function parseStoredJson(value) {
+  if (!value) return null;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 async function stageImport({ importId, filename, buffer, analysis, uploader }) {
   await ensureStorage();
   const current = getClients();
@@ -210,7 +220,7 @@ async function listImports(limit = 20) {
       uploadedBy: entity.uploadedBy,
       uploadedAt: entity.uploadedAt,
       committedAt: entity.committedAt || null,
-      summary: entity.summaryJson ? JSON.parse(entity.summaryJson) : null,
+      summary: parseStoredJson(entity.summaryJson),
       studentsSaved: entity.studentsSaved || 0,
       assessmentsSaved: entity.assessmentsSaved || 0,
     });
@@ -254,7 +264,7 @@ async function listStudents(limit = 100) {
     });
     if (results.length >= limit) break;
   }
-  return results.sort((a, b) => a.studentName.localeCompare(b.studentName));
+  return results.sort((a, b) => String(a.studentName || "").localeCompare(String(b.studentName || "")));
 }
 
 async function listDashboardStudents(limit = 500) {

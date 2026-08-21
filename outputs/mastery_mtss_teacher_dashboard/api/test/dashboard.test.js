@@ -46,6 +46,15 @@ test("handles students whose optional academic fields are missing", () => {
   assert.match(result.next, /Add 4 interim/);
 });
 
+test("keeps missing high-school credit data blank instead of reporting zero", () => {
+  const [result] = buildDashboardStudents([
+    { studentId: "DEMO-CREDITS", studentName: "Credit Sample", grade: "10", creditsEarned: null },
+  ], []);
+
+  assert.equal(result.creditsEarned, null);
+  assert.equal(result.creditsExpected, 12);
+});
+
 test("limits dashboard records to grades 7 through 12", () => {
   const results = buildDashboardStudents([
     { studentId: "GRADE-6", studentName: "Grade Six Sample", grade: "6" },

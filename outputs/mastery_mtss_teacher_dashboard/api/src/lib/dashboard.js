@@ -168,11 +168,12 @@ function buildDashboardStudents(students, assessments) {
     const reportingPeriods = [...new Set(records.map((record) => String(record.reportingPeriod || "").trim()).filter(Boolean))].sort();
     const missingAssessmentCount = Math.max(0, 4 - assessmentCount);
     const creditsExpected = expectedCredits(grade, student.creditsRequired);
-    const creditsEarned = numeric(student.creditsEarned) ?? (grade !== null && grade < 9 ? assessmentCount : 0);
-    const creditGap = creditsExpected - creditsEarned;
+    const importedCredits = numeric(student.creditsEarned);
+    const creditsEarned = importedCredits ?? (grade !== null && grade < 9 ? assessmentCount : null);
+    const creditGap = creditsEarned === null ? null : creditsExpected - creditsEarned;
     let status = statusFor(student, reading, math);
-    if (grade !== null && grade >= 9 && creditGap >= 2) status = "Review";
-    else if (grade !== null && grade >= 9 && creditGap > 0 && status === "On Track") status = "Watch";
+    if (grade !== null && grade >= 9 && creditGap !== null && creditGap >= 2) status = "Review";
+    else if (grade !== null && grade >= 9 && creditGap !== null && creditGap > 0 && status === "On Track") status = "Watch";
     const readingRit = latestValue(records, "readingRit");
     const mathRit = latestValue(records, "mathRit");
     const growthGoal = latestValue(records, "growthGoal");

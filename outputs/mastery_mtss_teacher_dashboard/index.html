@@ -2302,12 +2302,12 @@
             <article class="metric">
               <span>ELA benchmark</span>
               <strong id="metric-reading">71%</strong>
-              <small>70% interim or PSSA Proficient+</small>
+              <small>PSSA, Keystone, or 70% interim benchmark</small>
             </article>
             <article class="metric">
               <span>Math Benchmark</span>
               <strong id="metric-math">66%</strong>
-              <small>70% interim or PSSA Proficient+</small>
+              <small>PSSA, Keystone, or 70% interim benchmark</small>
             </article>
             <article class="metric">
               <span>Missing Fall MAP</span>
@@ -3247,9 +3247,42 @@
         const scale = numericValue(student[`${field}ScaleScore`]);
         const performance = performanceLabel(student[`${field}Performance`]) || "PSSA";
         const rit = numericValue(student[subject === "reading" ? "mapReadingRit" : "mapMathRit"]);
-        const primary = scale !== null ? `${scale} ${performance}` : percent !== null ? scoreDisplay(percent) : "N/A";
-        const source = scale !== null ? "PSSA" : percent !== null ? "Interim" : "No PSSA/interim score";
+        const keystone = (student.keystoneResults || []).find((result) => result.subject === (subject === "reading" ? "Reading" : "Math"));
+        const keystoneScale = numericValue(keystone?.scaleScore);
+        const primary = scale !== null
+          ? `${scale} ${performance}`
+          : percent !== null
+            ? scoreDisplay(percent)
+            : keystoneScale !== null
+              ? `${keystoneScale} ${performanceLabel(keystone.performance)}`
+              : "N/A";
+        const source = scale !== null
+          ? "PSSA"
+          : percent !== null
+            ? "Interim"
+            : keystoneScale !== null
+              ? keystone.assessment
+              : "No PSSA, interim, or Keystone score";
         return `<span class="score-stack"><strong>${escapeHtml(primary)}</strong><span>${escapeHtml(source)}</span><span>Fall MAP RIT: ${rit ?? "N/A"}</span></span>`;
+      }
+
+      function primarySubjectEvidence(student, subject) {
+        const field = subject === "Reading" ? "reading" : "math";
+        const existing = student[`${field}Text`];
+        if (existing && existing !== "No imported score") return existing;
+        const keystone = (student.keystoneResults || []).find((result) => result.subject === subject);
+        const scale = numericValue(keystone?.scaleScore);
+        return scale === null
+          ? "No imported score"
+          : `${keystone.assessment}: ${scale} (${performanceLabel(keystone.performance)})`;
+      }
+
+      function subjectPerformanceCode(student, field) {
+        const direct = numericValue(student[`${field}PerformanceCode`]);
+        if (direct !== null) return direct;
+        const subject = field === "reading" ? "Reading" : "Math";
+        const keystone = (student.keystoneResults || []).find((result) => result.subject === subject);
+        return numericValue(keystone?.performanceCode);
       }
 
       function filteredStudents() {
@@ -3339,10 +3372,13 @@
         const current = numericValue(student.gpa);
         const passing = numericValue(student.passingGpa);
         const target = numericValue(student.targetGpa);
+        const creditsEarned = numericValue(student.creditsEarned);
+        const creditsExpected = numericValue(student.creditsExpected);
         const hasGpa = current !== null && Number(student.gradeShort) >= 9;
         const passingGap = current - passing;
         const targetGap = target - current;
-        const creditGap = Number(student.creditsExpected) - Number(student.creditsEarned);
+        const hasCreditData = creditsEarned !== null && creditsExpected !== null;
+        const creditGap = hasCreditData ? creditsExpected - creditsEarned : null;
         const statusClassName = statusClass(student.gpaStatus);
 
         document.querySelector("#student-gpa").textContent = hasGpa ? formatGpa(current) : "N/A";
@@ -3372,10 +3408,13 @@
           document.querySelector("#gpa-gap").textContent = "GPA is not used for this grade in the imported dataset.";
         }
 
-        const creditText =
-          creditGap <= 0
-            ? `${student.creditsEarned} of ${student.creditsExpected} ${student.creditLabel} complete. Student is at or above expected pace.`
-            : `${student.creditsEarned} of ${student.creditsExpected} ${student.creditLabel} complete. Needs ${creditGap} more by this checkpoint.`;
+        const creditText = !hasCreditData
+          ? Number(student.gradeShort) >= 9
+            ? "Credit progress has not been imported for this student."
+            : "Assessment checkpoint progress has not been imported for this student."
+          : creditGap <= 0
+            ? `${creditsEarned} of ${creditsExpected} ${student.creditLabel} complete. Student is at or above expected pace.`
+            : `${creditsEarned} of ${creditsExpected} ${student.creditLabel} complete. Needs ${creditGap} more by this checkpoint.`;
         document.querySelector("#credit-gap").textContent = creditText;
       }
 
@@ -3388,8 +3427,8 @@
         document.querySelector("#student-name").textContent = student.name;
         document.querySelector("#student-grade").textContent = student.grade;
         document.querySelector("#student-tier").textContent = student.tier;
-        document.querySelector("#student-reading").textContent = student.readingText;
-        document.querySelector("#student-math").textContent = student.mathText;
+        document.querySelector("#student-reading").textContent = primarySubjectEvidence(student, "Reading");
+        document.querySelector("#student-math").textContent = primarySubjectEvidence(student, "Math");
         document.querySelector("#student-pssa-teachers").textContent = `ELA: ${student.readingTeacher || "Not listed"} | Math: ${student.mathTeacher || "Not listed"}`;
         document.querySelector("#student-pssa-performance").textContent = `ELA: ${student.readingPerformance || "Not imported"}${numericValue(student.readingScaleScore) === null ? "" : ` (${student.readingScaleScore})`} | Math: ${student.mathPerformance || "Not imported"}${numericValue(student.mathScaleScore) === null ? "" : ` (${student.mathScaleScore})`}`;
         document.querySelector("#student-map-performance").textContent = `Reading RIT: ${numericValue(student.mapReadingRit) ?? "Not imported"} | Math RIT: ${numericValue(student.mapMathRit) ?? "Not imported"}`;
@@ -3455,13 +3494,15 @@
 
       function missingDataFor(student) {
         const missing = [];
-        if (numericValue(student.reading) === null && numericValue(student.readingScaleScore) === null) missing.push("ELA score not imported");
-        else if ((numericValue(student.reading) !== null && student.reading < 60) || (numericValue(student.readingPerformanceCode) !== null && student.readingPerformanceCode < 3)) missing.push("ELA evidence needs review");
-        if (numericValue(student.math) === null && numericValue(student.mathScaleScore) === null) missing.push("math score not imported");
-        else if ((numericValue(student.math) !== null && student.math < 60) || (numericValue(student.mathPerformanceCode) !== null && student.mathPerformanceCode < 3)) missing.push("math evidence needs review");
+        const readingCode = subjectPerformanceCode(student, "reading");
+        const mathCode = subjectPerformanceCode(student, "math");
+        if (numericValue(student.reading) === null && numericValue(student.readingScaleScore) === null && readingCode === null) missing.push("ELA score not imported");
+        else if ((numericValue(student.reading) !== null && student.reading < 60) || (readingCode !== null && readingCode < 3)) missing.push("ELA evidence needs review");
+        if (numericValue(student.math) === null && numericValue(student.mathScaleScore) === null && mathCode === null) missing.push("math score not imported");
+        else if ((numericValue(student.math) !== null && student.math < 60) || (mathCode !== null && mathCode < 3)) missing.push("math evidence needs review");
         if (numericValue(student.attendance) !== null && student.attendance < 90) missing.push("attendance below 90%");
         if (numericValue(student.gpa) !== null && student.gpa < student.passingGpa) missing.push("GPA below passing threshold");
-        if (Number(student.creditsEarned) < Number(student.creditsExpected)) missing.push(`${student.creditLabel} below expected pace`);
+        if (numericValue(student.creditsEarned) !== null && numericValue(student.creditsExpected) !== null && student.creditsEarned < student.creditsExpected) missing.push(`${student.creditLabel} below expected pace`);
         if (student.missingAssessmentCount > 0) missing.push(`${student.missingAssessmentCount} interim data point${student.missingAssessmentCount === 1 ? "" : "s"} missing`);
         if (student.status === "Review") missing.push("intervention outcome needs staff review");
         return missing.length ? missing : ["no major data gaps in the current record"];
@@ -3471,7 +3512,7 @@
         const missing = missingDataFor(student).join("; ");
         return `Student: ${student.name} (${student.id})
 Current status: ${student.status}, ${student.tier}, ${student.grade}
-Evidence: ELA ${student.readingText}; Math ${student.mathText}; Attendance ${numericValue(student.attendance) === null ? "not imported" : `${student.attendance}%`}; GPA ${formatGpa(student.gpa)}
+Evidence: ELA ${primarySubjectEvidence(student, "Reading")}; Math ${primarySubjectEvidence(student, "Math")}; Attendance ${numericValue(student.attendance) === null ? "not imported" : `${student.attendance}%`}; GPA ${formatGpa(student.gpa)}
 PSSA teachers: ELA ${student.readingTeacher || "not listed"}; Math ${student.mathTeacher || "not listed"}
 Matching IDs: Student ID ${student.id}; Unique Matching ID ${student.uniqueMatchingId || "not imported"}; DRC ID ${student.drcStudentId || "not imported"}; PAsecureID ${student.paSecureId || "not imported"}
 Risk: ${student.gpaStatus}
@@ -3605,7 +3646,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const results = items.map((student) => {
           const percent = numericValue(student[field]);
           if (percent !== null) return percent >= threshold;
-          const performanceCode = numericValue(student[`${field}PerformanceCode`]);
+          const performanceCode = subjectPerformanceCode(student, field);
           return performanceCode === null ? null : performanceCode >= 3;
         }).filter((value) => value !== null);
         if (!results.length) return "N/A";
@@ -3616,7 +3657,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const results = items.map((student) => {
           const percent = numericValue(student[field]);
           if (percent !== null) return percent >= threshold;
-          const performanceCode = numericValue(student[`${field}PerformanceCode`]);
+          const performanceCode = subjectPerformanceCode(student, field);
           return performanceCode === null ? null : performanceCode >= 3;
         }).filter((value) => value !== null);
         return results.length ? Math.round((results.filter(Boolean).length / results.length) * 100) : null;
@@ -3705,11 +3746,11 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
           .map((grade) => `Grade ${grade}: ${visible.filter((student) => student.gradeShort === grade).length}`);
         const missing = visible.filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
 
-        document.querySelector("#reading-summary-1").textContent = `${percentageMeeting(visible, "reading")} meeting the interim or PSSA proficiency benchmark`;
+        document.querySelector("#reading-summary-1").textContent = `${percentageMeeting(visible, "reading")} meeting the PSSA, Keystone, or interim benchmark`;
         document.querySelector("#reading-summary-2").textContent = usingLiveData
           ? `${readingCount} unique ELA assessment records loaded`
           : "Fictional ELA scores shown for interface testing";
-        document.querySelector("#math-summary-1").textContent = `${percentageMeeting(visible, "math")} meeting the interim or PSSA proficiency benchmark`;
+        document.querySelector("#math-summary-1").textContent = `${percentageMeeting(visible, "math")} meeting the PSSA, Keystone, or interim benchmark`;
         document.querySelector("#math-summary-2").textContent = usingLiveData
           ? `${mathCount} unique Math assessment records loaded`
           : "Fictional Math scores shown for interface testing";
@@ -3724,8 +3765,14 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const subject = subjectFilterControl.value;
         const visible = filteredStudents();
         const needsReview = visible.filter((student) => {
-          if (subject === "Reading") return (numericValue(student.reading) === null ? numericValue(student.readingPerformanceCode) === null || student.readingPerformanceCode < 3 : student.reading < 70) || student.status === "Review";
-          if (subject === "Math") return (numericValue(student.math) === null ? numericValue(student.mathPerformanceCode) === null || student.mathPerformanceCode < 3 : student.math < 70) || student.status === "Review";
+          if (subject === "Reading") {
+            const code = subjectPerformanceCode(student, "reading");
+            return (numericValue(student.reading) === null ? code === null || code < 3 : student.reading < 70) || student.status === "Review";
+          }
+          if (subject === "Math") {
+            const code = subjectPerformanceCode(student, "math");
+            return (numericValue(student.math) === null ? code === null || code < 3 : student.math < 70) || student.status === "Review";
+          }
           return student.status !== "On Track";
         }).length;
         document.querySelector("#metric-students").textContent = visible.length;
@@ -3739,6 +3786,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         renderKpiVisuals(visible);
         updateLivePanels(visible);
         renderRows();
+        if (studentSearch.value.trim() && visible.length === 1) selectStudent(visible[0].id);
         if (notify) showToast("Dashboard view updated.");
       }
 

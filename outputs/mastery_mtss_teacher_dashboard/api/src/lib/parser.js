@@ -140,7 +140,7 @@ function normalizedStudentName(providedName, firstName, lastName) {
 }
 
 function inferredYear(row) {
-  const source = String(row.__sourceSheet || "");
+  const source = `${String(row.__sourceSheet || "")} ${String(row.__sourceFilename || "")}`;
   return source.match(/20\d{2}\s*[-/]\s*\d{2,4}/)?.[0].replace(/\s/g, "") || "";
 }
 
@@ -195,6 +195,8 @@ function normalizeRecord(row, mapping, index) {
   if (percent === null && score !== null && scoreMax) percent = (score / scoreMax) * 100;
 
   const sourceHeaders = Object.keys(row);
+  const isMasterRoster = /student\s*list/i.test(String(row.__sourceFilename || ""))
+    || (sourceHeaders.some((header) => /^sped$/i.test(header)) && !sourceHeaders.some((header) => /score|attendance|rit/i.test(header)));
   const isKeystone = sourceHeaders.some((header) => /admin scale score/i.test(header));
   const hasMapRit = sourceHeaders.some((header) => /map rit/i.test(header));
   let assessment = String(valueFor(row, mapping, "assessment") || "").trim();
@@ -246,6 +248,7 @@ function normalizeRecord(row, mapping, index) {
       hasIep: booleanValue(valueFor(row, mapping, "iep")),
       firefly: String(valueFor(row, mapping, "firefly") || "").trim(),
       intervention: String(valueFor(row, mapping, "intervention") || "").trim(),
+      rosterYear: isMasterRoster ? inferredYear(row) || "Current" : "",
     },
     assessment: {
       subject,
@@ -324,7 +327,9 @@ function analyzeDataset(parsed) {
     warnings.push("Student name was not matched automatically.");
   }
   if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit && !mapping.scaleScore && !mapping.attendance) {
-    warnings.push("No assessment score columns were matched automatically.");
+    warnings.push(validRecords.some((record) => record.student.rosterYear)
+      ? "Master roster detected. Student records will sync without creating blank assessments."
+      : "No assessment score columns were matched automatically.");
   }
   if (identityConflicts) warnings.push(`${identityConflicts} student ID record${identityConflicts === 1 ? " has" : "s have"} conflicting names or matching IDs.`);
 

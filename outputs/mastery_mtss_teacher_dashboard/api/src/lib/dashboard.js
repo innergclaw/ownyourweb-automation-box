@@ -138,6 +138,13 @@ function expectedCredits(grade, required) {
   return Math.min(totalRequired, (grade - 8) * 6);
 }
 
+function filterCurrentRosterStudents(students) {
+  const rosterYears = [...new Set(students.map((student) => String(student.rosterYear || "").trim()).filter(Boolean))].sort();
+  if (!rosterYears.length) return students;
+  const currentYear = rosterYears[rosterYears.length - 1];
+  return students.filter((student) => String(student.rosterYear || "").trim() === currentYear);
+}
+
 function buildDashboardStudents(students, assessments) {
   const deduped = dedupeAssessments(assessments);
   const byStudent = new Map();
@@ -254,4 +261,4 @@ function buildDashboardStudents(students, assessments) {
     });
 }
 
-module.exports = { buildDashboardStudents, dedupeAssessments, subjectSummary, assessmentKind };
+module.exports = { buildDashboardStudents, dedupeAssessments, subjectSummary, assessmentKind, filterCurrentRosterStudents };

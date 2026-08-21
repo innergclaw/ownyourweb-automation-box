@@ -31,7 +31,7 @@ const FIELD_DEFINITIONS = {
   creditsEarned: ["credits earned", "earned credits", "credits_earned"],
   creditsRequired: ["credits required", "required credits", "credits_required"],
   mtssTier: ["mtss tier", "tier", "intervention tier", "mtss_tier"],
-  iep: ["iep", "iep status", "iep not gifted", "has iep", "special education"],
+  iep: ["iep", "iep status", "iep not gifted", "has iep", "special education", "sped", "special ed"],
   firefly: ["firefly", "firefly status", "firefly screening"],
   intervention: ["intervention", "intervention details", "current intervention", "support"],
   compositeScore: ["composite score"],

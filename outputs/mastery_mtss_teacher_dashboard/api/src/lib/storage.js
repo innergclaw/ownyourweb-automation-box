@@ -2,7 +2,7 @@ const crypto = require("node:crypto");
 const path = require("node:path");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const { TableClient, TableServiceClient } = require("@azure/data-tables");
-const { buildDashboardStudents } = require("./dashboard");
+const { buildDashboardStudents, filterCurrentRosterStudents } = require("./dashboard");
 
 const SCHOOL_ID = "mastery-charter";
 const CONTAINER_NAME = "mtss-imports";
@@ -234,7 +234,7 @@ async function listStudents(limit = 100) {
   const entities = getClients().students.listEntities({
     queryOptions: { filter: `PartitionKey eq '${SCHOOL_ID}'`, select: [
       "studentId", "studentName", "firstName", "lastName", "drcStudentId", "uniqueMatchingId", "paSecureId", "grade", "campus", "attendance",
-      "enrolledDays", "participation", "daysPresent", "daysAbsent", "gpa", "creditsEarned", "creditsRequired", "mtssTier", "hasIep", "firefly", "intervention", "updatedAt",
+      "enrolledDays", "participation", "daysPresent", "daysAbsent", "gpa", "creditsEarned", "creditsRequired", "mtssTier", "hasIep", "firefly", "intervention", "rosterYear", "updatedAt",
     ] },
   });
   for await (const entity of entities) {
@@ -260,6 +260,7 @@ async function listStudents(limit = 100) {
       hasIep: entity.hasIep ?? null,
       firefly: entity.firefly || "",
       intervention: entity.intervention || "",
+      rosterYear: entity.rosterYear || "",
       updatedAt: entity.updatedAt,
     });
     if (results.length >= limit) break;
@@ -268,7 +269,7 @@ async function listStudents(limit = 100) {
 }
 
 async function listDashboardStudents(limit = 500) {
-  const students = await listStudents(limit);
+  const students = filterCurrentRosterStudents(await listStudents(limit));
   const studentIds = new Set(students.map((student) => student.studentId));
   const assessments = [];
   const entities = getClients().assessments.listEntities({

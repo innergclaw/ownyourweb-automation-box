@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildDashboardStudents, dedupeAssessments } = require("../src/lib/dashboard");
+const { buildDashboardStudents, dedupeAssessments, filterCurrentRosterStudents } = require("../src/lib/dashboard");
 
 test("builds a live dashboard record from student and assessment data", () => {
   const students = [{
@@ -64,6 +64,16 @@ test("limits dashboard records to grades 7 through 12", () => {
   ], []);
 
   assert.deepEqual(results.map((student) => student.gradeShort), ["7", "12"]);
+});
+
+test("uses the latest imported master roster as the active student scope", () => {
+  const students = filterCurrentRosterStudents([
+    { studentId: "OLD", rosterYear: "" },
+    { studentId: "CURRENT-1", rosterYear: "2025-26" },
+    { studentId: "CURRENT-2", rosterYear: "2025-26" },
+  ]);
+
+  assert.deepEqual(students.map((student) => student.studentId), ["CURRENT-1", "CURRENT-2"]);
 });
 
 test("surfaces PSSA scale score, performance, teacher, and matching identifiers", () => {

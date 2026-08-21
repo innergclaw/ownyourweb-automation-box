@@ -160,3 +160,19 @@ test("normalizes the attendance dashboard fields", () => {
   assert.equal(record.assessment.assessment, "");
   assert.equal(percentageValue(0.9333), 93.33);
 });
+
+test("recognizes a roster-only student list and SpEd indicator", () => {
+  const parsed = rowsFromMatrix([
+    ["Student ID", "Last Name", "First Name", "Grade", "SpEd"],
+    ["135951", "Abrahim", "Mahmoud", "12", "Yes"],
+  ]);
+  parsed.rows[0].__sourceFilename = "Student List 2025-26.xlsx";
+  const analysis = analyzeDataset(parsed);
+  const [record] = analysis.records;
+
+  assert.equal(record.student.studentName, "Mahmoud Abrahim");
+  assert.equal(record.student.hasIep, true);
+  assert.equal(record.student.rosterYear, "2025-26");
+  assert.equal(record.assessment.assessment, "");
+  assert.match(analysis.summary.warnings.join(" "), /Master roster detected/);
+});

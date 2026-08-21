@@ -1,0 +1,2534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mastery Charter | MTSS Access Dashboard V1</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18212f;
+        --muted: #617084;
+        --line: #d9e0e8;
+        --soft-line: #edf1f5;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --navy: #17375e;
+        --blue: #2d6cdf;
+        --teal: #0f9f8f;
+        --green: #1f8f4d;
+        --gold: #b7791f;
+        --red: #c2413b;
+        --purple: #6554c0;
+        --shadow: 0 10px 26px rgba(23, 55, 94, 0.08);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      body:not(.is-authenticated) .app {
+        display: none;
+      }
+
+      .auth-gate {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 28px 18px;
+        background: #eef3f8;
+      }
+
+      body.is-authenticated .auth-gate {
+        display: none;
+      }
+
+      .auth-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+        width: min(1040px, 100%);
+        overflow: hidden;
+        border: 1px solid #ccd8e5;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 18px 42px rgba(23, 55, 94, 0.12);
+      }
+
+      .auth-intro {
+        display: grid;
+        align-content: space-between;
+        gap: 28px;
+        min-height: 560px;
+        padding: 42px;
+        color: #ffffff;
+        background: #102b4b;
+      }
+
+      .auth-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .auth-mark {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 9px;
+        color: #cfe3ff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .auth-brand strong,
+      .auth-brand span {
+        display: block;
+      }
+
+      .auth-brand strong {
+        font-size: 16px;
+        letter-spacing: 0.05em;
+      }
+
+      .auth-brand span {
+        margin-top: 3px;
+        color: #bad1ee;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .auth-copy {
+        max-width: 430px;
+      }
+
+      .auth-copy small {
+        color: #90d9d0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .auth-copy h1 {
+        margin: 12px 0 13px;
+        font-size: clamp(30px, 4vw, 46px);
+        line-height: 1.04;
+      }
+
+      .auth-copy p {
+        margin: 0;
+        color: #cfdded;
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .auth-points {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .auth-points li {
+        display: grid;
+        gap: 4px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .auth-points strong {
+        font-size: 12px;
+      }
+
+      .auth-points span {
+        color: #bad1ee;
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .auth-panel {
+        display: grid;
+        align-content: center;
+        padding: 42px;
+      }
+
+      .auth-label {
+        width: fit-content;
+        margin-bottom: 18px;
+        padding: 6px 9px;
+        border: 1px solid #bfd4ee;
+        border-radius: 999px;
+        color: #2d6cdf;
+        background: #edf4ff;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .auth-panel h2 {
+        margin: 0 0 8px;
+        font-size: 27px;
+        line-height: 1.1;
+      }
+
+      .auth-panel > p {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .auth-field {
+        display: grid;
+        gap: 7px;
+        margin-bottom: 14px;
+      }
+
+      .auth-field label {
+        color: #34455a;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .auth-field select {
+        min-height: 42px;
+        padding: 0 11px;
+        border: 1px solid #cbd6e2;
+        border-radius: 6px;
+        color: var(--ink);
+        background: #fbfcfe;
+      }
+
+      .auth-button {
+        width: 100%;
+        min-height: 46px;
+        border: 0;
+        border-radius: 6px;
+        color: #ffffff;
+        background: #2d6cdf;
+        font-weight: 800;
+      }
+
+      .auth-button:hover {
+        background: #1f56b5;
+      }
+
+      .auth-note {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 11px;
+        border: 1px solid #dce5ee;
+        border-radius: 6px;
+        color: var(--muted);
+        background: #f8fafc;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .auth-note strong {
+        color: var(--ink);
+      }
+
+      .auth-footnote {
+        margin: 18px 0 0;
+        color: #8290a1;
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .signed-in-user {
+        display: grid;
+        gap: 2px;
+        margin-right: 4px;
+        text-align: right;
+      }
+
+      .signed-in-user strong {
+        font-size: 11px;
+      }
+
+      .signed-in-user span {
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .sign-out {
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: #40536b;
+        background: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      button,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 1fr;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 61px;
+        z-index: 4;
+        order: 2;
+        display: grid;
+        grid-template-columns: 190px minmax(420px, 1fr) minmax(520px, 0.95fr);
+        gap: 12px;
+        align-items: start;
+        height: auto;
+        padding: 10px 16px;
+        background: #102b4b;
+        color: #ffffff;
+        overflow: visible;
+      }
+
+      body.controls-collapsed .sidebar {
+        display: none;
+      }
+
+      .brand {
+        display: grid;
+        gap: 6px;
+        min-height: 100%;
+        padding-right: 14px;
+        border-right: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .brand strong {
+        font-size: 18px;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .brand span {
+        color: #bfd3ee;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .sidebar-section {
+        display: grid;
+        gap: 8px;
+        margin-top: 0;
+      }
+
+      .sidebar-section[aria-label="Filters"] {
+        grid-template-columns: repeat(3, minmax(150px, 1fr));
+      }
+
+      .sidebar-section[aria-label="Filters"] h2 {
+        grid-column: 1 / -1;
+      }
+
+      .sidebar-section[aria-label="Sync status"] {
+        grid-template-columns: 100px 100px 138px minmax(140px, 1fr) auto;
+        align-items: end;
+      }
+
+      .sidebar-section[aria-label="Sync status"] h2 {
+        grid-column: 1 / -1;
+      }
+
+      .sidebar-section h2 {
+        margin: 0;
+        color: #bfd3ee;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label {
+        color: #d9e8fb;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .field select,
+      .field textarea {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+
+      .field select {
+        min-height: 36px;
+        padding: 0 10px;
+      }
+
+      .field textarea {
+        min-height: 36px;
+        padding: 10px;
+        resize: vertical;
+      }
+
+      .field option {
+        color: var(--ink);
+      }
+
+      .sync-card {
+        display: grid;
+        gap: 3px;
+        min-height: 58px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.17);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .sync-card span {
+        color: #d9e8fb;
+        font-size: 12px;
+      }
+
+      .sync-card strong {
+        font-size: 16px;
+      }
+
+      .main {
+        display: contents;
+        min-width: 0;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        order: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(246, 248, 251, 0.92);
+        backdrop-filter: blur(14px);
+      }
+
+      .page-title {
+        min-width: 0;
+      }
+
+      .page-title h1 {
+        margin: 0 0 4px;
+        font-size: 22px;
+        line-height: 1.1;
+      }
+
+      .page-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .top-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .button.primary {
+        border-color: var(--navy);
+        background: var(--navy);
+        color: #ffffff;
+      }
+
+      .access-switcher {
+        display: flex;
+        gap: 6px;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .access-tab {
+        min-height: 34px;
+        padding: 0 11px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .access-tab.is-active {
+        background: var(--navy);
+        color: #ffffff;
+      }
+
+      .content {
+        display: grid;
+        order: 3;
+        gap: 12px;
+        padding: 14px 18px 22px;
+      }
+
+      .hero-band {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .purpose-panel,
+      .panel,
+      .metric,
+      .student-card,
+      .mini-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .purpose-panel {
+        position: relative;
+        overflow: hidden;
+        min-height: 0;
+        padding: 16px;
+      }
+
+      .purpose-panel h2 {
+        position: relative;
+        z-index: 1;
+        max-width: 860px;
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.12;
+      }
+
+      .purpose-panel p {
+        position: relative;
+        z-index: 1;
+        max-width: 720px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.42;
+      }
+
+      .data-flow {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .data-flow span,
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .meeting-panel {
+        padding: 14px;
+        border: 1px solid #b8c8dc;
+        border-radius: 8px;
+        background: #eef6ff;
+      }
+
+      .meeting-panel h2,
+      .panel h2,
+      .mini-panel h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .meeting-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .meeting-list div {
+        display: grid;
+        gap: 3px;
+        padding-left: 12px;
+        border-left: 4px solid var(--blue);
+      }
+
+      .meeting-list strong {
+        font-size: 13px;
+      }
+
+      .meeting-list span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .access-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .access-card {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .access-card header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .access-card h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .access-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .access-card ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .access-card li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 6px;
+        border-top: 1px solid var(--soft-line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .access-card li strong {
+        color: var(--ink);
+      }
+
+      .access-card.is-focused {
+        border-color: var(--blue);
+        box-shadow: 0 20px 50px rgba(45, 108, 223, 0.18);
+      }
+
+      .metric {
+        padding: 12px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 24px;
+        line-height: 1;
+      }
+
+      .metric small {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(520px, 1fr) 420px;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .panel {
+        min-width: 0;
+        padding: 14px;
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+        margin-bottom: 10px;
+      }
+
+      .panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 690px;
+      }
+
+      th,
+      td {
+        padding: 8px 9px;
+        border-bottom: 1px solid var(--soft-line);
+        text-align: left;
+        vertical-align: middle;
+        font-size: 13px;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      tr[data-student-id] {
+        cursor: pointer;
+      }
+
+      tr[data-student-id]:hover,
+      tr[data-student-id].is-selected {
+        background: #f0f6ff;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .status.watch {
+        background: #fff4d6;
+        color: #865d12;
+      }
+
+      .status.review {
+        background: #ffe3e1;
+        color: #a12d27;
+      }
+
+      .status.ontrack {
+        background: #dbf5e6;
+        color: #17663b;
+      }
+
+      .status.sync {
+        background: #e6edff;
+        color: #284eae;
+      }
+
+      .bar {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .bar span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .track {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e7edf4;
+      }
+
+      .track i {
+        display: block;
+        width: var(--value);
+        height: 100%;
+        border-radius: inherit;
+        background: var(--blue);
+      }
+
+      .student-card {
+        overflow: hidden;
+      }
+
+      .student-head {
+        padding: 14px;
+        background: var(--navy);
+        color: #ffffff;
+      }
+
+      .student-head span {
+        display: block;
+        color: #c5d9f2;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .student-head h2 {
+        margin: 5px 0 0;
+        font-size: 21px;
+      }
+
+      .student-body {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .student-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-box {
+        padding: 10px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .stat-box span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .stat-box strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 18px;
+      }
+
+      .gpa-tracker {
+        display: grid;
+        gap: 9px;
+        padding: 12px;
+        border: 1px solid #cbd8ea;
+        border-radius: 8px;
+        background: #f5f9ff;
+      }
+
+      .gpa-tracker header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .gpa-tracker h3 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .gpa-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .gpa-box {
+        padding: 10px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .gpa-box span {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .gpa-box strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 20px;
+      }
+
+      .gpa-meter {
+        display: grid;
+        gap: 7px;
+      }
+
+      .gpa-meter-row {
+        display: grid;
+        grid-template-columns: 96px 1fr 46px;
+        gap: 8px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .gpa-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .evidence-list {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .evidence-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+      }
+
+      .evidence-list span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .lower-grid {
+        display: grid;
+        grid-column: 1 / 2;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .lower-grid .mini-panel:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .mini-panel {
+        min-width: 0;
+        padding: 14px;
+      }
+
+      .panel .mini-panel {
+        box-shadow: none;
+      }
+
+      .matrix {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .matrix-row {
+        display: grid;
+        grid-template-columns: 92px 1fr 1fr;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .matrix-row strong {
+        font-size: 13px;
+      }
+
+      .matrix-cell {
+        min-height: 38px;
+        padding: 9px;
+        border-radius: 8px;
+        background: #f5f7fa;
+        font-size: 12px;
+      }
+
+      .teacher-feed {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .teacher-feed article {
+        padding: 12px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .teacher-feed strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .teacher-feed span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .intervention-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .intervention-list article {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 12px;
+        border-left: 4px solid var(--teal);
+        background: #f7fbfa;
+      }
+
+      .intervention-list p {
+        grid-column: 1 / -1;
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .message-portal {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .agent-prototype {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .agent-sidebar {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+        padding: 14px;
+        border-right: 1px solid var(--line);
+        background: #f8fafc;
+      }
+
+      .agent-sidebar h2,
+      .agent-main h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .agent-sidebar p,
+      .agent-main p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .prompt-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .prompt-button {
+        min-height: 38px;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        color: var(--ink);
+        text-align: left;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .prompt-button:hover {
+        border-color: var(--blue);
+        background: #f0f6ff;
+      }
+
+      .agent-main {
+        display: grid;
+        min-width: 0;
+      }
+
+      .agent-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+        padding: 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .agent-log {
+        display: grid;
+        gap: 12px;
+        align-content: start;
+        min-height: 360px;
+        max-height: 520px;
+        overflow-y: auto;
+        padding: 14px;
+        background: #ffffff;
+      }
+
+      .agent-turn {
+        display: grid;
+        gap: 8px;
+      }
+
+      .agent-turn.user {
+        justify-items: end;
+      }
+
+      .agent-bubble {
+        width: min(760px, 100%);
+        padding: 12px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .agent-turn.user .agent-bubble {
+        background: #eaf2ff;
+      }
+
+      .agent-bubble strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+      }
+
+      .agent-bubble pre {
+        margin: 0;
+        white-space: pre-wrap;
+        color: var(--ink);
+        font-family: inherit;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .agent-composer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid var(--line);
+        background: #fbfcfe;
+      }
+
+      .agent-composer textarea {
+        min-height: 42px;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        resize: vertical;
+        color: var(--ink);
+      }
+
+      .message-sidebar {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+        padding: 14px;
+        border-right: 1px solid var(--line);
+        background: #f8fafc;
+      }
+
+      .message-sidebar .panel-head {
+        display: grid;
+        gap: 4px;
+        margin: 0;
+      }
+
+      .message-form {
+        display: grid;
+        grid-template-columns: 210px 210px minmax(260px, 1fr) auto;
+        gap: 8px;
+        align-items: end;
+        padding: 12px;
+        border-top: 1px solid var(--line);
+        background: #fbfcfe;
+      }
+
+      .message-form .field label,
+      .message-form label {
+        color: var(--ink);
+      }
+
+      .message-form select,
+      .message-form textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        color: var(--ink);
+      }
+
+      .message-form select {
+        min-height: 38px;
+        padding: 0 10px;
+      }
+
+      .message-form textarea {
+        min-height: 38px;
+        padding: 11px;
+        resize: vertical;
+      }
+
+      .rule-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 0;
+      }
+
+      .rule-card {
+        padding: 10px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .rule-card strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .rule-card span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .message-feed {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+        min-height: 330px;
+        max-height: 460px;
+        margin-top: 0;
+        padding: 14px;
+        overflow-y: auto;
+        background: #ffffff;
+      }
+
+      .message-feed article {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 10px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .message-feed header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .message-feed strong {
+        font-size: 13px;
+      }
+
+      .message-feed p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .message-avatar {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        background: var(--navy);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .message-bubble {
+        display: grid;
+        gap: 5px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--soft-line);
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .message-main {
+        min-width: 0;
+      }
+
+      .message-main > .panel-head {
+        margin: 0;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        background: #ffffff;
+      }
+
+      .channel-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .channel-button {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        align-items: center;
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .channel-button.is-active {
+        border-color: #ccd7e6;
+        background: #ffffff;
+      }
+
+      .meeting-alert {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 12px 14px;
+        border: 1px solid #c9d7ff;
+        border-width: 1px 0 0;
+        border-radius: 0;
+        background: #f0f5ff;
+      }
+
+      .meeting-alert strong {
+        font-size: 14px;
+      }
+
+      .meeting-alert span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 20;
+        max-width: 360px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #102b4b;
+        color: #ffffff;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(12px);
+        pointer-events: none;
+        transition: 180ms ease;
+      }
+
+      .toast.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 1160px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+
+        .brand {
+          min-height: auto;
+          padding-right: 0;
+          padding-bottom: 12px;
+          border-right: 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .sidebar-section[aria-label="Filters"],
+        .sidebar-section[aria-label="Sync status"] {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar-section[aria-label="Filters"] h2,
+        .sidebar-section[aria-label="Sync status"] h2 {
+          grid-column: auto;
+        }
+
+        .hero-band,
+        .grid,
+        .lower-grid,
+        .message-portal,
+        .agent-prototype {
+          grid-template-columns: 1fr;
+        }
+
+        .agent-sidebar,
+        .message-sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .agent-composer,
+        .message-form {
+          grid-template-columns: 1fr;
+        }
+
+        .metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .access-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .auth-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .auth-intro {
+          min-height: auto;
+          padding: 30px 26px;
+        }
+
+        .auth-panel {
+          padding: 30px 26px;
+        }
+
+        .topbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .content {
+          padding: 18px 14px 28px;
+        }
+
+        .purpose-panel h2 {
+          font-size: 27px;
+        }
+
+        .metrics,
+        .student-stats,
+        .gpa-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .auth-gate {
+          padding: 14px 10px;
+        }
+
+        .auth-intro,
+        .auth-panel {
+          padding: 24px 20px;
+        }
+
+        .auth-points {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="auth-gate" aria-label="Mastery Charter staff sign-in">
+      <div class="auth-shell">
+        <div class="auth-intro">
+          <div class="auth-brand">
+            <div class="auth-mark">MC</div>
+            <div>
+              <strong>MASTERY CHARTER</strong>
+              <span>Secure MTSS staff workspace</span>
+            </div>
+          </div>
+          <div class="auth-copy">
+            <small>Staff access</small>
+            <h1>One protected workspace for MTSS action.</h1>
+            <p>Teachers and admin professionals use their existing school Microsoft account. Your identity and permissions come from Microsoft Entra ID.</p>
+          </div>
+          <ul class="auth-points">
+            <li><strong>Microsoft sign-in</strong><span>School account and MFA stay with Microsoft.</span></li>
+            <li><strong>Role-aware access</strong><span>Admin and teacher permissions stay separate.</span></li>
+            <li><strong>Shared records</strong><span>Approved MTSS data stays synced across staff.</span></li>
+            <li><strong>Protected workspace</strong><span>Only authorized staff can open student data.</span></li>
+          </ul>
+        </div>
+        <div class="auth-panel">
+          <span class="auth-label">Microsoft Entra ID</span>
+          <h2>Welcome to the staff dashboard</h2>
+          <p>Choose your staff view for the local prototype, then continue with your school Microsoft account when this is hosted securely.</p>
+          <form id="staff-login-form">
+            <div class="auth-field">
+              <label for="staff-role">Staff access level</label>
+              <select id="staff-role">
+                <option value="admin">Admin professional</option>
+                <option value="teacher">Teacher</option>
+              </select>
+            </div>
+            <button class="auth-button" type="submit">Continue with Microsoft</button>
+          </form>
+          <div class="auth-note"><strong>Account created by sign-in:</strong><span>Your staff profile is established from your school Microsoft identity. The app does not collect or store your password.</span></div>
+          <p class="auth-footnote" id="auth-mode">Local prototype mode: fictional records only. Hosted mode will require an approved Mastery staff account and Microsoft Entra authentication.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="app">
+      <aside class="sidebar">
+        <section class="brand" aria-label="Mastery Charter">
+          <strong>MASTERY<br />CHARTER</strong>
+          <span>Admin MTSS Staff Workspace</span>
+        </section>
+
+        <section class="sidebar-section" aria-label="Filters">
+          <h2>Dashboard Controls</h2>
+          <div class="field">
+            <label for="grade-filter">Grade Band</label>
+            <select id="grade-filter">
+              <option>All Grades 3-12</option>
+              <option>Grades 3-5</option>
+              <option>Grades 6-8</option>
+              <option>Grades 9-12</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="subject-filter">Subject Focus</label>
+            <select id="subject-filter">
+              <option>Math and Reading</option>
+              <option>Math</option>
+              <option>Reading</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="period-filter">Reporting Period</label>
+            <select id="period-filter">
+              <option>SY27 Planning</option>
+              <option>Q1 Biweekly Review</option>
+              <option>Q2 Biweekly Review</option>
+              <option>Q3 Biweekly Review</option>
+              <option>Q4 Biweekly Review</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="sidebar-section" aria-label="Sync status">
+          <h2>Admin Workspace Sync</h2>
+          <div class="sync-card">
+            <span>Last admin sync</span>
+            <strong id="sync-time">Today, 9:20 AM</strong>
+          </div>
+          <div class="sync-card">
+            <span>Workspace mode</span>
+            <strong>Admin</strong>
+          </div>
+          <div class="field">
+            <label for="team-note">Add synced note</label>
+            <textarea id="team-note" placeholder="Example: Grade 6 reading review assigned to API team."></textarea>
+          </div>
+          <button class="button primary" type="button" id="sync-note">Sync Note</button>
+        </section>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="page-title">
+            <h1>MTSS Access Dashboard V1</h1>
+            <p>Purpose: admin staff workspace for student progress, MTSS review, GPA tracking, and intervention action.</p>
+          </div>
+          <div class="top-actions">
+            <div class="signed-in-user">
+              <strong id="signed-in-user">Alex Williams</strong>
+              <span id="signed-in-role">Admin professional | Demo session</span>
+            </div>
+            <button class="button" type="button" id="export-summary">Export Summary</button>
+            <button class="button" type="button" id="toggle-controls" aria-expanded="true">Hide Controls</button>
+            <button class="button primary" type="button" id="run-review">Run Biweekly Review</button>
+            <button class="sign-out" type="button" id="sign-out">Sign out</button>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="hero-band">
+            <article class="purpose-panel">
+              <h2>One admin workspace for schoolwide MTSS review and action.</h2>
+              <p>
+                Built from the summer MTSS expectations: grades 3-12, Math and Reading,
+                PSSA, Keystone, MAP RIT, Firefly screening, interim assessments, SLGs,
+                IEP goals, and intervention outcomes. Admins can review trends, identify missing
+                data, assign owners, and coordinate staff follow-up from one view.
+              </p>
+              <div class="data-flow" aria-label="Data flow">
+                <span>PSSA</span>
+                <span>Keystone</span>
+                <span>MAP RIT</span>
+                <span>Amplify</span>
+                <span>EM2</span>
+                <span>Firefly</span>
+                <span>IEP Goals</span>
+                <span>SLGs</span>
+              </div>
+            </article>
+
+            <aside class="meeting-panel">
+              <h2>Biweekly Meeting View</h2>
+              <div class="meeting-list">
+                <div>
+                  <strong>1. Review trend</strong>
+                  <span>Triangulate PSSA or Keystone with MAP and interim data.</span>
+                </div>
+                <div>
+                  <strong>2. Confirm support</strong>
+                  <span>Check Tier 2 and Tier 3 interventions for Math and Reading.</span>
+                </div>
+                <div>
+                  <strong>3. Assign next step</strong>
+                  <span>Owner, due date, and progress outcome stay visible to the team.</span>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="metrics" aria-label="Schoolwide metrics">
+            <article class="metric">
+              <span>Students Tracked</span>
+              <strong id="metric-students">428</strong>
+              <small>Grades 3-12, includes IEPs</small>
+            </article>
+            <article class="metric">
+              <span>Need Review</span>
+              <strong id="metric-review">64</strong>
+              <small>Tier, attendance, growth, or IEP concern</small>
+            </article>
+            <article class="metric">
+              <span>Reading Growth Met</span>
+              <strong id="metric-reading">71%</strong>
+              <small>MAP plus interim evidence</small>
+            </article>
+            <article class="metric">
+              <span>Math Growth Met</span>
+              <strong id="metric-math">66%</strong>
+              <small>MAP RIT and unit assessments</small>
+            </article>
+            <article class="metric">
+              <span>Missing Data</span>
+              <strong id="metric-missing">22</strong>
+              <small>Records to clean before review</small>
+            </article>
+          </section>
+
+          <section class="access-grid" aria-label="Admin access view">
+            <article class="access-card is-focused" data-access-card="admin">
+              <header>
+                <h2>Admin Access Only</h2>
+                <span class="status sync">Full View</span>
+              </header>
+              <p>Schoolwide MTSS review, compliance readiness, intervention ownership, data gaps, and biweekly action tracking.</p>
+              <ul>
+                <li><span>Can view</span><strong>All grades 3-12</strong></li>
+                <li><span>Can edit</span><strong>Roster, tiers, outcomes</strong></li>
+                <li><span>Current scope</span><strong>Admin/staff prototype only</strong></li>
+              </ul>
+            </article>
+          </section>
+
+          <section class="grid">
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Student Review Queue</h2>
+                  <p id="queue-copy">Fictional demo data showing the admin review workflow.</p>
+                </div>
+                <span class="pill">Click a student</span>
+              </div>
+              <div class="table-wrap">
+                <table aria-label="Student review queue">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Grade</th>
+                      <th>Tier</th>
+                      <th>Reading</th>
+                      <th>Math</th>
+                      <th>Attendance</th>
+                      <th>Status</th>
+                      <th>Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody id="student-rows"></tbody>
+                </table>
+              </div>
+
+              <section class="lower-grid">
+                <article class="mini-panel">
+                  <h2>Triangulation Snapshot</h2>
+                  <div class="matrix" aria-label="Data triangulation matrix">
+                    <div class="matrix-row">
+                      <strong>Reading</strong>
+                      <div class="matrix-cell">MAP RIT: 71% met projected growth</div>
+                      <div class="matrix-cell">Amplify: 4 units logged, 2 below target</div>
+                    </div>
+                    <div class="matrix-row">
+                      <strong>Math</strong>
+                      <div class="matrix-cell">MAP RIT: 66% met projected growth</div>
+                      <div class="matrix-cell">EM2: 3 of 4 checkpoints uploaded</div>
+                    </div>
+                    <div class="matrix-row">
+                      <strong>State</strong>
+                      <div class="matrix-cell">PSSA trends tagged by standard</div>
+                      <div class="matrix-cell">Keystone pending import</div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="mini-panel">
+                  <h2>Admin Staff Sync Feed</h2>
+                  <div class="teacher-feed" id="teacher-feed">
+                    <article>
+                      <strong>Admin updated Grade 6 Reading</strong>
+                      <span>Added Amplify Unit 4 scores and two intervention notes.</span>
+                    </article>
+                    <article>
+                      <strong>API review assigned</strong>
+                      <span>Grade 9 Keystone readiness group moved to biweekly review queue.</span>
+                    </article>
+                    <article>
+                      <strong>Case manager review queued</strong>
+                      <span>IEP goal evidence review assigned before Friday.</span>
+                    </article>
+                  </div>
+                </article>
+
+                <article class="mini-panel">
+                  <h2>Intervention Board</h2>
+                  <div class="intervention-list">
+                    <article>
+                      <strong>Tier 2 Reading Fluency</strong>
+                      <span class="status sync">Active</span>
+                      <p>34 students, 3x weekly, outcome review due in 10 school days.</p>
+                    </article>
+                    <article>
+                      <strong>Tier 3 Math Concepts</strong>
+                      <span class="status review">Review</span>
+                      <p>12 students, progress flat across two interim checks.</p>
+                    </article>
+                    <article>
+                      <strong>Extended Learning Block</strong>
+                      <span class="status ontrack">Ready</span>
+                      <p>Roster aligned to MAP domain gaps and teacher availability.</p>
+                    </article>
+                  </div>
+                </article>
+              </section>
+            </article>
+
+            <aside class="student-card" aria-label="Selected student detail">
+              <div class="student-head">
+                <span id="student-id">MC-0821</span>
+                <h2 id="student-name">Aaliyah Carter</h2>
+              </div>
+              <div class="student-body">
+                <div class="student-stats">
+                  <div class="stat-box">
+                    <span>Grade / Team</span>
+                    <strong id="student-grade">6 / Team Phoenix</strong>
+                  </div>
+                  <div class="stat-box">
+                    <span>MTSS Tier</span>
+                    <strong id="student-tier">Tier 2</strong>
+                  </div>
+                  <div class="stat-box">
+                    <span>Reading RIT</span>
+                    <strong id="student-reading">211 / +4 goal</strong>
+                  </div>
+                  <div class="stat-box">
+                    <span>Math RIT</span>
+                    <strong id="student-math">206 / +6 goal</strong>
+                  </div>
+                </div>
+                <section class="gpa-tracker" aria-label="GPA and promotion tracker">
+                  <header>
+                    <h3 id="gpa-title">GPA / Promotion Tracker</h3>
+                    <span class="status watch" id="gpa-status">Watch</span>
+                  </header>
+                  <div class="gpa-grid">
+                    <div class="gpa-box">
+                      <span>Current GPA</span>
+                      <strong id="student-gpa">2.42</strong>
+                    </div>
+                    <div class="gpa-box">
+                      <span>Passing GPA</span>
+                      <strong id="passing-gpa">2.00</strong>
+                    </div>
+                    <div class="gpa-box">
+                      <span>Target GPA</span>
+                      <strong id="target-gpa">2.75</strong>
+                    </div>
+                  </div>
+                  <div class="gpa-meter">
+                    <div class="gpa-meter-row">
+                      <span>Passing</span>
+                      <div class="track"><i id="passing-gpa-bar" style="--value: 50%"></i></div>
+                      <strong id="passing-gpa-percent">50%</strong>
+                    </div>
+                    <div class="gpa-meter-row">
+                      <span>Current</span>
+                      <div class="track"><i id="current-gpa-bar" style="--value: 61%"></i></div>
+                      <strong id="current-gpa-percent">61%</strong>
+                    </div>
+                    <div class="gpa-meter-row">
+                      <span>Target</span>
+                      <div class="track"><i id="target-gpa-bar" style="--value: 69%"></i></div>
+                      <strong id="target-gpa-percent">69%</strong>
+                    </div>
+                  </div>
+                  <p class="gpa-note" id="gpa-gap">Current GPA is 0.42 above passing and 0.33 below the target pace.</p>
+                  <p class="gpa-note" id="credit-gap">Promotion evidence: 7 of 8 required coursework checkpoints complete.</p>
+                </section>
+                <ul class="evidence-list">
+                  <li><strong>Assessment trend</strong><span id="student-trend">MAP improved, Amplify below target</span></li>
+                  <li><strong>Intervention</strong><span id="student-intervention">Small-group reading, 3x weekly</span></li>
+                  <li><strong>IEP / Firefly</strong><span id="student-iep">No IEP, Firefly watch</span></li>
+                  <li><strong id="next-label">Next admin move</strong><span id="student-next">Upload two interim data points</span></li>
+                </ul>
+              </div>
+            </aside>
+
+          </section>
+
+          <section class="agent-prototype" aria-label="Mastery MTSS staff agent prototype">
+            <aside class="agent-sidebar">
+              <div>
+                <h2>Staff Agent Prototype</h2>
+                <p>Static demo agent. Uses sample records only. Built to port into Copilot Studio later.</p>
+              </div>
+              <div class="prompt-grid" aria-label="Suggested agent prompts">
+                <button class="prompt-button" type="button" data-agent-prompt="Show me Grade 6 students who need reading review.">Grade 6 reading review</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Summarize Aaliyah Carter for the biweekly MTSS meeting.">Summarize Aaliyah</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Which students are missing four interim assessment data points?">Find missing interim data</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Draft a parent update for Malik Johnson.">Draft parent update</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Schedule a student meeting alert for Darius Brooks Thursday at 2:15 PM.">Schedule student alert</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Send a direct message to Aaliyah Carter.">Test blocked student chat</button>
+              </div>
+            </aside>
+
+            <article class="agent-main">
+              <div class="agent-head">
+                <div>
+                  <h2>Mastery MTSS Staff Agent</h2>
+                  <p>Prototype workflows: student summary, risk queue, parent draft, meeting alert, and communication guardrails.</p>
+                </div>
+                <span class="status sync">Demo Mode</span>
+              </div>
+              <div class="agent-log" id="agent-log" aria-live="polite">
+                <div class="agent-turn">
+                  <div class="agent-bubble">
+                    <strong>Agent</strong>
+                    <pre>Ask a staff workflow question or use a suggested prompt. This prototype is deterministic and uses only demo data.</pre>
+                  </div>
+                </div>
+              </div>
+              <form class="agent-composer" id="agent-form">
+                <textarea id="agent-input" placeholder="Ask: Summarize Malik Johnson for the biweekly MTSS meeting."></textarea>
+                <button class="button primary" type="submit">Ask Agent</button>
+              </form>
+            </article>
+          </section>
+
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const students = [
+        {
+          id: "MC-0821",
+          name: "Aaliyah Carter",
+          grade: "6 / Team Phoenix",
+          gradeShort: "6",
+          tier: "Tier 2",
+          reading: 58,
+          math: 72,
+          attendance: 94,
+          status: "Watch",
+          owner: "Ms. Rivera",
+          readingText: "211 / +4 goal",
+          mathText: "206 / +6 goal",
+          gpa: 2.42,
+          passingGpa: 2.0,
+          targetGpa: 2.75,
+          creditsEarned: 7,
+          creditsExpected: 8,
+          creditLabel: "coursework checkpoints",
+          gpaStatus: "Watch",
+          trend: "MAP improved, Amplify below target",
+          intervention: "Small-group reading, 3x weekly",
+          iep: "No IEP, Firefly watch",
+          next: "Upload two interim data points",
+        },
+        {
+          id: "MC-1044",
+          name: "Malik Johnson",
+          grade: "9 / Keystone Prep",
+          gradeShort: "9",
+          tier: "Tier 3",
+          reading: 49,
+          math: 44,
+          attendance: 88,
+          status: "Review",
+          owner: "Mr. Hall",
+          readingText: "218 / +7 goal",
+          mathText: "212 / +8 goal",
+          gpa: 1.82,
+          passingGpa: 2.0,
+          targetGpa: 2.5,
+          creditsEarned: 5.5,
+          creditsExpected: 6.5,
+          creditLabel: "credits earned",
+          gpaStatus: "Review",
+          trend: "Keystone readiness low, MAP projection missed",
+          intervention: "Tier 3 math concepts, daily block",
+          iep: "IEP goal progress needs evidence",
+          next: "Schedule case manager and math review",
+        },
+        {
+          id: "MC-0632",
+          name: "Sofia Nguyen",
+          grade: "4 / Reading Lab",
+          gradeShort: "4",
+          tier: "Tier 1",
+          reading: 82,
+          math: 76,
+          attendance: 97,
+          status: "On Track",
+          owner: "Dr. Lane",
+          readingText: "198 / +3 goal",
+          mathText: "201 / +4 goal",
+          gpa: 3.12,
+          passingGpa: 2.0,
+          targetGpa: 2.75,
+          creditsEarned: 8,
+          creditsExpected: 8,
+          creditLabel: "coursework checkpoints",
+          gpaStatus: "On Track",
+          trend: "PSSA-aligned skill practice on pace",
+          intervention: "No active intervention",
+          iep: "No IEP, Firefly on track",
+          next: "Maintain SLG evidence collection",
+        },
+        {
+          id: "MC-1278",
+          name: "Darius Brooks",
+          grade: "11 / Credit Check",
+          gradeShort: "11",
+          tier: "Tier 2",
+          reading: 69,
+          math: 52,
+          attendance: 91,
+          status: "Watch",
+          owner: "Ms. Patel",
+          readingText: "224 / +2 goal",
+          mathText: "219 / +7 goal",
+          gpa: 2.31,
+          passingGpa: 2.0,
+          targetGpa: 2.7,
+          creditsEarned: 17,
+          creditsExpected: 18,
+          creditLabel: "credits earned",
+          gpaStatus: "Watch",
+          trend: "GPA on track, math growth below goal",
+          intervention: "Extended learning Algebra support",
+          iep: "No IEP",
+          next: "Add EM2 checkpoint and credit note",
+        },
+        {
+          id: "MC-0915",
+          name: "Imani Williams",
+          grade: "7 / Firefly Review",
+          gradeShort: "7",
+          tier: "Tier 3",
+          reading: 46,
+          math: 61,
+          attendance: 86,
+          status: "Review",
+          owner: "Case Team",
+          readingText: "207 / +8 goal",
+          mathText: "210 / +5 goal",
+          gpa: 1.94,
+          passingGpa: 2.0,
+          targetGpa: 2.6,
+          creditsEarned: 6,
+          creditsExpected: 8,
+          creditLabel: "coursework checkpoints",
+          gpaStatus: "Review",
+          trend: "Firefly reading concern, attendance below 90%",
+          intervention: "Reading intervention plus attendance plan",
+          iep: "IEP reading goal requires update",
+          next: "Post progress outcome before biweekly review",
+        },
+      ];
+
+      const body = document.body;
+      const staffLoginForm = document.querySelector("#staff-login-form");
+      const staffRole = document.querySelector("#staff-role");
+      const authMode = document.querySelector("#auth-mode");
+      const signedInUser = document.querySelector("#signed-in-user");
+      const signedInRole = document.querySelector("#signed-in-role");
+      const isGitHubPages = window.location.hostname.includes("github.io");
+      const isLocalPreview = window.location.protocol === "file:" || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+      const isHostedSecureApp = window.location.protocol === "https:" && !isGitHubPages;
+      const rows = document.querySelector("#student-rows");
+      const toast = document.querySelector("#toast");
+      const syncTime = document.querySelector("#sync-time");
+      const teacherFeed = document.querySelector("#teacher-feed");
+      const accessMode = document.querySelector("#access-mode");
+      const accessTabs = document.querySelectorAll("[data-access-target]");
+      const accessCards = document.querySelectorAll("[data-access-card]");
+      const queueCopy = document.querySelector("#queue-copy");
+      const nextLabel = document.querySelector("#next-label");
+      const toggleControls = document.querySelector("#toggle-controls");
+      const agentLog = document.querySelector("#agent-log");
+      const agentForm = document.querySelector("#agent-form");
+      const agentInput = document.querySelector("#agent-input");
+      const agentPromptButtons = document.querySelectorAll("[data-agent-prompt]");
+      let currentAccess = "admin";
+
+      function getRedirectPath() {
+        return `${window.location.pathname}${window.location.search}`;
+      }
+
+      function setSignedInProfile(name, role, statusText) {
+        body.classList.add("is-authenticated");
+        signedInUser.textContent = name;
+        signedInRole.textContent = `${role} | ${statusText}`;
+      }
+
+      function enterDemoWorkspace() {
+        const role = staffRole.value === "teacher" ? "Teacher" : "Admin professional";
+        setSignedInProfile(role === "Teacher" ? "Jordan Lee" : "Alex Williams", role, "Fictional preview session");
+        authMode.textContent = "Local prototype mode: fictional records only. Hosted mode will verify your Microsoft Entra session and staff role.";
+        showToast(`${role} demo workspace active.`);
+      }
+
+      function enterMicrosoftWorkspace(principal) {
+        const userDetails = principal?.userDetails || "Authorized staff";
+        const claims = principal?.claims || [];
+        const displayName = claims.find((claim) => claim.typ === "name")?.val || userDetails;
+        const userRoles = principal?.userRoles || [];
+        const roleClaim = claims.find((claim) => claim.typ === "role")?.val;
+        const role = roleClaim || (userRoles.includes("admin") ? "Admin professional" : "Authorized staff");
+        setSignedInProfile(displayName, role, "Microsoft Entra authenticated");
+        authMode.textContent = "Microsoft Entra session detected. Access is being evaluated by the hosted security policy.";
+      }
+
+      async function loadMicrosoftSession() {
+        if (isGitHubPages) {
+          authMode.textContent = "GitHub Pages preview only: secure staff sign-in is available from the Azure-hosted workspace.";
+          return;
+        }
+
+        if (!isHostedSecureApp) return;
+
+        try {
+          const response = await fetch("/.auth/me", { headers: { Accept: "application/json" } });
+          if (!response.ok) throw new Error("Microsoft session endpoint unavailable");
+          const payload = await response.json();
+          if (payload.clientPrincipal) enterMicrosoftWorkspace(payload.clientPrincipal);
+        } catch (error) {
+          authMode.textContent = "Secure host detected. Continue with Microsoft to use the school staff workspace.";
+        }
+      }
+
+      const accessContent = {
+        admin: {
+          queue: "Fictional demo data showing the admin review workflow.",
+          nextLabel: "Next admin move",
+          toast: "Admin workspace active.",
+          notePrefix: "Admin note synced",
+          exportMessage: "Admin export queued: schoolwide tracker, gaps, and intervention summary.",
+          reviewMessage: "Admin biweekly review queue refreshed.",
+        },
+      };
+
+      function statusClass(status) {
+        if (status === "Review") return "review";
+        if (status === "On Track") return "ontrack";
+        return "watch";
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("is-visible");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("is-visible"), 2400);
+      }
+
+      function renderRows() {
+        rows.innerHTML = students
+          .map(
+            (student, index) => `
+              <tr data-student-id="${student.id}" class="${index === 0 ? "is-selected" : ""}">
+                <td><strong>${student.name}</strong><br><span>${student.id}</span></td>
+                <td>${student.gradeShort}</td>
+                <td>${student.tier}</td>
+                <td><div class="bar"><span>${student.reading}%</span><div class="track"><i style="--value: ${student.reading}%"></i></div></div></td>
+                <td><div class="bar"><span>${student.math}%</span><div class="track"><i style="--value: ${student.math}%"></i></div></div></td>
+                <td>${student.attendance}%</td>
+                <td><span class="status ${statusClass(student.status)}">${student.status}</span></td>
+                <td>${student.owner}</td>
+              </tr>
+            `,
+          )
+          .join("");
+      }
+
+      function formatGpa(value) {
+        return Number(value).toFixed(2);
+      }
+
+      function gpaPercent(value) {
+        return `${Math.max(0, Math.min(100, Math.round((Number(value) / 4) * 100)))}%`;
+      }
+
+      function updateGpaTracker(student) {
+        const current = Number(student.gpa);
+        const passing = Number(student.passingGpa);
+        const target = Number(student.targetGpa);
+        const passingGap = current - passing;
+        const targetGap = target - current;
+        const creditGap = Number(student.creditsExpected) - Number(student.creditsEarned);
+        const statusClassName = statusClass(student.gpaStatus);
+
+        document.querySelector("#student-gpa").textContent = formatGpa(current);
+        document.querySelector("#passing-gpa").textContent = formatGpa(passing);
+        document.querySelector("#target-gpa").textContent = formatGpa(target);
+        document.querySelector("#passing-gpa-percent").textContent = gpaPercent(passing);
+        document.querySelector("#current-gpa-percent").textContent = gpaPercent(current);
+        document.querySelector("#target-gpa-percent").textContent = gpaPercent(target);
+        document.querySelector("#passing-gpa-bar").style.setProperty("--value", gpaPercent(passing));
+        document.querySelector("#current-gpa-bar").style.setProperty("--value", gpaPercent(current));
+        document.querySelector("#target-gpa-bar").style.setProperty("--value", gpaPercent(target));
+
+        const status = document.querySelector("#gpa-status");
+        status.textContent = student.gpaStatus;
+        status.className = `status ${statusClassName}`;
+        document.querySelector("#gpa-title").textContent =
+          Number(student.gradeShort) >= 9 ? "GPA / Graduation Tracker" : "GPA / Promotion Tracker";
+
+        const passingText =
+          passingGap >= 0
+            ? `${formatGpa(passingGap)} above passing`
+            : `${formatGpa(Math.abs(passingGap))} below passing`;
+        const targetText =
+          targetGap <= 0
+            ? `${formatGpa(Math.abs(targetGap))} above target pace`
+            : `${formatGpa(targetGap)} below target pace`;
+        document.querySelector("#gpa-gap").textContent = `Current GPA is ${passingText} and ${targetText}.`;
+
+        const creditText =
+          creditGap <= 0
+            ? `${student.creditsEarned} of ${student.creditsExpected} ${student.creditLabel} complete. Student is at or above expected pace.`
+            : `${student.creditsEarned} of ${student.creditsExpected} ${student.creditLabel} complete. Needs ${creditGap} more by this checkpoint.`;
+        document.querySelector("#credit-gap").textContent = creditText;
+      }
+
+      function selectStudent(id) {
+        const student = students.find((item) => item.id === id);
+        if (!student) return;
+
+        document.querySelector("#student-id").textContent = student.id;
+        document.querySelector("#student-name").textContent = student.name;
+        document.querySelector("#student-grade").textContent = student.grade;
+        document.querySelector("#student-tier").textContent = student.tier;
+        document.querySelector("#student-reading").textContent = student.readingText;
+        document.querySelector("#student-math").textContent = student.mathText;
+        document.querySelector("#student-trend").textContent = student.trend;
+        document.querySelector("#student-intervention").textContent = student.intervention;
+        document.querySelector("#student-iep").textContent = student.iep;
+        document.querySelector("#student-next").textContent = student.next;
+        updateGpaTracker(student);
+
+        document.querySelectorAll("[data-student-id]").forEach((row) => {
+          row.classList.toggle("is-selected", row.dataset.studentId === id);
+        });
+      }
+
+      function setAccess(nextAccess, silent = false) {
+        currentAccess = nextAccess;
+        if (accessMode) accessMode.value = nextAccess;
+        accessTabs.forEach((tab) => {
+          tab.classList.toggle("is-active", tab.dataset.accessTarget === nextAccess);
+        });
+        accessCards.forEach((card) => {
+          card.classList.toggle("is-focused", card.dataset.accessCard === nextAccess);
+        });
+        queueCopy.textContent = accessContent[nextAccess]?.queue || accessContent.admin.queue;
+        nextLabel.textContent = accessContent[nextAccess]?.nextLabel || accessContent.admin.nextLabel;
+
+        if (!silent) {
+          syncTime.textContent = "Just now";
+          showToast(accessContent[nextAccess]?.toast || accessContent.admin.toast);
+        }
+      }
+
+      function normalize(value) {
+        return String(value || "").toLowerCase();
+      }
+
+      function findStudentFromText(text) {
+        const query = normalize(text);
+        return students.find((student) => {
+          const [first, last] = student.name.toLowerCase().split(" ");
+          return query.includes(student.name.toLowerCase()) || query.includes(first) || query.includes(last);
+        }) || students[0];
+      }
+
+      function missingDataFor(student) {
+        const missing = [];
+        if (student.reading < 60) missing.push("reading growth evidence needs review");
+        if (student.math < 60) missing.push("math growth evidence needs review");
+        if (student.attendance < 90) missing.push("attendance below 90%");
+        if (student.gpa < student.passingGpa) missing.push("GPA below passing threshold");
+        if (student.creditsEarned < student.creditsExpected) missing.push(`${student.creditLabel} below expected pace`);
+        if (student.status === "Review") missing.push("intervention outcome needs staff review");
+        return missing.length ? missing : ["no major data gaps in demo record"];
+      }
+
+      function studentSummary(student) {
+        const missing = missingDataFor(student).join("; ");
+        return `Student: ${student.name} (${student.id})
+Current status: ${student.status}, ${student.tier}, ${student.grade}
+Evidence: Reading ${student.readingText}; Math ${student.mathText}; Attendance ${student.attendance}%; GPA ${formatGpa(student.gpa)} vs passing ${formatGpa(student.passingGpa)} and target ${formatGpa(student.targetGpa)}
+Risk: ${student.gpaStatus}
+Missing data / watch items: ${missing}
+Intervention: ${student.intervention}
+Recommended next action: ${student.next}
+Owner: ${student.owner}`;
+      }
+
+      function reviewQueueResponse(text) {
+        const query = normalize(text);
+        const gradeMatch = query.match(/grade\\s*(\\d+)/);
+        const subject = query.includes("math") ? "math" : query.includes("reading") ? "reading" : "all subjects";
+        const filtered = students.filter((student) => {
+          const gradeOk = gradeMatch ? student.gradeShort === gradeMatch[1] : true;
+          const subjectOk =
+            subject === "reading" ? student.reading < 70 :
+            subject === "math" ? student.math < 70 :
+            student.status !== "On Track";
+          return gradeOk && subjectOk;
+        });
+
+        if (!filtered.length) return "No matching demo students found for that filter.";
+
+        return `Students needing review (${subject}):
+${filtered.map((student) => `- ${student.name}, Grade ${student.gradeShort}: ${student.status}; Reading ${student.reading}%, Math ${student.math}%, Attendance ${student.attendance}%; owner ${student.owner}`).join("\\n")}`;
+      }
+
+      function parentDraft(student) {
+        return `Parent update draft for ${student.name}:
+
+Hi,
+
+I’m reaching out with a progress update. ${student.name} is currently at a ${formatGpa(student.gpa)} GPA. The passing benchmark is ${formatGpa(student.passingGpa)}, and the current target is ${formatGpa(student.targetGpa)}.
+
+Current support: ${student.intervention}.
+
+What we are watching: ${missingDataFor(student).join("; ")}.
+
+Next school action: ${student.next}.
+
+Please reply with any questions or confirm a time to discuss the support plan.`;
+      }
+
+      function studentAlertDraft(student, text) {
+        const timeMatch = text.match(/(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)?\\s*(?:at\\s*)?\\d{1,2}:\\d{2}\\s*(?:am|pm)?/i);
+        const meetingTime = timeMatch ? timeMatch[0].trim() : "next available scheduled time";
+        return `Student meeting alert scheduled:
+Student: ${student.name}
+Date/time: ${meetingTime}
+With: ${student.owner}
+Reason: MTSS progress check and next-step conference
+Rule: This is a one-way scheduled alert only. No direct student chat thread is opened.`;
+      }
+
+      function missingInterimResponse() {
+        const flagged = students.filter((student) => student.status !== "On Track" || student.reading < 60 || student.math < 60);
+        return `Students likely missing complete interim evidence in this demo:
+${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join("; ")}`).join("\\n")}`;
+      }
+
+      function agentResponse(prompt) {
+        const query = normalize(prompt);
+        const student = findStudentFromText(prompt);
+
+        if ((query.includes("direct message") || query.includes("message")) && query.includes("student")) {
+          return "Blocked: direct teacher-to-student or parent-to-student messaging is not allowed in this design. Use a scheduled student meeting alert instead.";
+        }
+
+        if (query.includes("schedule") && query.includes("alert")) {
+          return studentAlertDraft(student, prompt);
+        }
+
+        if (query.includes("parent") || query.includes("draft")) {
+          return parentDraft(student);
+        }
+
+        if (query.includes("missing") || query.includes("interim")) {
+          return missingInterimResponse();
+        }
+
+        if (query.includes("show") || query.includes("need") || query.includes("review") || query.includes("queue")) {
+          return reviewQueueResponse(prompt);
+        }
+
+        if (query.includes("summarize") || query.includes("summary") || query.includes("biweekly")) {
+          return studentSummary(student);
+        }
+
+        return `I can run these demo workflows:
+- summarize a student
+- show students needing review
+- identify missing interim data
+- draft a parent update
+- schedule a student meeting alert
+- block direct student messaging`;
+      }
+
+      function addAgentTurn(role, text) {
+        const turn = document.createElement("div");
+        turn.className = `agent-turn ${role === "You" ? "user" : ""}`;
+        turn.innerHTML = `
+          <div class="agent-bubble">
+            <strong>${role}</strong>
+            <pre>${text}</pre>
+          </div>
+        `;
+        agentLog.appendChild(turn);
+        agentLog.scrollTop = agentLog.scrollHeight;
+      }
+
+      function runAgentPrompt(prompt) {
+        const value = prompt.trim();
+        if (!value) {
+          showToast("Enter an agent prompt first.");
+          return;
+        }
+
+        addAgentTurn("You", value);
+        addAgentTurn("Agent", agentResponse(value));
+        agentInput.value = "";
+      }
+
+      function updateMetrics() {
+        const subject = document.querySelector("#subject-filter").value;
+        const grade = document.querySelector("#grade-filter").value;
+        const period = document.querySelector("#period-filter").value;
+
+        const baseReview = grade === "Grades 9-12" ? 24 : grade === "Grades 3-5" ? 18 : 64;
+        document.querySelector("#metric-review").textContent = subject === "Math" ? baseReview + 7 : baseReview;
+        document.querySelector("#metric-reading").textContent = subject === "Math" ? "N/A" : "71%";
+        document.querySelector("#metric-math").textContent = subject === "Reading" ? "N/A" : "66%";
+        document.querySelector("#metric-missing").textContent = period.includes("Planning") ? "22" : "14";
+        showToast("Dashboard view updated.");
+      }
+
+      document.addEventListener("click", (event) => {
+        const row = event.target.closest("[data-student-id]");
+        if (row) selectStudent(row.dataset.studentId);
+      });
+
+      document.querySelectorAll("#grade-filter, #subject-filter, #period-filter").forEach((select) => {
+        select.addEventListener("change", updateMetrics);
+      });
+
+      accessTabs.forEach((tab) => {
+        tab.addEventListener("click", () => setAccess(tab.dataset.accessTarget));
+      });
+
+      if (accessMode) accessMode.addEventListener("change", () => setAccess(accessMode.value));
+
+      document.querySelector("#sync-note").addEventListener("click", () => {
+        const note = document.querySelector("#team-note");
+        const value = note.value.trim();
+        if (!value) {
+          showToast("Add a team note before syncing.");
+          return;
+        }
+
+        const entry = document.createElement("article");
+        entry.innerHTML = `<strong>${accessContent[currentAccess].notePrefix}</strong><span>${value}</span>`;
+        teacherFeed.prepend(entry);
+        note.value = "";
+        syncTime.textContent = "Just now";
+        showToast("Admin note synced.");
+      });
+
+      agentForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        runAgentPrompt(agentInput.value);
+      });
+
+      agentPromptButtons.forEach((button) => {
+        button.addEventListener("click", () => runAgentPrompt(button.dataset.agentPrompt));
+      });
+
+      document.querySelector("#run-review").addEventListener("click", () => {
+        syncTime.textContent = "Just now";
+        showToast(accessContent[currentAccess].reviewMessage);
+      });
+
+      document.querySelector("#export-summary").addEventListener("click", () => {
+        showToast(accessContent[currentAccess].exportMessage);
+      });
+
+      toggleControls.addEventListener("click", () => {
+        const collapsed = document.body.classList.toggle("controls-collapsed");
+        toggleControls.textContent = collapsed ? "Show Controls" : "Hide Controls";
+        toggleControls.setAttribute("aria-expanded", String(!collapsed));
+        showToast(collapsed ? "Dashboard controls hidden." : "Dashboard controls shown.");
+      });
+
+      staffLoginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (isHostedSecureApp) {
+          const redirect = encodeURIComponent(getRedirectPath());
+          window.location.href = `/.auth/login/aad?post_login_redirect_uri=${redirect}`;
+          return;
+        }
+
+        if (!isLocalPreview) {
+          authMode.textContent = "Secure staff sign-in is unavailable on this host. Open the Azure-hosted workspace instead.";
+          showToast("Microsoft sign-in is only enabled on the Azure workspace.");
+          return;
+        }
+
+        enterDemoWorkspace();
+      });
+
+      document.querySelector("#sign-out").addEventListener("click", () => {
+        if (isHostedSecureApp) {
+          const redirect = encodeURIComponent(getRedirectPath());
+          window.location.href = `/.auth/logout?post_logout_redirect_uri=${redirect}`;
+          return;
+        }
+        body.classList.remove("is-authenticated");
+        staffRole.focus();
+      });
+
+      renderRows();
+      selectStudent(students[0].id);
+      setAccess("admin", true);
+      loadMicrosoftSession();
+    </script>
+  </body>
+</html>

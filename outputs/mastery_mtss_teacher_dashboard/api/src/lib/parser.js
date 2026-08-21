@@ -3,7 +3,7 @@ const readXlsxFile = require("read-excel-file/node");
 const { parse } = require("csv-parse/sync");
 const { detectMapping } = require("./schema");
 
-const SUPPORTED_EXTENSIONS = new Set([".csv", ".xlsx"]);
+const SUPPORTED_EXTENSIONS = new Set([".csv", ".cvc", ".xlsx"]);
 const MAX_ROWS = 10000;
 
 function cleanCell(value) {
@@ -61,12 +61,12 @@ function parseCsv(buffer) {
 async function parseDataset(buffer, filename) {
   const extension = path.extname(filename || "").toLowerCase();
   if (!SUPPORTED_EXTENSIONS.has(extension)) {
-    const error = new Error("Upload a CSV or XLSX file.");
+    const error = new Error("Upload a CSV, CVC, or XLSX file.");
     error.statusCode = 400;
     throw error;
   }
 
-  const parsed = extension === ".csv" ? parseCsv(buffer) : await parseWorkbook(buffer);
+  const parsed = extension === ".csv" || extension === ".cvc" ? parseCsv(buffer) : await parseWorkbook(buffer);
   if (!parsed.headers.length || !parsed.rows.length) {
     const error = new Error("The uploaded file does not contain a header row and student records.");
     error.statusCode = 400;

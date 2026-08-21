@@ -17,7 +17,7 @@ app.http("imports-preview", {
       const form = await request.formData();
       const file = form.get("dataset");
       if (!file || typeof file.arrayBuffer !== "function") {
-        const error = new Error("Choose a CSV or XLSX dataset to upload.");
+        const error = new Error("Choose a CSV, CVC, or XLSX dataset to upload.");
         error.statusCode = 400;
         throw error;
       }

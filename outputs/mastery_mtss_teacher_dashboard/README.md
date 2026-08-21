@@ -24,6 +24,7 @@ Set these application settings on the Azure Static Web App. Never commit their v
 | `AZURE_CLIENT_SECRET` | Microsoft Entra application credential |
 | `AZURE_STORAGE_CONNECTION_STRING` | Private Blob and Table storage used by the import API |
 | `DATA_UPLOAD_ALLOWED_EMAILS` | Comma-separated Microsoft email addresses approved to use the data API |
+| `DATA_UPLOAD_ALLOWED_DOMAINS` | Comma-separated staff email domains. Defaults to `masterycharter.org` for this deployment |
 
 The deployment workflow publishes the static dashboard and the managed Azure Functions API. The API runtime is Node 22.
 

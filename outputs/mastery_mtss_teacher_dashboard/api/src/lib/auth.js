@@ -32,6 +32,22 @@ function allowedUploadEmails() {
   );
 }
 
+function allowedUploadDomains() {
+  return new Set(
+    String(process.env.DATA_UPLOAD_ALLOWED_DOMAINS || "masterycharter.org")
+      .split(",")
+      .map((value) => value.trim().toLowerCase().replace(/^@/, ""))
+      .filter(Boolean),
+  );
+}
+
+function isUploaderAllowed(principal) {
+  if (!principal || !principal.userRoles?.includes("authenticated")) return false;
+  const email = String(principal.userDetails || "").trim().toLowerCase();
+  const domain = email.includes("@") ? email.split("@").pop() : "";
+  return allowedUploadEmails().has(email) || allowedUploadDomains().has(domain);
+}
+
 function requireUploader(request) {
   const principal = getPrincipal(request);
   if (!principal || !principal.userRoles?.includes("authenticated")) {
@@ -40,16 +56,17 @@ function requireUploader(request) {
     throw error;
   }
 
-  const allowed = allowedUploadEmails();
-  if (!allowed.size) {
+  const allowedEmails = allowedUploadEmails();
+  const allowedDomains = allowedUploadDomains();
+  if (!allowedEmails.size && !allowedDomains.size) {
     const error = new Error("Dataset uploads are paused until the staff upload list is configured.");
     error.statusCode = 503;
     throw error;
   }
 
   const email = String(principal.userDetails || "").toLowerCase();
-  if (!allowed.has(email)) {
-    const error = new Error("Your Microsoft account is not approved to upload student datasets.");
+  if (!isUploaderAllowed(principal)) {
+    const error = new Error("Use an approved Mastery staff Microsoft account to upload student datasets.");
     error.statusCode = 403;
     throw error;
   }
@@ -57,4 +74,4 @@ function requireUploader(request) {
   return { ...principal, email };
 }
 
-module.exports = { getPrincipal, requireUploader, allowedUploadEmails };
+module.exports = { getPrincipal, requireUploader, allowedUploadEmails, allowedUploadDomains, isUploaderAllowed };

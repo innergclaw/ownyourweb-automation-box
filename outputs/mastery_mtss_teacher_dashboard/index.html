@@ -2023,13 +2023,14 @@
               <form class="upload-pane" id="dataset-form">
                 <label class="upload-drop" for="dataset-file">
                   <strong>Choose a student dataset</strong>
-                  <span>CSV or XLSX, up to 8 MB and 10,000 records. Export title rows are detected automatically.</span>
-                  <input id="dataset-file" name="dataset" type="file" accept=".csv,.xlsx" required />
+                  <span>CSV, CVC, or XLSX, up to 8 MB and 10,000 records. Export title rows are detected automatically.</span>
+                  <input id="dataset-file" name="dataset" type="file" accept=".csv,.cvc,.xlsx" required />
                 </label>
                 <div class="intake-actions">
-                  <button class="button primary" id="preview-dataset" type="submit">Analyze File</button>
+                  <button class="button primary" id="preview-dataset" type="submit">Analyze &amp; Sync</button>
                   <a class="button" href="sample-data/mastery_mtss_upload_template.csv" download>Download Template</a>
                 </div>
+                <p class="intake-note" id="upload-feedback" aria-live="polite">Clean files sync automatically. Rows with missing student IDs or names pause for review.</p>
                 <p class="intake-note"><strong>Student privacy:</strong> Use this only after school approval. Uploads are limited to approved staff accounts and are not shared with students or parents.</p>
               </form>
 
@@ -2442,6 +2443,7 @@
       const previewResults = document.querySelector("#preview-results");
       const previewEmpty = document.querySelector("#preview-empty");
       const dataServiceStatus = document.querySelector("#data-service-status");
+      const uploadFeedback = document.querySelector("#upload-feedback");
       let pendingImportId = null;
       let currentAccess = "admin";
       let selectedStudentId = students[0].id;
@@ -2657,9 +2659,12 @@
         }
         try {
           const health = await apiRequest("/api/data/health");
-          const ready = health.storageConfigured && health.uploadListConfigured;
-          setDataServiceStatus(health.canUpload ? "Secure storage ready" : "Setup or staff approval required", health.canUpload ? "ontrack" : "watch");
+          const ready = health.storageConfigured && health.uploadPolicyConfigured;
+          setDataServiceStatus(health.canUpload ? "Secure storage ready" : "Staff account approval required", health.canUpload ? "ontrack" : "watch");
           previewButton.disabled = !ready || !health.canUpload;
+          uploadFeedback.textContent = health.canUpload
+            ? "Clean files sync automatically. Rows with missing student IDs or names pause for review."
+            : "This Microsoft account is not approved for data uploads. Sign in with an @masterycharter.org staff account or contact the dashboard administrator.";
           if (health.canUpload) {
             const history = await apiRequest("/api/imports");
             renderImportHistory(history.imports || []);
@@ -2682,17 +2687,26 @@
         if (!file) return showToast("Choose a CSV or XLSX file first.");
         previewButton.disabled = true;
         previewButton.textContent = "Analyzing...";
+        uploadFeedback.textContent = "Reading the file and matching student fields...";
         try {
           const formData = new FormData();
           formData.append("dataset", file);
           const payload = await apiRequest("/api/imports/preview", { method: "POST", body: formData });
           renderImportPreview(payload);
-          showToast(`${payload.summary.validRows} valid rows are ready for review.`);
+          if (payload.summary.validRows > 0 && payload.summary.invalidRows === 0) {
+            uploadFeedback.textContent = `${payload.summary.validRows} valid rows found. Syncing the shared dashboard...`;
+            await commitImportById(payload.importId, previewButton);
+            uploadFeedback.textContent = `${payload.summary.uniqueStudents} students synced. The dashboard is up to date.`;
+          } else {
+            uploadFeedback.textContent = `${payload.summary.validRows} valid rows and ${payload.summary.invalidRows} rejected rows found. Review the results before importing.`;
+            showToast("Review the file results before import.");
+          }
         } catch (error) {
           showToast(error.message);
+          uploadFeedback.textContent = `Upload stopped: ${error.message}`;
         } finally {
           previewButton.disabled = false;
-          previewButton.textContent = "Analyze File";
+          previewButton.textContent = "Analyze & Sync";
         }
       }
 

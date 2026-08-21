@@ -1,0 +1,14 @@
+# Local development and deployment files
+.env
+.env.*
+!.env.example
+.azure/
+.vscode/
+.DS_Store
+node_modules/
+dist/
+build/
+
+# Local captures and temporary exports
+*.log
+*.tmp

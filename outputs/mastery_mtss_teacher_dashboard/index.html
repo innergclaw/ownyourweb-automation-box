@@ -368,7 +368,7 @@
       }
 
       .sidebar-section[aria-label="Sync status"] {
-        grid-template-columns: 100px 100px 138px minmax(140px, 1fr) auto;
+        grid-template-columns: 100px 100px minmax(140px, 1fr) auto;
         align-items: end;
       }
 
@@ -641,6 +641,214 @@
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 8px;
+      }
+
+      .kpi-dashboard {
+        display: grid;
+        grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.75fr);
+        gap: 12px;
+      }
+
+      .kpi-panel {
+        min-width: 0;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .kpi-panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .kpi-panel-head h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .kpi-panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .chart-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+
+      .legend-dot.math { background: #e46d3c; }
+      .legend-dot.attendance { background: #228b6b; }
+
+      .grade-chart {
+        display: grid;
+        gap: 10px;
+      }
+
+      .grade-chart-row {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr) 48px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .grade-chart-row strong,
+      .grade-chart-value {
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .grade-chart-value {
+        color: var(--muted);
+        text-align: right;
+      }
+
+      .grade-bars {
+        display: grid;
+        gap: 4px;
+      }
+
+      .grade-bar,
+      .distribution-track {
+        position: relative;
+        overflow: hidden;
+        height: 7px;
+        border-radius: 4px;
+        background: #e7edf5;
+      }
+
+      .grade-bar span,
+      .distribution-track span {
+        display: block;
+        width: var(--value, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: var(--blue);
+      }
+
+      .grade-bar.math span { background: #e46d3c; }
+      .grade-bar.attendance span { background: #228b6b; }
+
+      .kpi-side-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .donut-layout {
+        display: grid;
+        grid-template-columns: 124px minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+
+      .donut-chart {
+        display: grid;
+        place-items: center;
+        width: 124px;
+        height: 124px;
+        border-radius: 50%;
+        background: conic-gradient(#228b6b 0 var(--on-track, 0%), #e5a329 var(--on-track, 0%) calc(var(--on-track, 0%) + var(--watch, 0%)), #c84545 0 100%);
+      }
+
+      .donut-chart::after {
+        display: grid;
+        place-items: center;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: #fff;
+        color: var(--ink);
+        content: attr(data-label);
+        font-size: 20px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .distribution-list {
+        display: grid;
+        gap: 9px;
+      }
+
+      .distribution-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 4px 10px;
+        align-items: center;
+        font-size: 12px;
+      }
+
+      .distribution-row .distribution-track {
+        grid-column: 1 / -1;
+      }
+
+      .distribution-row strong {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kpi-wide {
+        grid-column: 1 / -1;
+      }
+
+      .heatmap-wrap {
+        overflow-x: auto;
+      }
+
+      .heatmap {
+        display: grid;
+        min-width: 640px;
+        grid-template-columns: 150px repeat(var(--grade-count, 1), minmax(72px, 1fr));
+        gap: 3px;
+      }
+
+      .heatmap-cell {
+        display: grid;
+        min-height: 46px;
+        place-items: center;
+        padding: 7px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--blue) var(--intensity, 8%), #fff);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+      }
+
+      .heatmap-cell.label {
+        place-items: center start;
+        background: #f4f7fb;
+        color: var(--muted);
+      }
+
+      .heatmap-cell.header {
+        min-height: 34px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
       }
 
       .access-grid {
@@ -1750,6 +1958,7 @@
         .hero-band,
         .grid,
         .lower-grid,
+        .kpi-dashboard,
         .intake-workspace,
         .message-portal,
         .agent-prototype {
@@ -1834,6 +2043,7 @@
         }
 
         .topbar {
+          position: static;
           align-items: stretch;
           flex-direction: column;
         }
@@ -1850,6 +2060,24 @@
         .student-stats,
         .gpa-grid {
           grid-template-columns: 1fr;
+        }
+
+        .kpi-panel-head {
+          display: grid;
+        }
+
+        .donut-layout {
+          grid-template-columns: 110px minmax(0, 1fr);
+        }
+
+        .donut-chart {
+          width: 110px;
+          height: 110px;
+        }
+
+        .grade-chart-row {
+          grid-template-columns: 54px minmax(0, 1fr) 42px;
+          gap: 7px;
         }
       }
 
@@ -2090,6 +2318,61 @@
               <span>Attendance concern</span>
               <strong id="metric-attendance">0</strong>
               <small>Students below 90% attendance</small>
+            </article>
+          </section>
+
+          <section class="kpi-dashboard" aria-label="Student performance KPI dashboard">
+            <article class="kpi-panel">
+              <header class="kpi-panel-head">
+                <div>
+                  <h2>Performance by Grade</h2>
+                  <p>Benchmark attainment and average attendance for the current filters.</p>
+                </div>
+                <div class="chart-legend" aria-label="Chart legend">
+                  <span><i class="legend-dot"></i>ELA</span>
+                  <span><i class="legend-dot math"></i>Math</span>
+                  <span><i class="legend-dot attendance"></i>Attendance</span>
+                </div>
+              </header>
+              <div class="grade-chart" id="grade-performance-chart" aria-live="polite"></div>
+            </article>
+
+            <div class="kpi-side-stack">
+              <article class="kpi-panel">
+                <header class="kpi-panel-head">
+                  <div>
+                    <h2>MTSS Status Distribution</h2>
+                    <p>Current student action status.</p>
+                  </div>
+                </header>
+                <div class="donut-layout">
+                  <div class="donut-chart" id="status-donut" data-label="0"></div>
+                  <div class="distribution-list" id="status-distribution"></div>
+                </div>
+              </article>
+
+              <article class="kpi-panel">
+                <header class="kpi-panel-head">
+                  <div>
+                    <h2>Attendance Distribution</h2>
+                    <p>Students grouped by attendance threshold.</p>
+                  </div>
+                </header>
+                <div class="distribution-list" id="attendance-distribution"></div>
+              </article>
+            </div>
+
+            <article class="kpi-panel kpi-wide">
+              <header class="kpi-panel-head">
+                <div>
+                  <h2>Academic Evidence Heatmap</h2>
+                  <p>Grade-level benchmark attainment, attendance strength, and MAP coverage.</p>
+                </div>
+                <span class="status sync">Live filtered data</span>
+              </header>
+              <div class="heatmap-wrap">
+                <div class="heatmap" id="academic-heatmap" aria-live="polite"></div>
+              </div>
             </article>
           </section>
 
@@ -3321,6 +3604,88 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         return `${Math.round((results.filter(Boolean).length / results.length) * 100)}%`;
       }
 
+      function benchmarkRate(items, field, threshold = 70) {
+        const results = items.map((student) => {
+          const percent = numericValue(student[field]);
+          if (percent !== null) return percent >= threshold;
+          const performanceCode = numericValue(student[`${field}PerformanceCode`]);
+          return performanceCode === null ? null : performanceCode >= 3;
+        }).filter((value) => value !== null);
+        return results.length ? Math.round((results.filter(Boolean).length / results.length) * 100) : null;
+      }
+
+      function averageValue(items, field) {
+        const values = items.map((item) => numericValue(item[field])).filter((value) => value !== null);
+        return values.length ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10 : null;
+      }
+
+      function percentageWidth(value) {
+        return `${Math.max(0, Math.min(100, Number(value) || 0))}%`;
+      }
+
+      function renderDistribution(target, items, total) {
+        target.innerHTML = items.map((item) => {
+          const percent = total ? Math.round((item.count / total) * 100) : 0;
+          return `<div class="distribution-row"><span>${escapeHtml(item.label)}</span><strong>${item.count} · ${percent}%</strong><div class="distribution-track"><span style="--value:${percentageWidth(percent)};background:${item.color}"></span></div></div>`;
+        }).join("");
+      }
+
+      function renderKpiVisuals(visible) {
+        const grades = [...new Set(visible.map((student) => String(student.gradeShort || "")).filter(Boolean))]
+          .sort((a, b) => Number(a) - Number(b));
+        const gradeChart = document.querySelector("#grade-performance-chart");
+        gradeChart.innerHTML = grades.length ? grades.map((grade) => {
+          const cohort = visible.filter((student) => String(student.gradeShort) === grade);
+          const reading = benchmarkRate(cohort, "reading");
+          const math = benchmarkRate(cohort, "math");
+          const attendance = averageValue(cohort, "attendance");
+          const summary = [reading, math, attendance].filter((value) => value !== null);
+          const overall = summary.length ? Math.round(summary.reduce((sum, value) => sum + value, 0) / summary.length) : 0;
+          return `<div class="grade-chart-row"><strong>Grade ${escapeHtml(grade)}</strong><div class="grade-bars" aria-label="Grade ${escapeHtml(grade)}: ELA ${reading ?? "not available"} percent, Math ${math ?? "not available"} percent, Attendance ${attendance ?? "not available"} percent"><div class="grade-bar"><span style="--value:${percentageWidth(reading)}"></span></div><div class="grade-bar math"><span style="--value:${percentageWidth(math)}"></span></div><div class="grade-bar attendance"><span style="--value:${percentageWidth(attendance)}"></span></div></div><span class="grade-chart-value">${overall}%</span></div>`;
+        }).join("") : '<div class="empty-state">No grades match the current filters.</div>';
+
+        const statusItems = [
+          { label: "On Track", count: visible.filter((student) => student.status === "On Track").length, color: "#228b6b" },
+          { label: "Watch", count: visible.filter((student) => student.status === "Watch").length, color: "#e5a329" },
+          { label: "Review", count: visible.filter((student) => !["On Track", "Watch"].includes(student.status)).length, color: "#c84545" },
+        ];
+        const onTrackPercent = visible.length ? Math.round((statusItems[0].count / visible.length) * 100) : 0;
+        const watchPercent = visible.length ? Math.round((statusItems[1].count / visible.length) * 100) : 0;
+        const donut = document.querySelector("#status-donut");
+        donut.dataset.label = `${onTrackPercent}%`;
+        donut.style.setProperty("--on-track", `${onTrackPercent}%`);
+        donut.style.setProperty("--watch", `${watchPercent}%`);
+        renderDistribution(document.querySelector("#status-distribution"), statusItems, visible.length);
+
+        const attendanceItems = [
+          { label: "93% and above", count: visible.filter((student) => numericValue(student.attendance) !== null && student.attendance >= 93).length, color: "#228b6b" },
+          { label: "90–92.9%", count: visible.filter((student) => numericValue(student.attendance) !== null && student.attendance >= 90 && student.attendance < 93).length, color: "#2d6cdf" },
+          { label: "80–89.9%", count: visible.filter((student) => numericValue(student.attendance) !== null && student.attendance >= 80 && student.attendance < 90).length, color: "#e5a329" },
+          { label: "Below 80%", count: visible.filter((student) => numericValue(student.attendance) !== null && student.attendance < 80).length, color: "#c84545" },
+          { label: "Not imported", count: visible.filter((student) => numericValue(student.attendance) === null).length, color: "#7c8798" },
+        ];
+        renderDistribution(document.querySelector("#attendance-distribution"), attendanceItems, visible.length);
+
+        const heatmap = document.querySelector("#academic-heatmap");
+        heatmap.style.setProperty("--grade-count", Math.max(1, grades.length));
+        if (!grades.length) {
+          heatmap.innerHTML = '<div class="empty-state">No academic evidence matches the current filters.</div>';
+          return;
+        }
+        const measures = [
+          { label: "ELA benchmark", value: (cohort) => benchmarkRate(cohort, "reading") },
+          { label: "Math benchmark", value: (cohort) => benchmarkRate(cohort, "math") },
+          { label: "Attendance 93%+", value: (cohort) => cohort.length ? Math.round((cohort.filter((student) => numericValue(student.attendance) !== null && student.attendance >= 93).length / cohort.length) * 100) : null },
+          { label: "MAP coverage", value: (cohort) => cohort.length ? Math.round((cohort.filter((student) => numericValue(student.mapReadingRit) !== null && numericValue(student.mapMathRit) !== null).length / cohort.length) * 100) : null },
+        ];
+        const header = ['<div class="heatmap-cell header label">Measure</div>', ...grades.map((grade) => `<div class="heatmap-cell header">Grade ${escapeHtml(grade)}</div>`)].join("");
+        const cells = measures.map((measure) => {
+          const values = grades.map((grade) => measure.value(visible.filter((student) => String(student.gradeShort) === grade)));
+          return `<div class="heatmap-cell label">${escapeHtml(measure.label)}</div>${values.map((value) => `<div class="heatmap-cell" style="--intensity:${Math.max(8, Math.round((value ?? 0) * 0.62))}%">${value === null ? "N/A" : `${value}%`}</div>`).join("")}`;
+        }).join("");
+        heatmap.innerHTML = header + cells;
+      }
+
       function updateLivePanels(visible) {
         const readingCount = visible.reduce((sum, student) => sum + Number(student.readingAssessmentCount || 0), 0);
         const mathCount = visible.reduce((sum, student) => sum + Number(student.mathAssessmentCount || 0), 0);
@@ -3363,6 +3728,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
           .filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
         document.querySelector("#metric-attendance").textContent = visible
           .filter((student) => numericValue(student.attendance) !== null && student.attendance < 90).length;
+        renderKpiVisuals(visible);
         updateLivePanels(visible);
         renderRows();
         if (notify) showToast("Dashboard view updated.");

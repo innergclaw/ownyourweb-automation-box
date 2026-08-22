@@ -68,6 +68,13 @@ function populatedFields(record) {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== "" && value !== null && value !== undefined));
 }
 
+function preserveMasterRosterFields(existingStudent, incomingStudent) {
+  const fields = populatedFields(incomingStudent);
+  if (!existingStudent?.rosterYear || incomingStudent.rosterYear) return fields;
+  ["studentName", "firstName", "lastName", "grade", "hasIep"].forEach((field) => delete fields[field]);
+  return fields;
+}
+
 function parseStoredJson(value) {
   if (!value) return null;
   if (typeof value === "object") return value;
@@ -152,15 +159,24 @@ async function commitRecords({ entity, analysis, uploader }) {
   let studentsSaved = 0;
   let assessmentsSaved = 0;
   const uniqueStudentIds = new Set();
+  const existingStudents = new Map();
   const now = new Date().toISOString();
 
   for (const record of analysis.records.filter((item) => item.valid)) {
     const studentKey = safeKey(record.student.studentId);
     uniqueStudentIds.add(record.student.studentId);
+    if (!existingStudents.has(studentKey) && !record.student.rosterYear) {
+      try {
+        existingStudents.set(studentKey, await current.students.getEntity(SCHOOL_ID, studentKey));
+      } catch (error) {
+        if (error.statusCode !== 404) throw error;
+        existingStudents.set(studentKey, null);
+      }
+    }
     await current.students.upsertEntity({
       partitionKey: SCHOOL_ID,
       rowKey: studentKey,
-      ...populatedFields(record.student),
+      ...preserveMasterRosterFields(existingStudents.get(studentKey), record.student),
       lastImportId: entity.rowKey,
       updatedAt: now,
       updatedBy: uploader.email,
@@ -290,6 +306,7 @@ async function listDashboardStudents(limit = 500) {
 module.exports = {
   SCHOOL_ID,
   storageConnectionString,
+  preserveMasterRosterFields,
   ensureStorage,
   stageImport,
   getImport,

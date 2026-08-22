@@ -1504,43 +1504,70 @@
         z-index: 1;
       }
 
-      .import-history {
-        padding: 16px;
-        border-top: 1px solid var(--line);
-      }
-
-      .import-history h3 {
-        margin: 0 0 10px;
-        font-size: 14px;
-      }
-
-      .history-list {
-        display: grid;
-        gap: 7px;
-      }
-
-      .history-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto auto;
+      .table-pagination {
+        display: flex;
+        justify-content: space-between;
         gap: 12px;
         align-items: center;
-        padding: 9px 0;
-        border-top: 1px solid var(--soft-line);
-        font-size: 12px;
+        min-height: 56px;
+        padding: 10px 0 0;
       }
 
-      .history-row:first-child {
-        border-top: 0;
-      }
-
-      .history-row span {
+      .pagination-summary {
+        margin: 0;
         color: var(--muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
       }
 
-      .history-row .button {
-        min-height: 30px;
-        padding: 5px 9px;
-        font-size: 11px;
+      .pagination-controls,
+      .pagination-pages {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .pagination-button {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition-property: background-color, border-color, color, transform;
+        transition-duration: 140ms;
+        transition-timing-function: ease;
+      }
+
+      .pagination-button:hover:not(:disabled) {
+        border-color: var(--blue);
+        background: #f0f6ff;
+      }
+
+      .pagination-button:active:not(:disabled) {
+        transform: scale(0.96);
+      }
+
+      .pagination-button.is-current {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #ffffff;
+      }
+
+      .pagination-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .pagination-ellipsis {
+        min-width: 20px;
+        color: var(--muted);
+        text-align: center;
       }
 
       .message-portal {
@@ -2025,10 +2052,24 @@
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .history-row {
-          grid-template-columns: 1fr;
-          gap: 3px;
+        .table-pagination {
+          display: grid;
+          justify-items: stretch;
         }
+
+        .pagination-summary {
+          text-align: center;
+        }
+
+        .pagination-controls {
+          justify-content: space-between;
+        }
+
+        .pagination-pages {
+          max-width: 100%;
+          overflow-x: auto;
+        }
+
         .auth-shell {
           grid-template-columns: 1fr;
         }
@@ -2443,10 +2484,6 @@
               </div>
             </div>
 
-            <div class="import-history">
-              <h3>Recent Import Activity</h3>
-              <div class="history-list" id="import-history"><p class="empty-state">Import history will appear here after secure storage is connected.</p></div>
-            </div>
           </section>
 
           <section class="grid">
@@ -2479,6 +2516,14 @@
                   <tbody id="student-rows"></tbody>
                 </table>
               </div>
+              <nav class="table-pagination" id="student-pagination" aria-label="Student list pages">
+                <p class="pagination-summary" id="pagination-summary" aria-live="polite">Showing students 1-15</p>
+                <div class="pagination-controls">
+                  <button class="pagination-button" id="pagination-previous" type="button">Previous</button>
+                  <div class="pagination-pages" id="pagination-pages" aria-label="Choose a student list page"></div>
+                  <button class="pagination-button" id="pagination-next" type="button">Next</button>
+                </div>
+              </nav>
 
               <section class="lower-grid">
                 <article class="mini-panel">
@@ -2818,6 +2863,10 @@
       const queueCopy = document.querySelector("#queue-copy");
       const dataSourcePill = document.querySelector("#data-source-pill");
       const studentSearch = document.querySelector("#student-search");
+      const paginationSummary = document.querySelector("#pagination-summary");
+      const paginationPages = document.querySelector("#pagination-pages");
+      const paginationPrevious = document.querySelector("#pagination-previous");
+      const paginationNext = document.querySelector("#pagination-next");
       const gradeFilterControl = document.querySelector("#grade-filter");
       const campusFilterControl = document.querySelector("#campus-filter");
       const subjectFilterControl = document.querySelector("#subject-filter");
@@ -2845,6 +2894,8 @@
       let currentAccess = "admin";
       let selectedStudentId = students[0].id;
       let usingLiveData = false;
+      let currentStudentPage = 1;
+      const studentsPerPage = 15;
 
       function getRedirectPath() {
         return `${window.location.pathname}${window.location.search}`;
@@ -2971,6 +3022,7 @@
           ? `${students.length} students loaded. Search by name, ID, matching ID, or teacher, then narrow the results with the dropdown menus.`
           : "Fictional records are shown until an authorized assessment workbook is synced.";
         selectedStudentId = students.some((student) => student.id === selectedStudentId) ? selectedStudentId : students[0]?.id;
+        currentStudentPage = 1;
         renderRows();
         updateMetrics(false);
         if (selectedStudentId) selectStudent(selectedStudentId);
@@ -3045,43 +3097,6 @@
         confirmImportButton.disabled = payload.summary.validRows === 0;
       }
 
-      function renderImportHistory(imports) {
-        const history = document.querySelector("#import-history");
-        history.replaceChildren();
-        if (!imports.length) {
-          const empty = document.createElement("p");
-          empty.className = "empty-state";
-          empty.textContent = "No datasets have been imported yet.";
-          history.appendChild(empty);
-          return;
-        }
-        imports.forEach((item) => {
-          const row = document.createElement("div");
-          row.className = "history-row";
-          const name = document.createElement("strong");
-          name.textContent = item.filename;
-          const detail = document.createElement("span");
-          const count = item.studentsSaved || item.summary?.validRows || 0;
-          detail.textContent = `${count} valid rows | ${item.status}`;
-          const date = document.createElement("span");
-          date.textContent = new Date(item.committedAt || item.uploadedAt).toLocaleString();
-          row.append(name, detail, date);
-          if (item.status === "pending") {
-            const finishButton = document.createElement("button");
-            finishButton.className = "button";
-            finishButton.type = "button";
-            finishButton.textContent = "Finish import";
-            finishButton.addEventListener("click", () => commitImportById(item.importId, finishButton));
-            row.appendChild(finishButton);
-          } else {
-            const complete = document.createElement("span");
-            complete.textContent = "Complete";
-            row.appendChild(complete);
-          }
-          history.appendChild(row);
-        });
-      }
-
       async function commitImportById(importId, button = confirmImportButton) {
         if (!importId) return;
         const originalLabel = button.textContent;
@@ -3093,8 +3108,6 @@
           showToast(`${uniqueCount} student records securely imported.`);
           button.textContent = originalLabel;
           clearImportPreview();
-          const history = await apiRequest("/api/imports");
-          renderImportHistory(history.imports || []);
           await refreshDashboardData();
         } catch (error) {
           showToast(error.message);
@@ -3119,12 +3132,6 @@
             ? "Clean files sync automatically. Rows with missing student IDs or names pause for review."
             : "This Microsoft account is not approved for data uploads. Sign in with an @masterycharter.org staff account or contact the dashboard administrator.";
           if (health.canUpload) {
-            try {
-              const history = await apiRequest("/api/imports");
-              renderImportHistory(history.imports || []);
-            } catch {
-              document.querySelector("#import-history").innerHTML = '<p class="empty-state">Import history is temporarily unavailable. Student records remain accessible.</p>';
-            }
             await refreshDashboardData();
           }
         } catch (error) {
@@ -3333,13 +3340,68 @@
         });
       }
 
+      function paginationWindow(totalPages) {
+        if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+        let start = Math.max(2, currentStudentPage - 1);
+        let end = Math.min(totalPages - 1, currentStudentPage + 1);
+        if (currentStudentPage <= 3) end = 4;
+        if (currentStudentPage >= totalPages - 2) start = totalPages - 3;
+        return [
+          1,
+          ...(start > 2 ? [null] : []),
+          ...Array.from({ length: end - start + 1 }, (_, index) => start + index),
+          ...(end < totalPages - 1 ? [null] : []),
+          totalPages,
+        ];
+      }
+
+      function goToStudentPage(page) {
+        currentStudentPage = page;
+        renderRows();
+        document.querySelector(".queue-head").scrollIntoView({ block: "start" });
+      }
+
+      function renderPagination(totalStudents) {
+        const totalPages = Math.max(1, Math.ceil(totalStudents / studentsPerPage));
+        currentStudentPage = Math.min(Math.max(1, currentStudentPage), totalPages);
+        const firstStudent = totalStudents ? ((currentStudentPage - 1) * studentsPerPage) + 1 : 0;
+        const lastStudent = Math.min(currentStudentPage * studentsPerPage, totalStudents);
+        paginationSummary.textContent = totalStudents
+          ? `Showing ${firstStudent}-${lastStudent} of ${totalStudents} students`
+          : "No students match the current view";
+        paginationPrevious.disabled = currentStudentPage === 1 || totalStudents === 0;
+        paginationNext.disabled = currentStudentPage === totalPages || totalStudents === 0;
+        paginationPages.replaceChildren();
+        paginationWindow(totalPages).forEach((page) => {
+          if (page === null) {
+            const ellipsis = document.createElement("span");
+            ellipsis.className = "pagination-ellipsis";
+            ellipsis.textContent = "...";
+            ellipsis.setAttribute("aria-hidden", "true");
+            paginationPages.appendChild(ellipsis);
+            return;
+          }
+          const button = document.createElement("button");
+          button.className = `pagination-button${page === currentStudentPage ? " is-current" : ""}`;
+          button.type = "button";
+          button.textContent = page;
+          button.setAttribute("aria-label", `Page ${page}`);
+          if (page === currentStudentPage) button.setAttribute("aria-current", "page");
+          button.addEventListener("click", () => goToStudentPage(page));
+          paginationPages.appendChild(button);
+        });
+      }
+
       function renderRows() {
         const visible = filteredStudents();
+        renderPagination(visible.length);
         if (!visible.length) {
           rows.innerHTML = '<tr><td colspan="9" class="empty-state">No student records match this search. Clear a dropdown or try another ID.</td></tr>';
           return;
         }
+        const pageStart = (currentStudentPage - 1) * studentsPerPage;
         rows.innerHTML = visible
+          .slice(pageStart, pageStart + studentsPerPage)
           .map(
             (student) => `
               <tr data-student-id="${escapeHtml(student.id)}" class="${student.id === selectedStudentId ? "is-selected" : ""}">
@@ -3796,10 +3858,22 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       });
 
       document.querySelectorAll("#grade-filter, #campus-filter, #subject-filter, #source-filter, #attendance-filter, #year-filter, #performance-filter, #teacher-filter").forEach((select) => {
-        select.addEventListener("change", updateMetrics);
+        select.addEventListener("change", () => {
+          currentStudentPage = 1;
+          updateMetrics();
+        });
       });
 
-      studentSearch.addEventListener("input", () => updateMetrics(false));
+      studentSearch.addEventListener("input", () => {
+        currentStudentPage = 1;
+        updateMetrics(false);
+      });
+
+      paginationPrevious.addEventListener("click", () => goToStudentPage(Math.max(1, currentStudentPage - 1)));
+      paginationNext.addEventListener("click", () => {
+        const totalPages = Math.max(1, Math.ceil(filteredStudents().length / studentsPerPage));
+        goToStudentPage(Math.min(totalPages, currentStudentPage + 1));
+      });
 
       accessTabs.forEach((tab) => {
         tab.addEventListener("click", () => setAccess(tab.dataset.accessTarget));

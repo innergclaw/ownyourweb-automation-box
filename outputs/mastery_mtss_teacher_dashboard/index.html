@@ -7,22 +7,36 @@
     <style>
       :root {
         color-scheme: light;
-        --ink: #18212f;
-        --muted: #617084;
-        --line: #d9e0e8;
-        --soft-line: #edf1f5;
-        --bg: #f6f8fb;
-        --panel: #ffffff;
-        --navy: #17375e;
-        --blue: #2d6cdf;
-        --teal: #0f9f8f;
-        --green: #1f8f4d;
-        --gold: #b7791f;
-        --red: #c2413b;
-        --purple: #6554c0;
-        --shadow: 0 10px 26px rgba(23, 55, 94, 0.08);
+        --paper: #ffffff;
+        --desk: #f1f4f7;
+        --worksheet: #f8fafc;
+        --ink: #16202d;
+        --pencil: #59697b;
+        --faint-pencil: #7a8795;
+        --rule: rgba(22, 32, 45, 0.12);
+        --soft-rule: rgba(22, 32, 45, 0.07);
+        --mastery-navy: #153657;
+        --assessment-blue: #2868c7;
+        --progress-green: #23805f;
+        --review-gold: #a66b17;
+        --intervention-red: #b74740;
+        --control-bg: #edf1f5;
+        --control-border: rgba(22, 32, 45, 0.14);
+        --muted: var(--pencil);
+        --line: var(--rule);
+        --soft-line: var(--soft-rule);
+        --bg: var(--desk);
+        --panel: var(--paper);
+        --navy: var(--mastery-navy);
+        --blue: var(--assessment-blue);
+        --teal: #167f79;
+        --green: var(--progress-green);
+        --gold: var(--review-gold);
+        --red: var(--intervention-red);
+        --purple: #625a9c;
+        --shadow: 0 0 0 1px rgba(22, 32, 45, 0.035), 0 1px 2px rgba(22, 32, 45, 0.04), 0 7px 18px rgba(22, 32, 45, 0.035);
         font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Aptos, "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui,
           sans-serif;
       }
 
@@ -34,7 +48,7 @@
         margin: 0;
         min-width: 320px;
         min-height: 100vh;
-        background: var(--bg);
+        background: var(--desk);
         color: var(--ink);
         font-synthesis: none;
         -webkit-font-smoothing: antialiased;
@@ -360,7 +374,7 @@
       }
 
       .sidebar-section[aria-label="Filters"] {
-        grid-template-columns: repeat(8, minmax(92px, 1fr));
+        grid-template-columns: repeat(4, minmax(130px, 1fr));
       }
 
       .sidebar-section[aria-label="Filters"] h2 {
@@ -1935,6 +1949,421 @@
         transform: translateY(0);
       }
 
+      /* Mastery interface system: calm academic operations workspace. */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: minmax(420px, 1fr) auto;
+        padding: 12px 18px 10px;
+        border-bottom-color: var(--soft-rule);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 1px 10px rgba(22, 32, 45, 0.035);
+      }
+
+      .page-title h1 {
+        font-size: 24px;
+        font-weight: 750;
+        letter-spacing: -0.01em;
+      }
+
+      .workspace-nav {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      .workspace-nav a {
+        position: relative;
+        min-height: 30px;
+        color: var(--pencil);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 30px;
+        text-decoration: none;
+      }
+
+      .workspace-nav a::after {
+        position: absolute;
+        right: 0;
+        bottom: -10px;
+        left: 0;
+        height: 2px;
+        background: transparent;
+        content: "";
+      }
+
+      .workspace-nav a:hover,
+      .workspace-nav a:focus-visible,
+      .workspace-nav a.is-primary {
+        color: var(--mastery-navy);
+      }
+
+      .workspace-nav a.is-primary::after {
+        background: var(--assessment-blue);
+      }
+
+      .sidebar {
+        top: 111px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--soft-rule);
+        background: rgba(248, 250, 252, 0.97);
+        color: var(--ink);
+        box-shadow: 0 5px 14px rgba(22, 32, 45, 0.035);
+      }
+
+      .brand {
+        padding: 4px 14px 4px 12px;
+        border-right-color: var(--rule);
+        border-left: 4px solid var(--mastery-navy);
+      }
+
+      .brand strong {
+        color: var(--mastery-navy);
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .brand span,
+      .sidebar-section h2,
+      .field label,
+      .sync-card span {
+        color: var(--pencil);
+      }
+
+      .sidebar-section h2 {
+        font-weight: 800;
+        letter-spacing: 0.07em;
+      }
+
+      .field select,
+      .field textarea {
+        border-color: var(--control-border);
+        background: var(--control-bg);
+        color: var(--ink);
+        box-shadow: inset 0 1px 2px rgba(22, 32, 45, 0.035);
+      }
+
+      .field select:hover,
+      .field textarea:hover {
+        border-color: rgba(40, 104, 199, 0.35);
+      }
+
+      .field select:focus,
+      .field textarea:focus,
+      .queue-tools input:focus {
+        border-color: var(--assessment-blue);
+        outline: 3px solid rgba(40, 104, 199, 0.12);
+        outline-offset: 1px;
+      }
+
+      .sync-card {
+        border-color: var(--control-border);
+        background: var(--paper);
+        box-shadow: 0 1px 2px rgba(22, 32, 45, 0.035);
+      }
+
+      .sync-card strong {
+        color: var(--mastery-navy);
+      }
+
+      .button {
+        border-color: var(--control-border);
+        box-shadow: 0 1px 2px rgba(22, 32, 45, 0.04);
+      }
+
+      .button:hover:not(:disabled) {
+        border-color: rgba(40, 104, 199, 0.32);
+        background: var(--worksheet);
+      }
+
+      .button.primary {
+        border-color: var(--mastery-navy);
+        background: var(--mastery-navy);
+      }
+
+      .button.primary:hover:not(:disabled) {
+        border-color: #0f2944;
+        background: #0f2944;
+      }
+
+      .content {
+        gap: 16px;
+        padding: 16px 18px 28px;
+      }
+
+      .hero-band { order: 1; }
+      .metrics { order: 2; }
+      .grid { order: 3; }
+      .kpi-dashboard { order: 4; }
+      .agent-prototype { order: 5; }
+      .data-intake { order: 6; }
+      .access-grid { order: 7; }
+
+      #student-search-workspace,
+      #schoolwide-kpis,
+      #data-intake-workspace,
+      #ai-workspace {
+        scroll-margin-top: 292px;
+      }
+
+      .hero-band {
+        grid-template-columns: minmax(0, 1fr) 300px;
+      }
+
+      .purpose-panel,
+      .panel,
+      .metric,
+      .student-card,
+      .mini-panel,
+      .kpi-panel,
+      .access-card {
+        border-color: transparent;
+        box-shadow: var(--shadow);
+      }
+
+      .purpose-panel {
+        padding: 18px 20px;
+        border-left: 4px solid var(--assessment-blue);
+      }
+
+      .purpose-panel h2 {
+        max-width: 760px;
+        font-size: 22px;
+        font-weight: 750;
+        letter-spacing: -0.01em;
+      }
+
+      .data-flow {
+        gap: 6px;
+      }
+
+      .data-flow span,
+      .pill {
+        min-height: 26px;
+        border-color: var(--soft-rule);
+        border-radius: 6px;
+        background: var(--worksheet);
+        color: var(--pencil);
+        font-size: 11px;
+      }
+
+      .data-flow span:nth-child(1),
+      .data-flow span:nth-child(3) {
+        border-color: rgba(40, 104, 199, 0.18);
+        color: var(--assessment-blue);
+        background: rgba(40, 104, 199, 0.07);
+      }
+
+      .data-flow span:nth-child(2),
+      .data-flow span:nth-child(6),
+      .data-flow span:nth-child(7) {
+        border-color: rgba(35, 128, 95, 0.18);
+        color: var(--progress-green);
+        background: rgba(35, 128, 95, 0.07);
+      }
+
+      .meeting-panel {
+        border-color: rgba(40, 104, 199, 0.14);
+        background: #f5f8fc;
+        box-shadow: 0 0 0 1px rgba(22, 32, 45, 0.03);
+      }
+
+      .meeting-list div {
+        border-left-width: 2px;
+      }
+
+      .metrics {
+        overflow: hidden;
+        gap: 0;
+        border-radius: 8px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .metric {
+        min-width: 0;
+        padding: 14px 15px;
+        border: 0;
+        border-right: 1px solid var(--soft-rule);
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .metric:last-child {
+        border-right: 0;
+      }
+
+      .metric span {
+        color: var(--faint-pencil);
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: 0.06em;
+      }
+
+      .metric strong {
+        margin-top: 7px;
+        font-size: 28px;
+        font-weight: 750;
+        letter-spacing: -0.01em;
+      }
+
+      .metric:first-child strong {
+        color: var(--mastery-navy);
+        font-size: 32px;
+      }
+
+      .metric small {
+        color: var(--faint-pencil);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .grid {
+        grid-template-columns: minmax(620px, 1.6fr) minmax(360px, 0.7fr);
+        gap: 16px;
+      }
+
+      .panel {
+        padding: 0;
+        overflow: hidden;
+        border-top: 3px solid var(--mastery-navy);
+      }
+
+      .panel-head {
+        align-items: center;
+        margin: 0;
+        padding: 16px 16px 14px;
+        border-bottom: 1px solid var(--soft-rule);
+      }
+
+      .panel-head h2 {
+        font-size: 18px;
+        font-weight: 750;
+      }
+
+      .queue-tools input {
+        width: min(460px, 46vw);
+        min-height: 44px;
+        border-color: var(--control-border);
+        background: var(--control-bg);
+        box-shadow: inset 0 1px 2px rgba(22, 32, 45, 0.035);
+      }
+
+      .table-wrap {
+        background: var(--paper);
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        background: #f7f9fb;
+        color: var(--faint-pencil);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.055em;
+      }
+
+      td {
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+
+      tr[data-student-id] td:first-child {
+        border-left: 3px solid transparent;
+      }
+
+      tr[data-student-id]:hover,
+      tr[data-student-id].is-selected {
+        background: rgba(40, 104, 199, 0.055);
+      }
+
+      tr[data-student-id].is-selected td:first-child {
+        border-left-color: var(--assessment-blue);
+      }
+
+      .table-pagination {
+        padding: 10px 14px;
+        border-top: 1px solid var(--soft-rule);
+        background: #fbfcfd;
+      }
+
+      .pagination-button {
+        border-color: var(--control-border);
+        background: var(--paper);
+      }
+
+      .pagination-button.is-current {
+        border-color: var(--mastery-navy);
+        background: var(--mastery-navy);
+      }
+
+      .lower-grid {
+        margin: 0;
+        padding: 14px;
+        border-top: 1px solid var(--soft-rule);
+        background: #f7f9fb;
+      }
+
+      .panel .mini-panel {
+        box-shadow: 0 0 0 1px rgba(22, 32, 45, 0.055);
+      }
+
+      .student-card {
+        position: sticky;
+        top: 292px;
+        border-top: 3px solid var(--assessment-blue);
+      }
+
+      .kpi-dashboard {
+        gap: 16px;
+      }
+
+      .kpi-panel {
+        padding: 16px;
+      }
+
+      .kpi-panel-head h2,
+      .intake-head h2,
+      .agent-sidebar h2,
+      .agent-main h2 {
+        font-weight: 750;
+      }
+
+      .data-intake,
+      .agent-prototype {
+        border-color: transparent;
+        box-shadow: var(--shadow);
+      }
+
+      .access-card.is-focused {
+        border-color: rgba(40, 104, 199, 0.18);
+        box-shadow: var(--shadow);
+      }
+
+      :focus-visible {
+        outline: 3px solid rgba(40, 104, 199, 0.22);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+
       @media (max-width: 1360px) and (min-width: 1161px) {
         .sidebar {
           grid-template-columns: 170px minmax(0, 1fr);
@@ -1962,6 +2391,20 @@
           position: static;
           grid-template-columns: 1fr;
           height: auto;
+        }
+
+        .topbar {
+          grid-template-columns: 1fr;
+        }
+
+        .workspace-nav {
+          max-width: 100%;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        .student-card {
+          position: static;
         }
 
         .brand {
@@ -2010,6 +2453,10 @@
 
         .metrics {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .metric {
+          border-bottom: 1px solid var(--soft-rule);
         }
 
         .access-grid {
@@ -2087,6 +2534,17 @@
           position: static;
           align-items: stretch;
           flex-direction: column;
+          padding: 14px;
+        }
+
+        .workspace-nav {
+          gap: 14px;
+          margin-right: -14px;
+          padding-right: 14px;
+        }
+
+        .workspace-nav a::after {
+          bottom: -8px;
         }
 
         .content {
@@ -2101,6 +2559,10 @@
         .student-stats,
         .gpa-grid {
           grid-template-columns: 1fr;
+        }
+
+        .metric {
+          border-right: 0;
         }
 
         .kpi-panel-head {
@@ -2276,6 +2738,12 @@
           <div class="page-title">
             <h1>Assessment + MTSS Data Dashboard</h1>
             <p>Search PSSA, Fall MAP, and Keystone evidence in one connected student record.</p>
+            <nav class="workspace-nav" aria-label="Dashboard sections">
+              <a class="is-primary" href="#student-search-workspace">Student review</a>
+              <a href="#schoolwide-kpis">Schoolwide data</a>
+              <a href="#data-intake-workspace">Data intake</a>
+              <a href="#ai-workspace">AI assistant</a>
+            </nav>
           </div>
           <div class="top-actions">
             <div class="signed-in-user">
@@ -2362,7 +2830,7 @@
             </article>
           </section>
 
-          <section class="kpi-dashboard" aria-label="Student performance KPI dashboard">
+          <section class="kpi-dashboard" id="schoolwide-kpis" aria-label="Student performance KPI dashboard">
             <article class="kpi-panel">
               <header class="kpi-panel-head">
                 <div>
@@ -2432,7 +2900,7 @@
             </article>
           </section>
 
-          <section class="data-intake" aria-labelledby="data-intake-title">
+          <section class="data-intake" id="data-intake-workspace" aria-labelledby="data-intake-title">
             <header class="intake-head">
               <div>
                 <h2 id="data-intake-title">Student Data Intake</h2>
@@ -2486,7 +2954,7 @@
 
           </section>
 
-          <section class="grid">
+          <section class="grid" id="student-search-workspace">
             <article class="panel">
               <div class="panel-head queue-head">
                 <div>
@@ -2669,7 +3137,7 @@
 
           </section>
 
-          <section class="agent-prototype" aria-label="Mastery MTSS staff agent prototype">
+          <section class="agent-prototype" id="ai-workspace" aria-label="Mastery MTSS staff agent prototype">
             <aside class="agent-sidebar">
               <div>
                 <h2>Staff Agent Prototype</h2>

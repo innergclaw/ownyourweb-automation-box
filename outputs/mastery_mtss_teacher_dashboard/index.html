@@ -1949,6 +1949,211 @@
         transform: translateY(0);
       }
 
+      /* transitions-dev semantic motion tokens. */
+      :root {
+        --resize-dur: 300ms;
+        --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --digit-dur: 500ms;
+        --digit-distance: 8px;
+        --digit-stagger: 70ms;
+        --digit-blur: 2px;
+        --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
+        --digit-dir-x: 0;
+        --digit-dir-y: 1;
+        --text-swap-dur: 200ms;
+        --text-swap-translate-y: 8px;
+        --text-swap-blur: 2px;
+        --text-swap-ease: ease-out;
+        --panel-open-dur: 400ms;
+        --panel-close-dur: 350ms;
+        --panel-translate-y: 100px;
+        --panel-blur: 2px;
+        --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --check-opacity-dur: 550ms;
+        --check-rotate-dur: 550ms;
+        --check-rotate-from: 80deg;
+        --check-bob-dur: 450ms;
+        --check-y-amount: 40px;
+        --check-blur-dur: 500ms;
+        --check-blur-from: 10px;
+        --check-path-dur: 550ms;
+        --check-path-delay: 80ms;
+        --check-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+        --check-ease-opacity: cubic-bezier(0.22, 1, 0.36, 1);
+        --check-ease-rotate: cubic-bezier(0.22, 1, 0.36, 1);
+        --check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
+        --check-ease-path: cubic-bezier(0.22, 1, 0.36, 1);
+        --shake-distance: 6px;
+        --shake-overshoot: 4px;
+        --shake-dur-a: 80ms;
+        --shake-dur-b: 60ms;
+        --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --revert-hold: 3000ms;
+        --revert-dur: 280ms;
+      }
+
+      @keyframes t-digit-pop-in {
+        0% {
+          transform: translate(
+            calc(var(--digit-distance) * var(--digit-dir-x)),
+            calc(var(--digit-distance) * var(--digit-dir-y))
+          );
+          opacity: 0;
+          filter: blur(var(--digit-blur));
+        }
+        100% { transform: translate(0, 0); opacity: 1; filter: blur(0); }
+      }
+
+      .t-digit-group {
+        display: inline-flex;
+        align-items: baseline;
+      }
+
+      .t-digit {
+        display: inline-block;
+        will-change: transform, opacity, filter;
+      }
+
+      .t-digit-group.is-animating .t-digit {
+        animation: t-digit-pop-in var(--digit-dur) var(--digit-ease) both;
+      }
+
+      .t-digit-group.is-animating .t-digit[data-stagger="1"] {
+        animation-delay: var(--digit-stagger);
+      }
+
+      .t-digit-group.is-animating .t-digit[data-stagger="2"] {
+        animation-delay: calc(var(--digit-stagger) * 2);
+      }
+
+      .t-text-swap {
+        display: inline-block;
+        transform: translateY(0);
+        filter: blur(0);
+        opacity: 1;
+        transition:
+          transform var(--text-swap-dur) var(--text-swap-ease),
+          filter var(--text-swap-dur) var(--text-swap-ease),
+          opacity var(--text-swap-dur) var(--text-swap-ease);
+        will-change: transform, filter, opacity;
+      }
+
+      .t-text-swap.is-exit {
+        transform: translateY(calc(var(--text-swap-translate-y) * -1));
+        filter: blur(var(--text-swap-blur));
+        opacity: 0;
+      }
+
+      .t-text-swap.is-enter-start {
+        transform: translateY(var(--text-swap-translate-y));
+        filter: blur(var(--text-swap-blur));
+        opacity: 0;
+        transition: none;
+      }
+
+      .t-input {
+        transition: border-color 150ms ease-out;
+        will-change: transform;
+      }
+
+      .t-input.is-error {
+        border-color: var(--intervention-red);
+        transition: border-color var(--revert-dur) ease-out;
+      }
+
+      .t-error-msg {
+        margin: 0;
+        color: var(--intervention-red);
+        font-size: 12px;
+        font-weight: 750;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity var(--revert-dur) ease-out,
+          visibility 0s linear var(--revert-dur);
+      }
+
+      .t-input-wrap.is-error .t-error-msg {
+        opacity: 1;
+        visibility: visible;
+        transition:
+          opacity var(--revert-dur) ease-out,
+          visibility 0s linear 0s;
+      }
+
+      .t-input.is-shaking {
+        animation: t-input-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+      }
+
+      @keyframes t-input-shake {
+        0% { transform: translateX(0); animation-timing-function: var(--shake-ease); }
+        28.57% { transform: translateX(var(--shake-distance)); animation-timing-function: var(--shake-ease); }
+        57.14% { transform: translateX(calc(var(--shake-distance) * -1)); animation-timing-function: var(--shake-ease); }
+        78.57% { transform: translateX(var(--shake-overshoot)); animation-timing-function: var(--shake-ease); }
+        100% { transform: translateX(0); }
+      }
+
+      .sync-confirmation {
+        display: inline-flex;
+        min-height: 22px;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .t-success-check {
+        display: none;
+        transform-origin: center;
+        color: var(--progress-green);
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+        opacity: 0;
+        will-change: transform, opacity, filter;
+      }
+
+      .t-success-check[data-state="in"] {
+        display: inline-block;
+        animation:
+          t-check-fade var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+          t-check-rotate var(--check-rotate-dur) var(--check-ease-rotate) forwards,
+          t-check-blur var(--check-blur-dur) var(--check-ease-out) forwards,
+          t-check-bob var(--check-bob-dur) var(--check-ease-bob) forwards;
+      }
+
+      @keyframes t-check-fade { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes t-check-rotate { from { transform: rotate(var(--check-rotate-from)); } to { transform: rotate(0deg); } }
+      @keyframes t-check-blur { from { filter: blur(var(--check-blur-from)); } to { filter: blur(0); } }
+      @keyframes t-check-bob { from { translate: 0 var(--check-y-amount); } to { translate: 0 0; } }
+
+      #student-rows {
+        transition:
+          opacity var(--text-swap-dur) var(--text-swap-ease),
+          filter var(--text-swap-dur) var(--text-swap-ease);
+      }
+
+      #student-rows.is-refreshing {
+        opacity: 0;
+        filter: blur(var(--text-swap-blur));
+      }
+
+      .student-card {
+        transition:
+          opacity var(--text-swap-dur) var(--text-swap-ease),
+          transform var(--text-swap-dur) var(--text-swap-ease),
+          filter var(--text-swap-dur) var(--text-swap-ease);
+      }
+
+      .student-card.is-refreshing {
+        opacity: 0.42;
+        transform: translateY(var(--text-swap-translate-y));
+        filter: blur(var(--text-swap-blur));
+      }
+
+      .grade-bar span,
+      .distribution-track span {
+        transition: width var(--resize-dur) var(--resize-ease);
+      }
+
       /* Mastery interface system: calm academic operations workspace. */
       html {
         scroll-behavior: smooth;
@@ -2361,6 +2566,18 @@
         *::before,
         *::after {
           transition-duration: 0.01ms !important;
+        }
+
+        .t-digit-group .t-digit,
+        .t-input,
+        .t-success-check {
+          animation: none !important;
+          transform: none !important;
+          filter: none !important;
+        }
+
+        .t-success-check[data-state="in"] {
+          opacity: 1;
         }
       }
 
@@ -2800,32 +3017,32 @@
           <section class="metrics" aria-label="Schoolwide metrics">
             <article class="metric">
               <span>Students in view</span>
-              <strong id="metric-students">428</strong>
+              <strong class="t-digit-group" id="metric-students">428</strong>
               <small id="metric-student-scope">Current uploaded grades</small>
             </article>
             <article class="metric">
               <span>Need Review</span>
-              <strong id="metric-review">64</strong>
+              <strong class="t-digit-group" id="metric-review">64</strong>
               <small>Below Basic, Basic, or another active concern</small>
             </article>
             <article class="metric">
               <span>ELA benchmark</span>
-              <strong id="metric-reading">71%</strong>
+              <strong class="t-digit-group" id="metric-reading">71%</strong>
               <small>PSSA, Keystone, or 70% interim benchmark</small>
             </article>
             <article class="metric">
               <span>Math Benchmark</span>
-              <strong id="metric-math">66%</strong>
+              <strong class="t-digit-group" id="metric-math">66%</strong>
               <small>PSSA, Keystone, or 70% interim benchmark</small>
             </article>
             <article class="metric">
               <span>Missing Fall MAP</span>
-              <strong id="metric-missing">22</strong>
+              <strong class="t-digit-group" id="metric-missing">22</strong>
               <small>Missing Reading or Math RIT score</small>
             </article>
             <article class="metric">
               <span>Attendance concern</span>
-              <strong id="metric-attendance">0</strong>
+              <strong class="t-digit-group" id="metric-attendance">0</strong>
               <small>Students below 90% attendance</small>
             </article>
           </section>
@@ -2910,8 +3127,8 @@
             </header>
 
             <div class="intake-workspace">
-              <form class="upload-pane" id="dataset-form">
-                <label class="upload-drop" for="dataset-file">
+              <form class="upload-pane t-input-wrap" id="dataset-form">
+                <label class="upload-drop t-input" for="dataset-file">
                   <strong>Choose a student dataset</strong>
                   <span>CSV, CVC, or XLSX, up to 8 MB and 10,000 records. Export title rows are detected automatically.</span>
                   <input id="dataset-file" name="dataset" type="file" accept=".csv,.cvc,.xlsx" required />
@@ -2920,7 +3137,11 @@
                   <button class="button primary" id="preview-dataset" type="submit">Analyze &amp; Sync</button>
                   <a class="button" href="sample-data/mastery_mtss_upload_template.csv" download>Download Template</a>
                 </div>
-                <p class="intake-note" id="upload-feedback" aria-live="polite">Clean files sync automatically. Rows with missing student IDs or names pause for review.</p>
+                <p class="t-error-msg" id="upload-error" role="alert"></p>
+                <p class="intake-note sync-confirmation" aria-live="polite">
+                  <span class="t-success-check" id="upload-success" data-state="out" aria-hidden="true">&#10003;</span>
+                  <span class="t-text-swap" id="upload-feedback">Clean files sync automatically. Rows with missing student IDs or names pause for review.</span>
+                </p>
                 <p class="intake-note"><strong>Student privacy:</strong> Use this only after school approval. Uploads are limited to approved staff accounts and are not shared with students or parents.</p>
               </form>
 
@@ -2985,7 +3206,7 @@
                 </table>
               </div>
               <nav class="table-pagination" id="student-pagination" aria-label="Student list pages">
-                <p class="pagination-summary" id="pagination-summary" aria-live="polite">Showing students 1-15</p>
+                <p class="pagination-summary t-text-swap" id="pagination-summary" aria-live="polite">Showing students 1-15</p>
                 <div class="pagination-controls">
                   <button class="pagination-button" id="pagination-previous" type="button">Previous</button>
                   <div class="pagination-pages" id="pagination-pages" aria-label="Choose a student list page"></div>
@@ -3180,7 +3401,7 @@
       </main>
     </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-text-swap" id="toast-message"></span></div>
 
     <script>
       const demoStudents = [
@@ -3323,6 +3544,7 @@
       const isHostedSecureApp = window.location.protocol === "https:" && !isGitHubPages;
       const rows = document.querySelector("#student-rows");
       const toast = document.querySelector("#toast");
+      const toastMessage = document.querySelector("#toast-message");
       const syncTime = document.querySelector("#sync-time");
       const teacherFeed = document.querySelector("#teacher-feed");
       const accessMode = document.querySelector("#access-mode");
@@ -3358,6 +3580,10 @@
       const previewEmpty = document.querySelector("#preview-empty");
       const dataServiceStatus = document.querySelector("#data-service-status");
       const uploadFeedback = document.querySelector("#upload-feedback");
+      const uploadDrop = document.querySelector(".upload-drop");
+      const uploadError = document.querySelector("#upload-error");
+      const uploadSuccess = document.querySelector("#upload-success");
+      const studentCard = document.querySelector(".student-card");
       let pendingImportId = null;
       let currentAccess = "admin";
       let selectedStudentId = students[0].id;
@@ -3414,6 +3640,84 @@
       function setDataServiceStatus(text, state = "watch") {
         dataServiceStatus.textContent = text;
         dataServiceStatus.className = `status ${state}`;
+      }
+
+      function motionDuration(name, fallback) {
+        const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+        return Number.isFinite(value) ? value : fallback;
+      }
+
+      function swapText(element, next, immediate = false) {
+        if (!element || element.textContent === String(next)) return;
+        clearTimeout(element._swapTimer);
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (immediate || reducedMotion) {
+          element.classList.remove("is-exit", "is-enter-start");
+          element.textContent = next;
+          return;
+        }
+
+        element.classList.add("is-exit");
+        element._swapTimer = setTimeout(() => {
+          element.textContent = next;
+          element.classList.remove("is-exit");
+          element.classList.add("is-enter-start");
+          void element.offsetHeight;
+          element.classList.remove("is-enter-start");
+        }, motionDuration("--text-swap-dur", 200));
+      }
+
+      function setDigits(element, next, animate = true) {
+        const text = String(next);
+        if (!element || element.textContent === text) return;
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!animate || reducedMotion || !/\d/.test(text)) {
+          element.classList.remove("is-animating");
+          element.textContent = text;
+          return;
+        }
+
+        element.classList.remove("is-animating");
+        element.replaceChildren();
+        [...text].forEach((character, index, characters) => {
+          const digit = document.createElement("span");
+          digit.className = "t-digit";
+          digit.textContent = character;
+          if (index === characters.length - 2) digit.dataset.stagger = "1";
+          if (index === characters.length - 1) digit.dataset.stagger = "2";
+          element.appendChild(digit);
+        });
+        void element.offsetHeight;
+        element.classList.add("is-animating");
+      }
+
+      function setUploadFeedback(message, animate = true) {
+        swapText(uploadFeedback, message, !animate);
+      }
+
+      function showUploadSuccess() {
+        uploadSuccess.setAttribute("data-state", "out");
+        void uploadSuccess.offsetWidth;
+        uploadSuccess.setAttribute("data-state", "in");
+      }
+
+      function clearUploadError() {
+        if (datasetForm._revertTimer) clearTimeout(datasetForm._revertTimer);
+        datasetForm.classList.remove("is-error");
+        uploadDrop.classList.remove("is-error", "is-shaking");
+      }
+
+      function showUploadError(message) {
+        uploadError.textContent = message;
+        datasetForm.classList.add("is-error");
+        uploadDrop.classList.add("is-error");
+        uploadDrop.classList.remove("is-shaking");
+        void uploadDrop.offsetWidth;
+        uploadDrop.classList.add("is-shaking");
+
+        const shakeMs = motionDuration("--shake-dur-a", 80) * 2 + motionDuration("--shake-dur-b", 60) * 2;
+        setTimeout(() => uploadDrop.classList.remove("is-shaking"), shakeMs + 20);
+        datasetForm._revertTimer = setTimeout(clearUploadError, shakeMs + motionDuration("--revert-hold", 3000));
       }
 
       async function apiRequest(url, options = {}) {
@@ -3574,11 +3878,13 @@
           const result = await apiRequest(`/api/imports/${encodeURIComponent(importId)}/commit`, { method: "POST" });
           const uniqueCount = result.uniqueStudentsSaved || result.studentsSaved;
           showToast(`${uniqueCount} student records securely imported.`);
+          showUploadSuccess();
           button.textContent = originalLabel;
           clearImportPreview();
           await refreshDashboardData();
         } catch (error) {
           showToast(error.message);
+          showUploadError(error.message);
           document.querySelector("#import-warnings").textContent = `Import stopped: ${error.message}`;
           button.disabled = false;
           button.textContent = originalLabel;
@@ -3596,9 +3902,9 @@
           const ready = health.storageConfigured && health.uploadPolicyConfigured;
           setDataServiceStatus(health.canUpload ? "Secure storage ready" : "Staff account approval required", health.canUpload ? "ontrack" : "watch");
           previewButton.disabled = !ready || !health.canUpload;
-          uploadFeedback.textContent = health.canUpload
+          setUploadFeedback(health.canUpload
             ? "Clean files sync automatically. Rows with missing student IDs or names pause for review."
-            : "This Microsoft account is not approved for data uploads. Sign in with an @masterycharter.org staff account or contact the dashboard administrator.";
+            : "This Microsoft account is not approved for data uploads. Sign in with an @masterycharter.org staff account or contact the dashboard administrator.", false);
           if (health.canUpload) {
             await refreshDashboardData();
           }
@@ -3616,27 +3922,36 @@
       async function previewDataset(event) {
         event.preventDefault();
         const file = datasetFile.files[0];
-        if (!file) return showToast("Choose a CSV, CVC, or XLSX file first.");
+        if (!file) {
+          const message = "Choose a CSV, CVC, or XLSX file first.";
+          showUploadError(message);
+          showToast(message);
+          return;
+        }
+        clearUploadError();
+        uploadSuccess.setAttribute("data-state", "out");
         previewButton.disabled = true;
         previewButton.textContent = "Analyzing...";
-        uploadFeedback.textContent = "Reading the file and matching student fields...";
+        setUploadFeedback("Reading the file and matching student fields...");
         try {
           const formData = new FormData();
           formData.append("dataset", file);
           const payload = await apiRequest("/api/imports/preview", { method: "POST", body: formData });
           renderImportPreview(payload);
           if (payload.summary.validRows > 0 && payload.summary.invalidRows === 0 && !payload.summary.identityConflicts) {
-            uploadFeedback.textContent = `${payload.summary.validRows} valid rows found. Syncing the shared dashboard...`;
+            setUploadFeedback(`${payload.summary.validRows} valid rows found. Syncing the shared dashboard...`);
             await commitImportById(payload.importId, previewButton);
-            uploadFeedback.textContent = `${payload.summary.uniqueStudents} students synced. The dashboard is up to date.`;
+            setUploadFeedback(`${payload.summary.uniqueStudents} students synced. The dashboard is up to date.`);
+            showUploadSuccess();
           } else {
             const identityNote = payload.summary.identityConflicts ? ` ${payload.summary.identityConflicts} student identity conflict${payload.summary.identityConflicts === 1 ? "" : "s"} must be reviewed.` : "";
-            uploadFeedback.textContent = `${payload.summary.validRows} valid rows and ${payload.summary.invalidRows} rejected rows found.${identityNote} Review the results before importing.`;
+            setUploadFeedback(`${payload.summary.validRows} valid rows and ${payload.summary.invalidRows} rejected rows found.${identityNote} Review the results before importing.`);
             showToast("Review the file results before import.");
           }
         } catch (error) {
           showToast(error.message);
-          uploadFeedback.textContent = `Upload stopped: ${error.message}`;
+          showUploadError(error.message);
+          setUploadFeedback(`Upload stopped: ${error.message}`);
         } finally {
           previewButton.disabled = false;
           previewButton.textContent = "Analyze & Sync";
@@ -3666,7 +3981,7 @@
       }
 
       function showToast(message) {
-        toast.textContent = message;
+        swapText(toastMessage, message, !toast.classList.contains("is-visible"));
         toast.classList.add("is-visible");
         clearTimeout(showToast.timer);
         showToast.timer = setTimeout(() => toast.classList.remove("is-visible"), 2400);
@@ -3834,9 +4149,10 @@
         currentStudentPage = Math.min(Math.max(1, currentStudentPage), totalPages);
         const firstStudent = totalStudents ? ((currentStudentPage - 1) * studentsPerPage) + 1 : 0;
         const lastStudent = Math.min(currentStudentPage * studentsPerPage, totalStudents);
-        paginationSummary.textContent = totalStudents
+        const summary = totalStudents
           ? `Showing ${firstStudent}-${lastStudent} of ${totalStudents} students`
           : "No students match the current view";
+        swapText(paginationSummary, summary);
         paginationPrevious.disabled = currentStudentPage === 1 || totalStudents === 0;
         paginationNext.disabled = currentStudentPage === totalPages || totalStudents === 0;
         paginationPages.replaceChildren();
@@ -3861,10 +4177,15 @@
       }
 
       function renderRows() {
+        rows.classList.add("is-refreshing");
+        rows.setAttribute("aria-busy", "true");
         const visible = filteredStudents();
         renderPagination(visible.length);
         if (!visible.length) {
           rows.innerHTML = '<tr><td colspan="9" class="empty-state">No student records match this search. Clear a dropdown or try another ID.</td></tr>';
+          void rows.offsetHeight;
+          rows.classList.remove("is-refreshing");
+          rows.removeAttribute("aria-busy");
           return;
         }
         const pageStart = (currentStudentPage - 1) * studentsPerPage;
@@ -3886,6 +4207,9 @@
             `,
           )
           .join("");
+        void rows.offsetHeight;
+        rows.classList.remove("is-refreshing");
+        rows.removeAttribute("aria-busy");
       }
 
       function formatGpa(value) {
@@ -3952,6 +4276,7 @@
         const student = students.find((item) => item.id === id);
         if (!student) return;
         selectedStudentId = id;
+        studentCard.classList.add("is-refreshing");
 
         document.querySelector("#student-id").textContent = student.id;
         document.querySelector("#student-name").textContent = student.name;
@@ -3987,6 +4312,8 @@
         document.querySelectorAll("[data-student-id]").forEach((row) => {
           row.classList.toggle("is-selected", row.dataset.studentId === id);
         });
+        void studentCard.offsetHeight;
+        studentCard.classList.remove("is-refreshing");
       }
 
       function setAccess(nextAccess, silent = false) {
@@ -4305,14 +4632,20 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
           }
           return student.status !== "On Track";
         }).length;
-        document.querySelector("#metric-students").textContent = visible.length;
-        document.querySelector("#metric-review").textContent = needsReview;
-        document.querySelector("#metric-reading").textContent = subject === "Math" ? "N/A" : percentageMeeting(visible, "reading");
-        document.querySelector("#metric-math").textContent = subject === "Reading" ? "N/A" : percentageMeeting(visible, "math");
-        document.querySelector("#metric-missing").textContent = visible
-          .filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
-        document.querySelector("#metric-attendance").textContent = visible
-          .filter((student) => numericValue(student.attendance) !== null && student.attendance < 90).length;
+        setDigits(document.querySelector("#metric-students"), visible.length, notify);
+        setDigits(document.querySelector("#metric-review"), needsReview, notify);
+        setDigits(document.querySelector("#metric-reading"), subject === "Math" ? "N/A" : percentageMeeting(visible, "reading"), notify);
+        setDigits(document.querySelector("#metric-math"), subject === "Reading" ? "N/A" : percentageMeeting(visible, "math"), notify);
+        setDigits(
+          document.querySelector("#metric-missing"),
+          visible.filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length,
+          notify,
+        );
+        setDigits(
+          document.querySelector("#metric-attendance"),
+          visible.filter((student) => numericValue(student.attendance) !== null && student.attendance < 90).length,
+          notify,
+        );
         renderKpiVisuals(visible);
         updateLivePanels(visible);
         renderRows();
@@ -4379,6 +4712,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       });
 
       datasetForm.addEventListener("submit", previewDataset);
+      datasetFile.addEventListener("change", clearUploadError);
       confirmImportButton.addEventListener("click", confirmDatasetImport);
       cancelImportButton.addEventListener("click", clearImportPreview);
 

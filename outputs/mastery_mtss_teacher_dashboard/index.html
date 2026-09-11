@@ -3432,6 +3432,18 @@
                 </div>
                 <span class="status sync" id="agent-mode">Rules-Based Preview</span>
               </div>
+              <form id="staff-report-form" style="display:flex;flex-wrap:wrap;gap:10px;padding:16px;align-items:center">
+                <label for="staff-report-type">Report</label>
+                <select id="staff-report-type" style="padding:12px;max-width:100%;flex:1;min-width:180px">
+                  <option value="attendance">Attendance</option>
+                  <option value="scores">Assessment scores</option>
+                  <option value="review">Students needing review</option>
+                  <option value="missing">Missing data</option>
+                  <option value="selected">Selected student</option>
+                  <option value="outcomes">Outcome patterns and systems</option>
+                </select>
+                <button class="button primary" type="submit">Generate report</button>
+              </form>
               <div class="agent-log" id="agent-log" aria-live="polite">
                 <div class="agent-turn">
                   <div class="agent-bubble">
@@ -4521,6 +4533,12 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const query = normalize(prompt);
         const student = findStudentFromText(prompt);
 
+        if (/attendance|absen/.test(query)) return staffDataReport('attendance');
+        if (/missing|interim/.test(query)) return staffDataReport('missing');
+        if (/score|assessment|keystone|pssa|map\b/.test(query)) return staffDataReport('scores');
+        if (/summari|summary|selected student/.test(query)) return staffDataReport('selected');
+        if (/review|queue|need help/.test(query)) return staffDataReport('review');
+
         if (/patterns|outcomes|most impacted|systems|contributing/.test(query)) {
           return outcomeReport();
         }
@@ -4549,14 +4567,45 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
           return studentSummary(student);
         }
 
-        return `I can run these rules-based workflows on the currently loaded records:
-- summarize a student
-- show students needing review
-- identify missing interim data
-- draft a parent update
-- schedule a student meeting alert
-- block direct student messaging`;
+        return 'This question does not match a supported report. Choose Attendance, Assessment scores, Students needing review, Missing data, or Selected student above. Use student search and Show filters to choose the group. No report was generated for this question.';
       }
+
+      function staffDataReport(type) {
+        const cohort = filteredStudents();
+        const identity = s => `${s.name} | ID ${s.id} | Grade ${s.gradeShort}`;
+        const gaps = s => [
+          numericValue(s.attendance) === null ? 'Attendance rate' : '',
+          numericValue(s.mapReadingRit) === null ? 'Reading MAP RIT' : '',
+          numericValue(s.mapMathRit) === null ? 'Math MAP RIT' : '',
+          numericValue(s.reading) === null && numericValue(s.readingScaleScore) === null && subjectPerformanceCode(s, 'reading') === null ? 'ELA benchmark evidence' : '',
+          numericValue(s.math) === null && numericValue(s.mathScaleScore) === null && subjectPerformanceCode(s, 'math') === null ? 'Math benchmark evidence' : '',
+        ].filter(Boolean);
+        const intro = [reportHeader(), `Scope: ${cohort.length} students. Dashboard filters and search select the group; reports include their connected evidence.`, 'Data dates: the selected test year is shown above. Assessment dates and the attendance reporting period are not verified in this report. Generated time is not the data date.'];
+        if (!cohort.length) return [...intro, 'No students match the current filters.'].join('\n\n');
+        if (type === 'outcomes') return [...intro, outcomeReport()].join('\n\n');
+        if (type === 'selected') {
+          const selected = cohort.find(s => s.id === selectedStudentId);
+          return [...intro, selected ? studentSummary(selected) : 'The selected student is outside this group. Select a student from the current results.'].join('\n\n');
+        }
+        if (type === 'attendance') {
+          const known = cohort.filter(s => numericValue(s.attendance) !== null);
+          const below = known.filter(s => Number(s.attendance) < 90);
+          return [...intro, 'Attendance report', `${known.length} have a rate; ${cohort.length-known.length} are missing a rate. ${below.length} of ${known.length} recorded rates are below 90%.`,
+            'Rates are shown as imported. Do not combine reporting periods or infer absence days from a rate.',
+            ...cohort.map(s => `${identity(s)}\nAttendance: ${attendanceDisplay(s.attendance)}`)].join('\n\n');
+        }
+        if (type === 'missing') return [...intro, 'Missing data report',
+          'Missing records do not mean failing scores. Four interim points per reporting period cannot be verified without dated interim records.',
+          ...cohort.map(s => `${identity(s)}\n${gaps(s).length ? 'Missing: '+gaps(s).join('; ') : 'No gaps in the fields checked.'}`)].join('\n\n');
+        if (type === 'review') return [...intro, outcomeReport()].join('\n\n');
+        return [...intro, 'Assessment scores report', 'Different assessment scales are listed separately, not averaged.',
+          ...cohort.map(s => `${identity(s)}\nELA: ${primarySubjectEvidence(s,'Reading')}\nMath: ${primarySubjectEvidence(s,'Math')}\nMAP Reading RIT: ${numericValue(s.mapReadingRit) ?? 'Not imported'}; Math RIT: ${numericValue(s.mapMathRit) ?? 'Not imported'}\nKeystone: ${s.keystoneText || 'Not imported'}\nTeachers: ELA ${s.readingTeacher || 'Not listed'}; Math ${s.mathTeacher || 'Not listed'}`)].join('\n\n');
+      }
+
+      document.querySelector('#staff-report-form').addEventListener('submit', event => {
+        event.preventDefault();
+        addAgentTurn('Staff report', staffDataReport(document.querySelector('#staff-report-type').value));
+      });
 
       function addAgentTurn(role, text) {
         const turn = document.createElement("div");

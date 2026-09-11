@@ -1,7 +1,5 @@
 const crypto = require("node:crypto");
 const path = require("node:path");
-const { BlobServiceClient } = require("@azure/storage-blob");
-const { TableClient, TableServiceClient } = require("@azure/data-tables");
 const { buildDashboardStudents, filterCurrentRosterStudents } = require("./dashboard");
 
 const SCHOOL_ID = "mastery-charter";
@@ -28,6 +26,8 @@ function storageConnectionString() {
 
 function getClients() {
   if (clients) return clients;
+  const { BlobServiceClient } = require("@azure/storage-blob");
+  const { TableClient, TableServiceClient } = require("@azure/data-tables");
   const connectionString = storageConnectionString();
   const blobService = BlobServiceClient.fromConnectionString(connectionString);
   clients = {
@@ -303,7 +303,32 @@ async function listDashboardStudents(limit = 500) {
   return buildDashboardStudents(students, assessments);
 }
 
+async function editStudent(method, input, actor) {
+  const { saveStudent, validateStudent, fail } = require('./student-editor');
+  if (method !== 'GET') input = { ...input, ...validateStudent(input) };
+  await ensureStorage();
+  const table = getClients().students;
+  const key = safeKey(input.studentId);
+  let existing;
+  try { existing = await table.getEntity(SCHOOL_ID, key); }
+  catch (error) { if (error.statusCode !== 404) throw error; }
+  if (method === 'GET') {
+    if (!existing) fail('Student not found.', 404);
+    return Object.fromEntries(['studentId', 'firstName', 'lastName', 'grade', 'campus', 'mtssTier', 'intervention', 'etag'].map(field => [field, String(existing[field] ?? '')]));
+  }
+  if (method === 'PATCH' && !existing) fail('Student not found.', 404);
+  if (method === 'POST' && existing) fail('This student ID already exists.', 409);
+  const fields = validateStudent(input);
+  const roster = await listStudents(5000);
+  if (method === 'POST' && roster.some(s => String(s.studentName).toLowerCase().replace(/\s+/g, ' ').trim() === fields.studentName.toLowerCase())) fail('A student with this name already exists. Check the roster before adding another record.', 409);
+  const rosterYear = roster.map(s => s.rosterYear).filter(Boolean).sort().pop() || '';
+  await saveStudent({ table, schoolId: SCHOOL_ID, key, input, actor: actor.email, existing, rosterYear });
+  await writeAudit({ actor: actor.email, action: method === 'POST' ? 'student_created' : 'student_updated', detail: `Student ${fields.studentId}; roster and support fields saved` });
+  return { saved: true, studentId: fields.studentId };
+}
+
 module.exports = {
+  editStudent,
   SCHOOL_ID,
   storageConnectionString,
   preserveMasterRosterFields,

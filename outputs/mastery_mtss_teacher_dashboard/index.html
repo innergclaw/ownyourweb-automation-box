@@ -3227,6 +3227,7 @@
               <div class="panel-head queue-head">
                 <div>
                   <h2>Find a student</h2>
+                  <button class="button" id="add-student" type="button">Add student</button>
                   <p id="queue-copy">Loading authorized assessment records.</p>
                 </div>
                 <div class="queue-tools">
@@ -3465,6 +3466,28 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-text-swap" id="toast-message"></span></div>
 
+    <dialog id="student-editor" aria-labelledby="student-editor-title" style="width:min(560px,calc(100% - 32px));max-height:90vh;overflow:auto;border:1px solid #d7d9de;border-radius:8px;padding:24px">
+      <form id="student-editor-form" style="display:grid;gap:12px">
+        <h2 id="student-editor-title">Edit student</h2>
+        <label>Student ID <input name="studentId" required maxlength="80" pattern="[A-Za-z0-9_-]+" /></label>
+        <label>First name <input name="firstName" required maxlength="150" /></label>
+        <label>Last name <input name="lastName" required maxlength="150" /></label>
+        <label>Grade <select name="grade" required><option value="">Select grade</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
+        <label>Campus <input name="campus" maxlength="150" /></label>
+        <label>MTSS tier <select name="mtssTier"><option value="">Not assigned</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option></select></label>
+        <label>Intervention notes <textarea name="intervention" maxlength="2000" rows="3"></textarea></label>
+        <p>Assessment scores are managed through data uploads. This form changes roster and support fields only.</p>
+        <p id="student-editor-error" role="alert"></p>
+        <div style="display:flex;gap:10px"><button class="button primary" id="save-student" type="submit">Save student</button><button class="button" id="cancel-student" type="button">Cancel</button></div>
+      </form>
+    </dialog>
+    <style>
+      #student-editor::backdrop { background: rgba(0,0,0,.45); }
+      #student-editor label { display:grid; gap:5px; font-weight:600; }
+      #student-editor input, #student-editor select, #student-editor textarea { width:100%;min-width:0;padding:10px;border:1px solid #a5aab4;border-radius:4px;font:inherit; }
+      #student-editor p { font-size:13px;line-height:1.5; }
+      #student-editor-error { color:#a12924; }
+    </style>
     <script>
       // Keep supporting work available without extending the initial student view.
       function foldWorkspace(selector, title, order) {
@@ -3905,6 +3928,70 @@
         }
       }
 
+      const studentEditor = document.querySelector('#student-editor');
+      const studentEditorForm = document.querySelector('#student-editor-form');
+      let editingStudent = null;
+      let studentSaveBusy = false;
+      async function openStudentEditor(id) {
+        studentEditorForm.reset();
+        editingStudent = null;
+        const errorBox = document.querySelector('#student-editor-error');
+        errorBox.textContent = '';
+        document.querySelector('#student-editor-title').textContent = id ? 'Edit student' : 'Add student';
+        studentEditorForm.elements.studentId.readOnly = Boolean(id);
+        const saveButton = document.querySelector('#save-student');
+        saveButton.disabled = true;
+        studentEditor.showModal();
+        if (!isHostedSecureApp || !usingLiveData) {
+          errorBox.textContent = 'Live student editing requires the signed-in Azure dashboard with loaded records.';
+          return;
+        }
+        try {
+          if (id) {
+            editingStudent = await apiRequest(`/api/student-record?id=${encodeURIComponent(id)}`);
+            if (!studentEditor.open) return;
+            for (const key of ['studentId','firstName','lastName','grade','campus','mtssTier','intervention']) studentEditorForm.elements[key].value = key === 'mtssTier' ? (editingStudent[key] || '').replace(/^Tier /, '') : editingStudent[key] || '';
+          }
+          saveButton.disabled = false;
+        } catch (error) { errorBox.textContent = error.message; }
+      }
+      document.querySelector('#add-student').addEventListener('click', () => openStudentEditor());
+      document.querySelector('#student-rows').addEventListener('click', event => {
+        const button = event.target.closest('[data-edit-student]');
+        if (button) openStudentEditor(button.dataset.editStudent);
+      });
+      document.querySelector('#cancel-student').addEventListener('click', () => { if (!studentSaveBusy) studentEditor.close(); });
+      studentEditor.addEventListener('cancel', event => { if (studentSaveBusy) event.preventDefault(); });
+      studentEditorForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (studentSaveBusy) return;
+        studentSaveBusy = true;
+        const button = document.querySelector('#save-student');
+        button.disabled = true;
+        button.textContent = 'Saving...';
+        const errorBox = document.querySelector('#student-editor-error');
+        errorBox.textContent = '';
+        let saved = false;
+        try {
+          const input = Object.fromEntries(new FormData(studentEditorForm));
+          if (editingStudent) input.etag = editingStudent.etag;
+          await apiRequest('/api/student-record', { method: editingStudent ? 'PATCH' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(input) });
+          saved = true;
+          await refreshDashboardData();
+          studentEditor.close();
+          showToast('Student saved to the live database. Current filters still apply.');
+        } catch (error) {
+          errorBox.textContent = saved ? 'Saved, but the dashboard could not refresh. Close this form and reload the page. Do not submit again.' : error.message;
+        } finally {
+          studentSaveBusy = false;
+          button.disabled = saved;
+          button.textContent = 'Save student';
+        }
+      });
+      window.addEventListener('focus', () => {
+        if (isHostedSecureApp && usingLiveData && !studentEditor.open) refreshDashboardData().catch(() => {});
+      });
+
       function clearImportPreview() {
         pendingImportId = null;
         previewResults.hidden = true;
@@ -4288,7 +4375,7 @@
           .map(
             (student) => `
               <tr data-student-id="${escapeHtml(student.id)}" class="${student.id === selectedStudentId ? "is-selected" : ""}">
-                <td><span class="student-identity"><strong>${escapeHtml(student.name)}</strong><span>Student ID ${escapeHtml(student.id)}</span><span>${escapeHtml(student.campus || "Campus not imported")}</span>${student.uniqueMatchingId ? `<span>Matching ID ${escapeHtml(student.uniqueMatchingId)}</span>` : ""}</span></td>
+                <td><span class="student-identity"><strong>${escapeHtml(student.name)}</strong><span>Student ID ${escapeHtml(student.id)}</span><span>${escapeHtml(student.campus || "Campus not imported")}</span>${student.uniqueMatchingId ? `<span>Matching ID ${escapeHtml(student.uniqueMatchingId)}</span>` : ""}</span><button type="button" class="button edit-student" data-edit-student="${escapeHtml(student.id)}" aria-label="Edit student ${escapeHtml(student.name)}">Edit student</button></td>
                 <td>${escapeHtml(student.gradeShort || "-")}</td>
                 <td>${subjectScoreCell(student, "reading")}</td>
                 <td>${subjectScoreCell(student, "math")}</td>

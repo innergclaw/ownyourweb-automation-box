@@ -203,6 +203,7 @@ function buildDashboardStudents(students, assessments) {
 
     return {
       id: student.studentId,
+      ...Object.fromEntries(['focusCause','focusEvidence','focusSupport','focusOwner','focusReviewDate','focusProgress','focusStartedAt','focusBaselineAttendance','focusUpdatedAt','focusUpdatedBy'].map(key => [key, student[key] ?? null])),
       name: student.studentName,
       grade: grade === null ? String(student.grade || "Grade not imported") : `Grade ${grade}`,
       gradeShort: grade === null ? "" : String(grade),

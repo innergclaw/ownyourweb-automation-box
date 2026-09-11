@@ -251,6 +251,7 @@ async function listStudents(limit = 100) {
     queryOptions: { filter: `PartitionKey eq '${SCHOOL_ID}'`, select: [
       "studentId", "studentName", "firstName", "lastName", "drcStudentId", "uniqueMatchingId", "paSecureId", "grade", "campus", "attendance",
       "enrolledDays", "participation", "daysPresent", "daysAbsent", "gpa", "creditsEarned", "creditsRequired", "mtssTier", "hasIep", "firefly", "intervention", "rosterYear", "updatedAt",
+      "focusCause", "focusEvidence", "focusSupport", "focusOwner", "focusReviewDate", "focusProgress", "focusStartedAt", "focusBaselineAttendance", "focusUpdatedAt", "focusUpdatedBy",
     ] },
   });
   for await (const entity of entities) {
@@ -278,6 +279,7 @@ async function listStudents(limit = 100) {
       intervention: entity.intervention || "",
       rosterYear: entity.rosterYear || "",
       updatedAt: entity.updatedAt,
+      ...Object.fromEntries(['focusCause','focusEvidence','focusSupport','focusOwner','focusReviewDate','focusProgress','focusStartedAt','focusBaselineAttendance','focusUpdatedAt','focusUpdatedBy'].map(key => [key, entity[key] ?? null])),
     });
     if (results.length >= limit) break;
   }
@@ -314,7 +316,7 @@ async function editStudent(method, input, actor) {
   catch (error) { if (error.statusCode !== 404) throw error; }
   if (method === 'GET') {
     if (!existing) fail('Student not found.', 404);
-    return Object.fromEntries(['studentId', 'firstName', 'lastName', 'grade', 'campus', 'mtssTier', 'intervention', 'etag'].map(field => [field, String(existing[field] ?? '')]));
+    return Object.fromEntries(['studentId', 'firstName', 'lastName', 'grade', 'campus', 'mtssTier', 'intervention', 'etag', 'focusCause','focusEvidence','focusSupport','focusOwner','focusReviewDate','focusProgress'].map(field => [field, String(existing[field] ?? '')]));
   }
   if (method === 'PATCH' && !existing) fail('Student not found.', 404);
   if (method === 'POST' && existing) fail('This student ID already exists.', 409);

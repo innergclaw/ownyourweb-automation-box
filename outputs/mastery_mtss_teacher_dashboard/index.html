@@ -3004,6 +3004,7 @@
             <p>Administration and staff</p>
             <nav class="workspace-nav" aria-label="Dashboard sections">
               <a class="is-primary" href="#student-search-workspace">Student review</a>
+              <a href="#student-focus">Student focus</a>
               <a href="#schoolwide-kpis">Schoolwide data</a>
               <a href="#data-intake-workspace">Upload data</a>
               <a href="#ai-workspace">Reports and analysis</a>
@@ -3094,6 +3095,17 @@
             </article>
           </section>
 
+          <section id="student-focus" class="workspace-fold" style="order:3;padding:16px;scroll-margin-top:12px">
+            <h2>Student focus and reflection</h2>
+            <p id="focus-summary" aria-live="polite"></p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;align-items:center">
+              <label for="focus-filter">Focus</label>
+              <select id="focus-filter" style="padding:10px;max-width:100%"><option value="all">All concerns and gaps</option><option value="multiple">Multiple concerns</option><option value="ELA">ELA below benchmark</option><option value="Math">Math below benchmark</option><option value="Attendance">Attendance below 90%</option><option value="missing">Missing evidence</option><option value="due">Review due</option><option value="plan">Saved reflection plans</option></select>
+              <button type="button" class="button" id="focus-download">Download focus report</button>
+            </div>
+            <div class="table-wrap"><table aria-label="Students needing focus"><thead><tr><th>Student</th><th>Recorded concerns</th><th>Missing evidence</th><th>Plan and follow-up</th><th>Action</th></tr></thead><tbody id="focus-rows"></tbody></table></div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:12px"><button class="button" id="focus-previous" type="button">Previous</button><span id="focus-page" aria-live="polite"></span><button class="button" id="focus-next" type="button">Next</button></div>
+          </section>
           <section class="kpi-dashboard" id="schoolwide-kpis" aria-label="Student performance KPI dashboard">
             <article class="kpi-panel">
               <header class="kpi-panel-head">
@@ -3476,6 +3488,16 @@
         <label>Campus <input name="campus" maxlength="150" /></label>
         <label>MTSS tier <select name="mtssTier"><option value="">Not assigned</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option></select></label>
         <label>Intervention notes <textarea name="intervention" maxlength="2000" rows="3"></textarea></label>
+        <details id="focus-fields">
+          <summary style="padding:12px 0;font-weight:700;cursor:pointer">Reflection and support plan</summary>
+          <p>Possible causes require evidence and staff review. Scores alone do not establish a cause.</p>
+          <label>Possible cause <textarea name="focusCause" maxlength="2000" rows="2"></textarea></label>
+          <label>Supporting evidence and dates <textarea name="focusEvidence" maxlength="2000" rows="3"></textarea></label>
+          <label>Planned support <textarea name="focusSupport" maxlength="2000" rows="3"></textarea></label>
+          <label>Responsible staff member <input name="focusOwner" maxlength="150" /></label>
+          <label>Next review date <input name="focusReviewDate" type="date" /></label>
+          <label>Follow-up findings and dates <textarea name="focusProgress" maxlength="2000" rows="3"></textarea></label>
+        </details>
         <p>Assessment scores are managed through data uploads. This form changes roster and support fields only.</p>
         <p id="student-editor-error" role="alert"></p>
         <div style="display:flex;gap:10px"><button class="button primary" id="save-student" type="submit">Save student</button><button class="button" id="cancel-student" type="button">Cancel</button></div>
@@ -3932,8 +3954,9 @@
       const studentEditorForm = document.querySelector('#student-editor-form');
       let editingStudent = null;
       let studentSaveBusy = false;
-      async function openStudentEditor(id) {
+      async function openStudentEditor(id, reflection = false) {
         studentEditorForm.reset();
+        document.querySelector('#focus-fields').open = reflection;
         editingStudent = null;
         const errorBox = document.querySelector('#student-editor-error');
         errorBox.textContent = '';
@@ -3950,7 +3973,7 @@
           if (id) {
             editingStudent = await apiRequest(`/api/student-record?id=${encodeURIComponent(id)}`);
             if (!studentEditor.open) return;
-            for (const key of ['studentId','firstName','lastName','grade','campus','mtssTier','intervention']) studentEditorForm.elements[key].value = key === 'mtssTier' ? (editingStudent[key] || '').replace(/^Tier /, '') : editingStudent[key] || '';
+            for (const key of ['studentId','firstName','lastName','grade','campus','mtssTier','intervention','focusCause','focusEvidence','focusSupport','focusOwner','focusReviewDate','focusProgress']) studentEditorForm.elements[key].value = key === 'mtssTier' ? (editingStudent[key] || '').replace(/^Tier /, '') : editingStudent[key] || '';
           }
           saveButton.disabled = false;
         } catch (error) { errorBox.textContent = error.message; }
@@ -4357,7 +4380,59 @@
         });
       }
 
+      let focusPage = 1;
+      function focusEntries() {
+        const mode = document.querySelector('#focus-filter').value;
+        const today = new Date().toLocaleDateString('en-CA');
+        return filteredStudents().map(student => {
+          const concerns = [], gaps = [];
+          for (const [field,label] of [['reading','ELA'],['math','Math']]) {
+            const score = numericValue(student[field]);
+            const code = subjectPerformanceCode(student,field);
+            if (score !== null ? score < 70 : code !== null && code < 3) concerns.push(`${label}: ${primarySubjectEvidence(student,label === 'ELA' ? 'Reading' : 'Math')}`);
+            if (score === null && code === null) gaps.push(`${label} benchmark evidence`);
+          }
+          const attendance = numericValue(student.attendance);
+          if (attendance === null) gaps.push('Attendance');
+          else if (attendance < 90) concerns.push(`Attendance: ${attendanceDisplay(attendance)}`);
+          if (numericValue(student.mapReadingRit) === null) gaps.push('Reading MAP RIT');
+          if (numericValue(student.mapMathRit) === null) gaps.push('Math MAP RIT');
+          if (numericValue(student.gpa) !== null && numericValue(student.passingGpa) !== null && Number(student.gpa) < Number(student.passingGpa)) concerns.push(`GPA: ${student.gpa}, passing target ${student.passingGpa}`);
+          if (numericValue(student.creditsEarned) !== null && numericValue(student.creditsExpected) !== null && Number(student.creditsEarned) < Number(student.creditsExpected)) concerns.push(`Credits: ${student.creditsEarned} of ${student.creditsExpected} expected`);
+          const due = Boolean(student.focusReviewDate && student.focusReviewDate <= today);
+          return {student,concerns,gaps,due};
+        }).filter(e => mode === 'multiple' ? e.concerns.length > 1 : mode === 'missing' ? e.gaps.length : mode === 'due' ? e.due : mode === 'plan' ? e.student.focusStartedAt : mode !== 'all' ? e.concerns.some(c => c.startsWith(mode+':')) : e.concerns.length || e.gaps.length || e.student.focusStartedAt)
+          .sort((a,b) => b.concerns.length-a.concerns.length || Number(b.due)-Number(a.due) || a.student.name.localeCompare(b.student.name));
+      }
+      function focusFollowUp(s) {
+        const baseline = numericValue(s.focusBaselineAttendance), current = numericValue(s.attendance);
+        const change = baseline !== null && current !== null ? `Attendance at plan start: ${baseline}%; current: ${current}%; change: ${(current-baseline).toFixed(1)} percentage points. Reporting periods must be checked before drawing conclusions.` : 'No comparable attendance baseline recorded.';
+        return `Owner: ${s.focusOwner || 'Unassigned'}\nReview: ${s.focusReviewDate || 'Not set'}\nPlan started: ${s.focusStartedAt || 'No saved plan'}\n${change}\nFollow-up: ${s.focusProgress || 'Not recorded'}`;
+      }
+      function renderFocus() {
+        const entries = focusEntries();
+        const pages = Math.max(1,Math.ceil(entries.length/15));
+        focusPage = Math.min(focusPage,pages);
+        document.querySelector('#focus-summary').textContent = `${entries.length} students in this focus view. Current grade, teacher, subject, and search filters apply. Missing evidence is not a failing score. Multiple recorded concerns appear first.`;
+        document.querySelector('#focus-rows').innerHTML = entries.slice((focusPage-1)*15,focusPage*15).map(({student:s,concerns,gaps,due}) => `<tr><td><strong>${escapeHtml(s.name)}</strong><br>ID ${escapeHtml(s.id)} | Grade ${escapeHtml(s.gradeShort)}<br>ELA: ${escapeHtml(s.readingTeacher || 'Not listed')}<br>Math: ${escapeHtml(s.mathTeacher || 'Not listed')}</td><td>${escapeHtml(concerns.join('; ') || 'No concern in available scores')}</td><td>${escapeHtml(gaps.join('; ') || 'None in fields checked')}</td><td>${escapeHtml(s.focusOwner || 'Owner unassigned')}<br>${escapeHtml(s.focusReviewDate || 'Review date not set')}${due ? ' (due)' : ''}<br>${escapeHtml(s.focusSupport || 'Support plan not recorded')}<details><summary>Reflection and progress</summary><p>Possible cause: ${escapeHtml(s.focusCause || 'Not recorded')}</p><p>Evidence: ${escapeHtml(s.focusEvidence || 'Not recorded')}</p><p style="white-space:pre-line">${escapeHtml(focusFollowUp(s))}</p></details></td><td><button type="button" class="button" data-focus-edit="${escapeHtml(s.id)}">Reflect / plan</button></td></tr>`).join('') || '<tr><td colspan="5">No students match this focus filter.</td></tr>';
+        document.querySelector('#focus-page').textContent = `Page ${focusPage} of ${pages}`;
+        document.querySelector('#focus-previous').disabled = focusPage === 1;
+        document.querySelector('#focus-next').disabled = focusPage === pages;
+      }
+      document.querySelector('#focus-filter').addEventListener('change', () => { focusPage=1; renderFocus(); });
+      document.querySelector('#focus-previous').addEventListener('click', () => { focusPage--; renderFocus(); });
+      document.querySelector('#focus-next').addEventListener('click', () => { focusPage++; renderFocus(); });
+      document.querySelector('#focus-rows').addEventListener('click', event => {
+        const button = event.target.closest('[data-focus-edit]');
+        if (button) openStudentEditor(button.dataset.focusEdit,true);
+      });
+      document.querySelector('#focus-download').addEventListener('click', () => {
+        const entries = focusEntries();
+        downloadReport([reportHeader(), `Student focus: ${entries.length} students; ${document.querySelector('#focus-filter').selectedOptions[0].textContent}`, 'Possible causes are staff hypotheses, not established findings. Missing evidence is not failure.', ...entries.map(({student:s,concerns,gaps}) => `${s.name} | ID ${s.id} | Grade ${s.gradeShort}\nConcerns: ${concerns.join('; ') || 'None recorded'}\nMissing: ${gaps.join('; ') || 'None in fields checked'}\nPossible cause: ${s.focusCause || 'Not recorded'}\nEvidence: ${s.focusEvidence || 'Not recorded'}\nSupport: ${s.focusSupport || 'Not recorded'}\n${focusFollowUp(s)}`)].join('\n\n'));
+      });
+
       function renderRows() {
+        renderFocus();
         rows.classList.add("is-refreshing");
         rows.setAttribute("aria-busy", "true");
         const visible = filteredStudents();

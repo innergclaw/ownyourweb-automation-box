@@ -4389,7 +4389,7 @@
           for (const [field,label] of [['reading','ELA'],['math','Math']]) {
             const score = numericValue(student[field]);
             const code = subjectPerformanceCode(student,field);
-            if (score !== null ? score < 70 : code !== null && code < 3) concerns.push(`${label}: ${primarySubjectEvidence(student,label === 'ELA' ? 'Reading' : 'Math')}`);
+            if (score !== null ? score < 70 : code !== null && code < 3) concerns.push(`${label}: below benchmark (${score !== null ? `${score}% interim; target 70%` : `${primarySubjectEvidence(student,label === 'ELA' ? 'Reading' : 'Math')}; target Proficient`})`);
             if (score === null && code === null) gaps.push(`${label} benchmark evidence`);
           }
           const attendance = numericValue(student.attendance);

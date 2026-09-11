@@ -2815,6 +2815,52 @@
           grid-template-columns: 1fr;
         }
       }
+      /* Lenfest staff workspace: neutral surfaces, royal-blue actions. */
+      :root { --mastery-navy: #224ba6; --assessment-blue: #2855c3; --ink: #202124; --pencil: #565b63; --desk: #f2f3f5; --worksheet: #f7f7f8; --navy: #224ba6; --blue: #2855c3; }
+      * { letter-spacing: 0 !important; }
+      .topbar { position: relative; grid-template-columns: minmax(0, 1fr) auto; border-top: 5px solid #2855c3; }
+      .page-title { display: grid; grid-template-columns: 84px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+      .school-logo { width: 84px; height: 78px; object-fit: contain; grid-row: 1 / 4; }
+      .page-title h1 { font-size: 22px; color: #202124; }
+      .page-title p { margin: 3px 0; }
+      .workspace-nav { gap: 16px; flex-wrap: wrap; margin-top: 3px; }
+      .workspace-nav a::after { bottom: 0; }
+      .top-actions { flex-wrap: wrap; max-width: 520px; gap: 8px; }
+      .sidebar { position: relative; top: auto; }
+      .content { gap: 12px; }
+      .metrics { order: 1; }
+      .metric { padding: 12px 14px; border-top: 2px solid #d3d5da; }
+      .metric strong { font-size: 26px; }
+      .grid { order: 2; align-items: start; }
+      .student-card { position: static; }
+      .queue-head { display: grid; grid-template-columns: 1fr; gap: 10px; background: #f4f6fb; border-top: 3px solid #2855c3; }
+      .queue-tools { display: flex; width: 100%; max-width: none; gap: 10px; }
+      .queue-tools input { width: 100%; min-width: 0; flex: 1; height: 48px; padding: 12px 16px; border: 2px solid #2855c3; border-radius: 6px; background: #fff; font-size: 16px; color: #202124; }
+      .queue-tools input:focus { outline: 3px solid #b9c9f1; outline-offset: 2px; }
+      .table-wrap { max-height: 600px; overflow: auto; }
+      .table-wrap thead { position: sticky; top: 0; z-index: 1; background: #f2f3f5; }
+      .workspace-fold { min-width: 0; border-top: 1px solid #d7d9de; background: #fff; }
+      .workspace-fold > summary { cursor: pointer; padding: 15px 16px; font-size: 15px; font-weight: 700; color: #202124; }
+      .workspace-fold > summary::marker { color: #2855c3; }
+      .workspace-fold > summary:focus-visible { outline: 2px solid #2855c3; outline-offset: -2px; }
+      .workspace-fold[open] > summary { border-bottom: 1px solid #e0e2e6; }
+      .workspace-fold > section { margin: 0; }
+      .student-body > .workspace-fold > summary { padding: 12px 0; font-size: 14px; }
+      .student-body { gap: 12px; }
+      #student-search-workspace, #schoolwide-kpis, #data-intake-workspace, #ai-workspace { scroll-margin-top: 12px; }
+      @media (max-width: 1100px) { .topbar { grid-template-columns: 1fr; } .top-actions { max-width: none; } }
+      @media (max-width: 760px) {
+        .metrics { order: 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .metric small { font-size: 11px; }
+        .page-title { grid-template-columns: 64px minmax(0,1fr); gap: 8px; }
+        .school-logo { width: 64px; height: 68px; }
+        .page-title h1 { font-size: 18px; }
+        .workspace-nav { gap: 10px; }
+        .queue-tools { flex-direction: column; align-items: stretch; }
+        .queue-tools input { flex: auto; }
+        .queue-tools .pill { align-self: start; }
+        .table-wrap { max-height: 480px; }
+      }
     </style>
   </head>
   <body>
@@ -2953,13 +2999,14 @@
       <main class="main">
         <header class="topbar">
           <div class="page-title">
-            <h1>Assessment + MTSS Data Dashboard</h1>
-            <p>Search PSSA, Fall MAP, and Keystone evidence in one connected student record.</p>
+            <img class="school-logo" src="mastery-25-years.png" alt="Mastery 25 years, 2001-2026" width="84" height="78" />
+            <h1>Mastery-Lenfest | Student progress</h1>
+            <p>Administration and staff</p>
             <nav class="workspace-nav" aria-label="Dashboard sections">
               <a class="is-primary" href="#student-search-workspace">Student review</a>
               <a href="#schoolwide-kpis">Schoolwide data</a>
-              <a href="#data-intake-workspace">Data intake</a>
-              <a href="#ai-workspace">AI assistant</a>
+              <a href="#data-intake-workspace">Upload data</a>
+              <a href="#ai-workspace">Reports and analysis</a>
             </nav>
           </div>
           <div class="top-actions">
@@ -3179,7 +3226,7 @@
             <article class="panel">
               <div class="panel-head queue-head">
                 <div>
-                  <h2>Connected student search</h2>
+                  <h2>Find a student</h2>
                   <p id="queue-copy">Loading authorized assessment records.</p>
                 </div>
                 <div class="queue-tools">
@@ -3361,7 +3408,7 @@
           <section class="agent-prototype" id="ai-workspace" aria-label="Mastery MTSS staff agent prototype">
             <aside class="agent-sidebar">
               <div>
-                <h2>Staff Agent Prototype</h2>
+                <h2>Staff reports</h2>
                 <p>Rules-based staff assistant using the currently loaded dashboard records. Azure AI is not active yet.</p>
               </div>
               <div class="prompt-grid" aria-label="Suggested agent prompts">
@@ -3380,8 +3427,8 @@
             <article class="agent-main">
               <div class="agent-head">
                 <div>
-                  <h2>Mastery MTSS Staff Agent</h2>
-                  <p>Prototype workflows: student summary, risk queue, parent draft, meeting alert, and communication guardrails.</p>
+                  <h2>Student and school reports</h2>
+                  <p>Review student needs, attendance, and assessment results.</p>
                 </div>
                 <span class="status sync" id="agent-mode">Rules-Based Preview</span>
               </div>
@@ -3407,6 +3454,38 @@
     <div class="toast" id="toast" role="status" aria-live="polite"><span class="t-text-swap" id="toast-message"></span></div>
 
     <script>
+      // Keep supporting work available without extending the initial student view.
+      function foldWorkspace(selector, title, order) {
+        const section = document.querySelector(selector);
+        if (!section) return;
+        const fold = document.createElement('details');
+        fold.className = 'workspace-fold';
+        if (order) fold.style.order = order;
+        const summary = document.createElement('summary');
+        summary.textContent = title;
+        section.before(fold);
+        fold.append(summary, section);
+      }
+      foldWorkspace('.hero-band', 'Biweekly meeting guidance', '8');
+      foldWorkspace('.kpi-dashboard', 'Schoolwide charts and performance', '3');
+      foldWorkspace('.agent-prototype', 'Reports and analysis', '4');
+      foldWorkspace('.data-intake', 'Upload and manage student data', '5');
+      foldWorkspace('.access-grid', 'Staff access', '6');
+      foldWorkspace('.lower-grid', 'Assessment coverage and interventions');
+      foldWorkspace('.gpa-tracker', 'GPA and graduation progress');
+      foldWorkspace('.evidence-list', 'Assessment, attendance, and support details');
+      document.querySelectorAll('.workspace-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+          const target = document.querySelector(link.getAttribute('href'));
+          const fold = target?.closest('details');
+          if (fold) fold.open = true;
+          document.querySelectorAll('.workspace-nav a').forEach(item => item.classList.toggle('is-primary', item === link));
+          if (target?.id === 'student-search-workspace') document.querySelector('#student-search').focus({preventScroll: true});
+        });
+      });
+      document.body.classList.add('controls-collapsed');
+      document.querySelector('#toggle-controls').textContent = 'Show filters';
+      document.querySelector('#toggle-controls').setAttribute('aria-expanded', 'false');
       const demoStudents = [
         {
           id: "MC-0821",
@@ -4819,8 +4898,10 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       cancelImportButton.addEventListener("click", clearImportPreview);
 
       document.querySelector("#run-review").addEventListener("click", () => {
-        syncTime.textContent = "Just now";
-        showToast(accessContent[currentAccess].reviewMessage);
+        const workspace = document.querySelector('#ai-workspace');
+        workspace.closest('details').open = true;
+        addAgentTurn('Staff report', outcomeReport());
+        workspace.scrollIntoView({ block: 'start' });
       });
 
       document.querySelector("#export-summary").addEventListener("click", () => {
@@ -4829,7 +4910,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
 
       toggleControls.addEventListener("click", () => {
         const collapsed = document.body.classList.toggle("controls-collapsed");
-        toggleControls.textContent = collapsed ? "Show Controls" : "Hide Controls";
+        toggleControls.textContent = collapsed ? "Show filters" : "Hide filters";
         toggleControls.setAttribute("aria-expanded", String(!collapsed));
         showToast(collapsed ? "Dashboard controls hidden." : "Dashboard controls shown.");
       });

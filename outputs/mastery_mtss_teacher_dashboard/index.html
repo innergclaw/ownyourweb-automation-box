@@ -3365,6 +3365,9 @@
                 <p>Rules-based staff assistant using the currently loaded dashboard records. Azure AI is not active yet.</p>
               </div>
               <div class="prompt-grid" aria-label="Suggested agent prompts">
+                <button class="prompt-button" type="button" data-agent-prompt="What patterns are preventing stronger outcomes?">Outcome patterns</button>
+                <button class="prompt-button" type="button" data-agent-prompt="Which students are most impacted?">Students most impacted</button>
+                <button class="prompt-button" type="button" data-agent-prompt="What systems may be contributing?">Systems to review</button>
                 <button class="prompt-button" type="button" data-agent-prompt="Show me students who need ELA review.">ELA review</button>
                 <button class="prompt-button" type="button" data-agent-prompt="Summarize the selected student for the biweekly MTSS meeting.">Summarize selected student</button>
                 <button class="prompt-button" type="button" data-agent-prompt="Which students are missing four interim assessment data points?">Find missing interim data</button>
@@ -4439,6 +4442,10 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const query = normalize(prompt);
         const student = findStudentFromText(prompt);
 
+        if (/patterns|outcomes|most impacted|systems|contributing/.test(query)) {
+          return outcomeReport();
+        }
+
         if ((query.includes("direct message") || query.includes("message")) && query.includes("student")) {
           return "Blocked: direct teacher-to-student or parent-to-student messaging is not available. Use a scheduled student meeting alert instead.";
         }
@@ -4482,6 +4489,21 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         const content = document.createElement("pre");
         content.textContent = text;
         bubble.append(label, content);
+        if (role !== "You") {
+          const download = document.createElement("button");
+          download.type = "button";
+          download.className = "button";
+          download.textContent = "Download report";
+          const snapshot = reportHeader() + "\n\n" + text;
+          download.addEventListener("click", () => downloadReport(snapshot));
+          bubble.appendChild(download);
+          const print = document.createElement("button");
+          print.type = "button";
+          print.className = "button";
+          print.textContent = "Print / Save PDF";
+          print.addEventListener("click", () => printReport(snapshot));
+          bubble.appendChild(print);
+        }
         turn.appendChild(bubble);
         agentLog.appendChild(turn);
         agentLog.scrollTop = agentLog.scrollHeight;
@@ -4497,6 +4519,86 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         addAgentTurn("You", value);
         addAgentTurn("Agent", agentResponse(value));
         agentInput.value = "";
+      }
+
+      function reportHeader() {
+        const filters = [...document.querySelectorAll('.sidebar-section[aria-label="Filters"] select')]
+          .map((control) => `${document.querySelector(`label[for="${control.id}"]`).textContent}: ${control.selectedOptions[0]?.textContent || "All"}`);
+        return ["MASTERY CHARTER | Staff report", `Generated: ${new Date().toLocaleString()}`,
+          `Source: ${usingLiveData ? "Imported records" : "Fictional demonstration records"}`,
+          ...filters, `Search: ${studentSearch.value.trim() || "None"}`,
+          "Confidential student information. Share only with authorized staff."].join("\n");
+      }
+
+      function downloadReport(text) {
+        const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `mastery-report-${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function printReport(text) {
+        const reportWindow = window.open("", "_blank");
+        if (!reportWindow) return showToast("Allow a new window to print this report.");
+        reportWindow.document.write(`<!doctype html><html><head><title>Mastery staff report</title><style>body{font:12pt Arial,sans-serif;margin:24px;color:#16202d}pre{font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}@page{margin:18mm}</style></head><body><pre>${escapeHtml(text)}</pre></body></html>`);
+        reportWindow.document.close();
+        reportWindow.focus();
+        reportWindow.print();
+      }
+
+      function outcomeReport() {
+        const cohort = filteredStudents();
+        if (!cohort.length) return "No students match the current filters. No outcome conclusions can be drawn.";
+        const evidence = (student, field) => {
+          const percent = numericValue(student[field]);
+          if (percent !== null) return { below: percent < 70, label: `${percent}% interim` };
+          const code = subjectPerformanceCode(student, field);
+          return code === null ? null : { below: code < 3, label: `${student[field + 'Performance'] || performanceLabel(code)}; performance code ${code}` };
+        };
+        const concerns = cohort.map((student) => {
+          const reasons = [];
+          for (const [field, label] of [["reading", "ELA"], ["math", "Math"]]) {
+            const result = evidence(student, field);
+            if (result?.below) reasons.push(`${label} below benchmark: ${result.label}`);
+          }
+          const attendance = numericValue(student.attendance);
+          if (attendance !== null && attendance < 90) reasons.push(`Attendance ${attendance}%`);
+          return { student, reasons };
+        }).filter((entry) => entry.reasons.length).sort((a, b) => b.reasons.length - a.reasons.length || a.student.name.localeCompare(b.student.name));
+        const patterns = [["reading", "ELA"], ["math", "Math"]].map(([field, label]) => {
+          const available = cohort.map((student) => evidence(student, field)).filter(Boolean);
+          return `${label}: ${available.filter((item) => item.below).length} of ${available.length} students with evidence are below benchmark. ${cohort.length - available.length} have no usable benchmark evidence.`;
+        });
+        const attendanceKnown = cohort.filter((student) => numericValue(student.attendance) !== null);
+        const attendanceLow = attendanceKnown.filter((student) => Number(student.attendance) < 90);
+        patterns.push(`Attendance: ${attendanceLow.length} of ${attendanceKnown.length} students with attendance data are below 90%. ${cohort.length - attendanceKnown.length} have no attendance rate.`);
+        const overlap = concerns.filter((entry) => entry.reasons.length > 1).length;
+        patterns.push(`${overlap} students have more than one recorded concern.`);
+        const grades = [...new Set(cohort.map((student) => student.gradeShort))].sort((a, b) => Number(a) - Number(b));
+        for (const grade of grades) {
+          const total = cohort.filter((student) => student.gradeShort === grade).length;
+          const count = concerns.filter((entry) => entry.student.gradeShort === grade).length;
+          patterns.push(`Grade ${grade}: ${count} of ${total} students have a recorded concern.`);
+        }
+        const missingMap = cohort.filter((student) => numericValue(student.mapReadingRit) === null || numericValue(student.mapMathRit) === null).length;
+        return ["Outcome review", `Scope: ${cohort.length} students in the current view.`,
+          "Filters select the student group. Evidence below covers the connected records for those students.",
+          "1. What patterns are preventing stronger outcomes?",
+          "These are observed patterns, not proof of what caused an outcome.", ...patterns,
+          "2. Which students are most impacted?",
+          "Ordered by number of recorded concerns, then name. This is a review list, not a measure of student potential.",
+          ...(concerns.length ? concerns.map(({ student, reasons }) => `${student.name} | ID ${student.id} | Grade ${student.gradeShort}\n  ${reasons.join('; ')}\n  ELA teacher: ${student.readingTeacher || 'Not listed'}; Math teacher: ${student.mathTeacher || 'Not listed'}`) : ["No concerns found in the available benchmark and attendance data."]),
+          "3. What systems may be contributing?",
+          ...(attendanceLow.length ? ["Attendance support: review absence reasons, outreach records, and access to missed instruction for students below 90%."] : []),
+          ...(concerns.length ? ["Instruction and intervention: review skill-level results, intervention start dates, session attendance, and progress checks for the students listed above."] : []),
+          `Data collection: ${missingMap} of ${cohort.length} students lack a Reading or Math MAP RIT score. Check upload coverage and test completion. Missing scores are not failing scores.`,
+          "The current summary does not establish causes, teacher effectiveness, or intervention effectiveness. Confirm these with dated records and staff review.",
+          "Benchmark rules: interim scores below 70%; PSSA or Keystone performance below Proficient; attendance below 90%. Scores from different assessment types are not averaged.",
+        ].join("\n\n");
       }
 
       function percentageMeeting(items, field, threshold = 70) {
@@ -4722,7 +4824,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
       });
 
       document.querySelector("#export-summary").addEventListener("click", () => {
-        showToast(accessContent[currentAccess].exportMessage);
+        downloadReport(reportHeader() + "\n\n" + outcomeReport());
       });
 
       toggleControls.addEventListener("click", () => {

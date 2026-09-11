@@ -4537,7 +4537,7 @@ ${flagged.map((student) => `- ${student.name}: ${missingDataFor(student).join(";
         if (/missing|interim/.test(query)) return staffDataReport('missing');
         if (/score|assessment|keystone|pssa|map\b/.test(query)) return staffDataReport('scores');
         if (/summari|summary|selected student/.test(query)) return staffDataReport('selected');
-        if (/review|queue|need help/.test(query)) return staffDataReport('review');
+        if (/review|queue|need|show/.test(query)) return staffDataReport('review');
 
         if (/patterns|outcomes|most impacted|systems|contributing/.test(query)) {
           return outcomeReport();

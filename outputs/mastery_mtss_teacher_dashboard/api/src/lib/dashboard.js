@@ -15,6 +15,15 @@ function gradeNumber(value) {
 }
 
 function assessmentTime(record) {
+  if (!record.testDate && assessmentKind(record) === "MAP") {
+    const term = String(record.reportingPeriod || "").match(/^(Fall|Winter|Spring) (20\d{2})$/i);
+    if (term) {
+      const month = { fall: 8, winter: 0, spring: 2 }[term[1].toLowerCase()];
+      return Date.UTC(Number(term[2]), month, 1);
+    }
+    const schoolYear = String(record.testedYear || "").match(/^20\d{2}/)?.[0];
+    return schoolYear ? Date.UTC(Number(schoolYear), 8, 1) : 0;
+  }
   const value = record.testDate || record.createdAt || "";
   const timestamp = Date.parse(value);
   return Number.isFinite(timestamp) ? timestamp : 0;

@@ -158,33 +158,40 @@ async function commitRecords({ entity, analysis, uploader }) {
   const current = getClients();
   let studentsSaved = 0;
   let assessmentsSaved = 0;
-  const uniqueStudentIds = new Set();
-  const existingStudents = new Map();
+  const recordsByStudent = new Map();
   const now = new Date().toISOString();
 
   for (const record of analysis.records.filter((item) => item.valid)) {
     const studentKey = safeKey(record.student.studentId);
-    uniqueStudentIds.add(record.student.studentId);
-    if (!existingStudents.has(studentKey) && !record.student.rosterYear) {
+    if (!recordsByStudent.has(studentKey)) recordsByStudent.set(studentKey, []);
+    recordsByStudent.get(studentKey).push(record);
+  }
+
+  async function saveStudentRecords([studentKey, records]) {
+    let existingStudent = null;
+    if (records.some((record) => !record.student.rosterYear)) {
       try {
-        existingStudents.set(studentKey, await current.students.getEntity(SCHOOL_ID, studentKey));
+        existingStudent = await current.students.getEntity(SCHOOL_ID, studentKey);
       } catch (error) {
         if (error.statusCode !== 404) throw error;
-        existingStudents.set(studentKey, null);
       }
     }
-    await current.students.upsertEntity({
-      partitionKey: SCHOOL_ID,
-      rowKey: studentKey,
-      ...preserveMasterRosterFields(existingStudents.get(studentKey), record.student),
-      lastImportId: entity.rowKey,
-      updatedAt: now,
-      updatedBy: uploader.email,
-    }, "Merge");
-    studentsSaved += 1;
 
-    const hasAssessment = Object.entries(record.assessment).some(([key, value]) => !["assessmentType", "reportingPeriod", "sourceSheet", "sourceFilename"].includes(key) && value !== "" && value !== null);
-    if (hasAssessment) {
+    for (const record of records) {
+      const fields = preserveMasterRosterFields(existingStudent, record.student);
+      await current.students.upsertEntity({
+        partitionKey: SCHOOL_ID,
+        rowKey: studentKey,
+        ...fields,
+        lastImportId: entity.rowKey,
+        updatedAt: now,
+        updatedBy: uploader.email,
+      }, "Merge");
+      existingStudent = { ...existingStudent, ...fields };
+      studentsSaved += 1;
+
+      const hasAssessment = Object.entries(record.assessment).some(([key, value]) => !["assessmentType", "reportingPeriod", "sourceSheet", "sourceFilename"].includes(key) && value !== "" && value !== null);
+      if (!hasAssessment) continue;
       const sourceData = Object.fromEntries(Object.entries(record.raw).filter(([key]) => !key.startsWith("__")));
       await current.assessments.upsertEntity({
         partitionKey: `${SCHOOL_ID}-${studentKey}`,
@@ -200,6 +207,15 @@ async function commitRecords({ entity, analysis, uploader }) {
     }
   }
 
+  const studentGroups = [...recordsByStudent];
+  const batchSize = 16;
+  for (let index = 0; index < studentGroups.length; index += batchSize) {
+    const batch = studentGroups.slice(index, index + batchSize);
+    const results = await Promise.allSettled(batch.map(saveStudentRecords));
+    const failure = results.find((result) => result.status === "rejected");
+    if (failure) throw failure.reason;
+  }
+
   await current.imports.updateEntity({
     partitionKey: SCHOOL_ID,
     rowKey: entity.rowKey,
@@ -207,7 +223,7 @@ async function commitRecords({ entity, analysis, uploader }) {
     committedAt: now,
     committedBy: uploader.email,
     studentsSaved,
-    uniqueStudentsSaved: uniqueStudentIds.size,
+    uniqueStudentsSaved: recordsByStudent.size,
     assessmentsSaved,
     invalidRows: analysis.summary.invalidRows,
   }, "Merge");
@@ -219,7 +235,7 @@ async function commitRecords({ entity, analysis, uploader }) {
     detail: `${studentsSaved} valid rows and ${assessmentsSaved} assessment records stored`,
   });
 
-  return { studentsSaved, uniqueStudentsSaved: uniqueStudentIds.size, assessmentsSaved, invalidRows: analysis.summary.invalidRows };
+  return { studentsSaved, uniqueStudentsSaved: recordsByStudent.size, assessmentsSaved, invalidRows: analysis.summary.invalidRows };
 }
 
 async function listImports(limit = 20) {

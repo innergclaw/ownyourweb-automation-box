@@ -65,7 +65,13 @@ async function parseWorkbook(buffer) {
 }
 
 function parseCsv(buffer) {
-  const matrix = parse(buffer, {
+  let text;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+  } catch {
+    text = new TextDecoder("windows-1252").decode(buffer);
+  }
+  const matrix = parse(text, {
     bom: true,
     relax_column_count: true,
     skip_empty_lines: true,
@@ -141,7 +147,7 @@ function normalizedStudentName(providedName, firstName, lastName) {
 
 function inferredYear(row) {
   const source = `${String(row.__sourceSheet || "")} ${String(row.__sourceFilename || "")}`;
-  return source.match(/20\d{2}\s*[-/]\s*\d{2,4}/)?.[0].replace(/\s/g, "") || "";
+  return source.match(/20\d{2}\s*[-/]\s*(?:20\d{2}|\d{2})\b/)?.[0].replace(/\s/g, "") || "";
 }
 
 function inferredFallMapPeriod(row) {
@@ -189,12 +195,27 @@ function normalizeRecord(row, mapping, index) {
   const enrolledDays = numberValue(valueFor(row, mapping, "enrolledDays"));
   const participation = percentageValue(valueFor(row, mapping, "participation"));
   const daysPresent = attendance === null || enrolledDays === null ? null : Math.round(enrolledDays * attendance) / 100;
-  const daysAbsent = daysPresent === null ? null : Math.round((enrolledDays - daysPresent) * 100) / 100;
+  const daysAbsent = numberValue(valueFor(row, mapping, "daysAbsent"))
+    ?? (daysPresent === null ? null : Math.round((enrolledDays - daysPresent) * 100) / 100);
   let percent = numberValue(valueFor(row, mapping, "percent"));
   if (percent !== null && percent > 0 && percent <= 1) percent *= 100;
   if (percent === null && score !== null && scoreMax) percent = (score / scoreMax) * 100;
 
   const sourceHeaders = Object.keys(row);
+  const isStudentOverview = sourceHeaders.includes("Cum GPA") && sourceHeaders.includes("Fail Classes")
+    && sourceHeaders.includes("Building") && sourceHeaders.some((header) => /^MAP Read RIT F\d{2}$/.test(header));
+  const nweaRit = numberValue(valueFor(row, mapping, "nweaRit"));
+  const isNwea = sourceHeaders.includes("TermName") && sourceHeaders.includes("TestRITScore")
+    && sourceHeaders.includes("TestStartDate");
+  if (isNwea && /^language arts$/i.test(subject)) subject = "Reading";
+  const overviewYear = isStudentOverview ? inferredYear(row).replace(/[-/]20(\d{2})$/, "-$1") : "";
+  const overviewFall = overviewYear ? `F${overviewYear.slice(-2)}` : "";
+  const sourceCampus = inferredCampus(row, mapping);
+  const campus = (isStudentOverview || isNwea) && /^lenfest (campus|hs)$/i.test(sourceCampus) ? "Lenfest" : sourceCampus;
+  const readingRit = isNwea && subject === "Reading" ? nweaRit
+    : numberValue(row[`MAP Read RIT ${overviewFall}`] ?? valueFor(row, mapping, "readingRit"));
+  const mathRit = isNwea && subject === "Math" ? nweaRit
+    : numberValue(row[`MAP Math RIT ${overviewFall}`] ?? valueFor(row, mapping, "mathRit"));
   const isMasterRoster = /student\s*list/i.test(String(row.__sourceFilename || ""))
     || (sourceHeaders.some((header) => /^sped$/i.test(header)) && !sourceHeaders.some((header) => /score|attendance|rit/i.test(header)));
   const isKeystone = sourceHeaders.some((header) => /admin scale score/i.test(header));
@@ -202,7 +223,21 @@ function normalizeRecord(row, mapping, index) {
   let assessment = String(valueFor(row, mapping, "assessment") || "").trim();
   let assessmentType = "Interim";
   let reportingPeriod = String(valueFor(row, mapping, "reportingPeriod") || "").trim();
-  if (isKeystone) {
+  if (isNwea && (subject === "Reading" || subject === "Math")) {
+    const term = reportingPeriod.match(/^(Fall|Winter|Spring) (20\d{2})-(20\d{2})$/i);
+    if (term) {
+      const [, season, start, end] = term;
+      reportingPeriod = `${season} ${/^fall$/i.test(season) ? start : end}`;
+      testedYear = `${start}-${end.slice(-2)}`;
+    }
+    assessment = `MAP ${subject}`;
+    assessmentType = "MAP";
+  } else if (isStudentOverview && (readingRit !== null || mathRit !== null)) {
+    subject = "MAP";
+    assessment = "Fall MAP Reading + Math";
+    assessmentType = "MAP";
+    reportingPeriod = `Fall ${overviewYear.slice(0, 4)}`;
+  } else if (isKeystone) {
     const details = keystoneDetails(assessment);
     subject = details.subject;
     assessment = details.assessment;
@@ -221,6 +256,7 @@ function normalizeRecord(row, mapping, index) {
   const errors = [];
   if (!studentId) errors.push("Missing student ID");
   if (!studentName) errors.push("Missing student name");
+  if (isNwea && (readingRit === null && mathRit === null)) errors.push("Missing MAP Reading or Math RIT score");
 
   return {
     rowNumber: index + 2,
@@ -232,7 +268,7 @@ function normalizeRecord(row, mapping, index) {
       firstName,
       lastName,
       grade,
-      campus: inferredCampus(row, mapping),
+      campus,
       drcStudentId: String(valueFor(row, mapping, "drcStudentId") || "").trim(),
       uniqueMatchingId: String(valueFor(row, mapping, "uniqueMatchingId") || "").trim(),
       paSecureId: String(valueFor(row, mapping, "paSecureId") || "").trim(),
@@ -248,7 +284,7 @@ function normalizeRecord(row, mapping, index) {
       hasIep: booleanValue(valueFor(row, mapping, "iep")),
       firefly: String(valueFor(row, mapping, "firefly") || "").trim(),
       intervention: String(valueFor(row, mapping, "intervention") || "").trim(),
-      rosterYear: isMasterRoster ? inferredYear(row) || "Current" : "",
+      rosterYear: overviewYear || (isMasterRoster ? inferredYear(row) || "Current" : ""),
     },
     assessment: {
       subject,
@@ -261,8 +297,8 @@ function normalizeRecord(row, mapping, index) {
       percent: percent === null ? null : Math.round(percent * 100) / 100,
       testDate: String(valueFor(row, mapping, "testDate") || "").trim(),
       reportingPeriod,
-      readingRit: numberValue(valueFor(row, mapping, "readingRit")),
-      mathRit: numberValue(valueFor(row, mapping, "mathRit")),
+      readingRit,
+      mathRit,
       growthGoal: numberValue(valueFor(row, mapping, "growthGoal")),
       scaleScore,
       performanceCode: String(valueFor(row, mapping, "performanceCode") || "").trim(),
@@ -326,7 +362,7 @@ function analyzeDataset(parsed) {
   if (!mapping.studentName && !(mapping.firstName && mapping.lastName)) {
     warnings.push("Student name was not matched automatically.");
   }
-  if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit && !mapping.scaleScore && !mapping.attendance) {
+  if (!mapping.score && !mapping.percent && !mapping.readingRit && !mapping.mathRit && !mapping.nweaRit && !mapping.scaleScore && !mapping.attendance) {
     warnings.push(validRecords.some((record) => record.student.rosterYear)
       ? "Master roster detected. Student records will sync without creating blank assessments."
       : "No assessment score columns were matched automatically.");
